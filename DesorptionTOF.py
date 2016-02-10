@@ -43,82 +43,80 @@ from ParseCmdFile import parseCmdFile
 from PlotFit import PlotFit
 # from Parameters2 import Parameter2, Parameters2
 
+import GlobalVariables as glbl
+
 # Physical constants ###################################################
 
-kb          = 8.6173324E-5           # Boltzmann constant in eV/K
-eV2J        = 1.602176565E-19           # eV to Joule 
-J2eV        = 6.24150934E18           # Joule to eV 
-AtomicMass  = 1.660538921E-27           # Atomic mass constant
-eVConst     = AtomicMass * J2eV
-MassAmu     = 2. * 2.01410178           # Mass of molecule (amu)
+#kb          = 8.6173324E-5           # Boltzmann constant in eV/K
+# eV2J        = 1.602176565E-19           # eV to Joule 
+# J2eV        = 6.24150934E18           # Joule to eV 
+# AtomicMass  = 1.660538921E-27           # Atomic mass constant
+# eVConst     = AtomicMass * J2eV
+# MassAmu     = 2. * 2.01410178           # Mass of molecule (amu)
 
 # Experimental apparatus constants #####################################
 
-FFRDist           = 29.0E-3        # Distance travelled by the molecule in the fieldfree region as an ion (m)
-FFRDistTolerance  = 0.5            # Percentage by which the field free region lenght can vary
-TimeCorr          = 4.6            # Time correction (us)
-TimeCorrTolerance = 0.8            # (see two lines above )
-TCutC             = 28.6           # CutOff function 1st parameter (us) 
-TCutCTolerance    = 0.5            # ...
-TCutW             = 4.3            # CutOff function 2nd parameter (us)
-TCutWTolerance    = 1.0
+# FFRDist           = 29.0E-3        # Distance travelled by the molecule in the fieldfree region as an ion (m)
+# FFRDistTolerance  = 0.5            # Percentage by which the field free region lenght can vary
+# TimeCorr          = 4.6            # Time correction (us)
+# TimeCorrTolerance = 0.8            # (see two lines above )
+# TCutC             = 28.6           # CutOff function 1st parameter (us) 
+# TCutCTolerance    = 0.5            # ...
+# TCutW             = 4.3            # CutOff function 2nd parameter (us)
+# TCutWTolerance    = 1.0
 
-TemperatureTolerance = 1.         
-
-# Following parameters for point detector
-AngRes               = 20.         # Angular resolusion (degrees)
-ThetaStep            = 2.          # Theta step in averaging
+# TemperatureTolerance = 1.         
 
 # Following parameters for point detector
-AngRes               = 20.         # Angular resolusion (degrees)
-ThetaStep            = 2.          # Theta step in averaging
+# AngRes               = 20.         # Angular resolusion (degrees)
+# ThetaStep            = 2.          # Theta step in averaging
 
 # Following parameters for line detector
-ZDiffWall   = 0.0               # Poistion of inside (detector side)
-RDiffWall   = 6.0               # Radius of the hole in differential wall        
-ZRef = ZDiffWall                # Use Diff wall as reference point since
+# ZDiffWall   = 0.0               # Poistion of inside (detector side)
+# RDiffWall   = 6.0               # Radius of the hole in differential wall        
+# ZRef = ZDiffWall                # Use Diff wall as reference point since
                                 #   Source and differential wall positions
                                 #   might be changed
-ZAperture  = ZRef - 3.5        # Position of Aperture in Ta Sheiled   
-RAperture   = 1.5               # Radius of aperture in Ta shield
-ZSource     = ZAperture - 4.   # Position of Source
-RSource     = 0.1               # Radius of the source (Source or knudsen)
+# ZAperture  = ZRef - 3.5        # Position of Aperture in Ta Sheiled   
+# RAperture   = 1.5               # Radius of aperture in Ta shield
+# ZSource     = glbl.ZAperture - 4.   # Position of Source
+# RSource     = 0.1               # Radius of the source (Source or knudsen)
     
 # Detection volume is determined by length of REMPI laser.
 # the actual length is very long, so we should set this parameter to be 
 # long enough that it does not limit detection.  
-ZLaser      = ZRef + 5.0        # Position of REMP laser beam
-LLaser      = 9.3               # Length of REMPI detection volume.  
+# ZLaser      = ZRef + 5.0        # Position of REMP laser beam
+# LLaser      = 9.3               # Length of REMPI detection volume.  
 
 # In the present code we don't us these parameter.  Instead
 # we use an effective detection line based on the acceptance
 # of ions at the final field free region, i.e we assume the length of the
 # REMPI detection volume is not a limiting factor
        
-ZFinal     = ZRef + 34.         # Position of the final grid
-RFinal     = 10.0               # Effective acceptance radius for ions at
+# ZFinal     = ZRef + 34.         # Position of the final grid
+# RFinal     = 10.0               # Effective acceptance radius for ions at
                                 #   at the final grid.  Because of strong
                                 #   accleration to extractor take this to
                                 #   be equal to the extrator radius
 
-NPointsDetector = 101          # Number of points to consider on the line
+# NPointsDetector = 101          # Number of points to consider on the line
     
-NPointsSource   = 1             # Number of points to consider on the Source
+# NPointsSource   = 1             # Number of points to consider on the Source
                                 #   If NPointsSource = 1 we treat this as
                                 #   point source
 
-GridType = 'Cartesian'          # Generate a cartesian or radial grid on  
+# GridType = 'Cartesian'          # Generate a cartesian or radial grid on  
                                 #   the source. This parameter can have
                                 #   values of 'Cartesian' or'Radial'
 # Data Format ##########################################################
 
-DataLine         = 34    # Line in DataFile where data start
-MassLine         = 1
-TemperatureLine  = 2     # Line in DataFile where temperature is reported
+# DataLine         = 34    # Line in DataFile where data start
+# MassLine         = 1
+# TemperatureLine  = 2     # Line in DataFile where temperature is reported
                          #  (surface T for desorption experiments,
                          #    nozzle T for Knudsen experiments) 
-VibStateLine     = 3
-RotStateLine     = 4
+# VibStateLine     = 3
+# RotStateLine     = 4
 
 ########################################################################
 
@@ -142,10 +140,10 @@ def ReadData( DataFile, BackgroundFile = "", Tmin = '', Tmax = '', Threshold = 0
     # Read temperature, vib, rot states from head
 
 
-    Temperature = float( lines[TemperatureLine - 1].split()[3 ] )
+    Temperature = float( lines[glbl.TemperatureLine - 1].split()[3 ] )
     # Mass        = float( lines[MassLine        - 1].split()[3 ] )
-    VibState    = float( lines[VibStateLine    - 1].split()[3 ] )
-    RotState    = float( lines[RotStateLine    - 1].split()[3 ] )
+    VibState    = float( lines[glbl.VibStateLine    - 1].split()[3 ] )
+    RotState    = float( lines[glbl.RotStateLine    - 1].split()[3 ] )
     # Read rovibrational state (if not in input):
     State = "v" + str( int(VibState)) + "J" + str( int(RotState))
 
@@ -164,7 +162,7 @@ def ReadData( DataFile, BackgroundFile = "", Tmin = '', Tmax = '', Threshold = 0
     Time = []
     Data = []
        
-    for n in range(DataLine - 1, DataLineEnd):
+    for n in range(glbl.DataLine - 1, DataLineEnd):
         # print(n,lines[n])
         T = float( lines[n].split()[0] )*1E-6   # T is ins sec , Gottingen data                                                # is in microsec
         F = float( lines[n].split()[1] ) #
@@ -208,19 +206,21 @@ def ReadData( DataFile, BackgroundFile = "", Tmin = '', Tmax = '', Threshold = 0
 
     return State, Temperature, VarX, VarY
 
-def SetupParametersDictionary( i, Params,  Temperature):
-    
-    
 #==============================================================================
-#     # Reaction probability parameters
-#     Params.add('A_%i' %(i+1),  value=1.0 , vary=True, max=1. )           # Saturation value
-#     Params.add('B_%i' %(i+1),  value=0.6 , vary=False, min=0., max=5.)    # ReacProb Curve E0 Parameter
-#     Params.add('BI_%i'%(i+1), value=0.5 , vary=False )                   # ReacProb Curve E0 Parameter (for FPC)
-#     Params.add('C_%i' %(i+1),  value=0.16, vary=False, min=0., max=1.)    # ReacProb Curve Width Parameter
-#     Params.add('CI_%i'%(i+1), value=0.90, vary=False, min=0.)            # ReacProb Curve Width Parameter (for FPC)
-#     Params.add('ni_%i'%(i+1), value=0.05, vary=False, min=1E-7, max=1.)  # ReacProb Curve 'ni' parameter  (for LGS)
+# def SetupParametersDictionary( i, Params,  Temperature):
+#     
+#     
+# #==============================================================================
+# #     # Reaction probability parameters
+# #     Params.add('A_%i' %(i+1),  value=1.0 , vary=True, max=1. )           # Saturation value
+# #     Params.add('B_%i' %(i+1),  value=0.6 , vary=False, min=0., max=5.)    # ReacProb Curve E0 Parameter
+# #     Params.add('BI_%i'%(i+1), value=0.5 , vary=False )                   # ReacProb Curve E0 Parameter (for FPC)
+# #     Params.add('C_%i' %(i+1),  value=0.16, vary=False, min=0., max=1.)    # ReacProb Curve Width Parameter
+# #     Params.add('CI_%i'%(i+1), value=0.90, vary=False, min=0.)            # ReacProb Curve Width Parameter (for FPC)
+# #     Params.add('ni_%i'%(i+1), value=0.05, vary=False, min=1E-7, max=1.)  # ReacProb Curve 'ni' parameter  (for LGS)
+# #==============================================================================
+#     
 #==============================================================================
-    
 
     # Experimental apparatus
     #Params.add('MaxTOF_%i'      %(i+1),  value=1.E-14 , vary=True)    # Max of the TOF spectrum
@@ -259,7 +259,7 @@ def GenerateThetaAngles(AveragingType, GridType,        \
                         ZDetector,  LengthDetector):
 
     if AveragingType == 'PointDetector':
-        ThetaAngles = np.arange( 0., AngRes + ThetaStep, ThetaStep )
+        ThetaAngles = np.arange( 0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep )
     elif AveragingType == 'None':
         ThetaAngles = [0.] 
     elif AveragingType == 'LineDetector':
@@ -408,24 +408,24 @@ def AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles):
         # Averaging performed  taking into account different flight time for different angles, but assuming ionization occurring in one point
         for Theta in ThetaAngles :  
             Velocity = FFRDist /(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-            Ekin = (0.5 * MassAmu * Velocity**2.) * eVConst
+            Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
             Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
-            Signal = Signal + (Velocity**4. * np.exp( -Ekin / (kb * Temperature) ) * np.cos( np.radians(Theta) )**2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * np.sin( np.radians(Theta) ) * ThetaStep
+            Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * np.cos( np.radians(Theta) )**2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * np.sin( np.radians(Theta) ) * glbl.ThetaStep
     elif AveragingType == "None":
         # No angular averaging performed
         Velocity = FFRDist / Time # v = L / t 
-        Ekin = (0.5 * MassAmu * Velocity**2.) * eVConst
+        Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
         Enorm = Ekin
-        Signal = (Velocity**4. * np.exp( -Ekin / (kb * Temperature) ) * Prob(Enorm, NDataSet, Params, ProbCurveType))
+        Signal = (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * Prob(Enorm, NDataSet, Params, ProbCurveType))
 
     elif AveragingType == "LineDetector":
         # Averaging along line, accounting for different flight time for different angles
         for Theta in ThetaAngles :
                         Velocity = FFRDist/(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-                        Ekin = (0.5 * MassAmu * Velocity**2.) * eVConst
+                        Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
                         Enorm = Ekin * np.cos( np.radians(Theta) )**2 # Reaction probability depends on normal energy
                         # Here no sin weight, since each Theta value has a weight of one
-                        Signal = Signal + (Velocity**4. * np.exp( -Ekin / (kb * Temperature) ) * np.cos( np.radians(Theta) )**2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * ThetaStep
+                        Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * np.cos( np.radians(Theta) )**2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * glbl.ThetaStep
 
     return Signal
 
@@ -487,21 +487,21 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
         # Averaging performed taking into account different flight time for different angles
         for Theta in ThetaAngles:
             Velocity = FFRDist /(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-            Ekin = (0.5 * MassAmu * Velocity**2.) * eVConst
+            Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
             # Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
             VelocityDistribution = VelocityDistribution                   \
                                    + Velocity**4.                         \
-                                   * np.exp( -Ekin / (kb * Temperature) ) \
+                                   * np.exp( -Ekin / (glbl.kb * Temperature) ) \
                                    * np.cos( np.radians(Theta) )**2.      \
                                    * np.sin( np.radians(Theta) )           \
-                                   * ThetaStep
+                                   * glbl.ThetaStep
 
     elif AveragingType == "None":
         # No angular averaging
         Velocity = FFRDist / Time
-        Ekin = (0.5 * MassAmu * Velocity**2.) * eVConst
+        Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
         # Enorm = Ekin
-        VelocityDistribution = Velocity**4. * np.exp( -Ekin / (kb * Temperature))
+        VelocityDistribution = Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature))
         
         # kludge to fix divide by zero runtime error        
         for ii in range(len(VelocityDistribution)):
@@ -510,7 +510,7 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
         
 
     ProbFromTOF = (Signal - Baseline ) / (MaxTOF * VelocityDistribution * CutOff)
-    Energy = 0.5 * MassAmu * ( FFRDist / Time )**2. * eVConst
+    Energy = 0.5 * glbl.MassAmu * ( FFRDist / Time )**2. * glbl.eVConst
     
 
     return Energy, ProbFromTOF
@@ -576,11 +576,13 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
 #==============================================================================
                                        
 
-def LockParam(Params):
-    for name, param in list(Params.items()):
-        if param.vary == True :
-            param.vary = False
-    return
+#==============================================================================
+# def LockParam(Params):
+#     for name, param in list(Params.items()):
+#         if param.vary == True :
+#             param.vary = False
+#     return
+#==============================================================================
                                                        
 
 def WriteTOFOutput( TOFTime, TOFData, State, Label, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType):
@@ -642,10 +644,11 @@ def WriteProbOutput( TOFTime, TOFData, State, Label, NDataSet, Params, Averaging
 ################################################################################
 # Main PROGRAM
 ################################################################################
-filename = 'test2.tof_in'
-parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(filename)
+cmdFilename = 'test2.tof_in'
+parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFilename)
 
-
+DataFiles = signalFiles
+BackgroundFiles = backgroundFiles
 #==============================================================================
 # print('\nFuncions: ', functions)    
 # print('\nsignalFiles\n', signalFiles)
@@ -670,9 +673,12 @@ if len(errors) > 0:
 args_task = 'FitTOF'
 args_label = 'test2'
 args_function = 'ERF'
-args_angularaveraging = 'None'
-args_input = r'data\referenceline\6008_Au_D2_v1J2_x=35.datv2'
-args_background = r'data\referenceline\6009_Au_D2_v1J2_x=35_offRes.datv2'
+
+angularaveragingList = ['None','PointDetector','LineDetector']
+args_angularaveraging = angularaveragingList[2]
+
+# args_input = r'data\referenceline\6008_Au_D2_v1J2_x=35.datv2'
+# args_background = r'data\referenceline\6009_Au_D2_v1J2_x=35_offRes.datv2'
 args_mintime = 5
 args_maxtime = 25
 args_baseline = False
@@ -690,9 +696,9 @@ if DataType == 'Calibration':
 else:
     ProbCurveType = args_function
     
-DataFiles = args_input.split(",")
+# DataFiles = args_input.split(",")
 AveragingType = args_angularaveraging
-BackgroundFiles = args_background.split(",")
+# BackgroundFiles = args_background.split(",")
 
 if len( BackgroundFiles ) != len( DataFiles ) and  BackgroundFiles  != [ "" ] :
     print("Number of Background files does not match number of Data files. Quit. ")
@@ -723,7 +729,8 @@ for i in range( len( DataFiles)):
     DataSets.append( [ Time, Signal ] )
   
     # Add parameters to the dictionary
-    Params = SetupParametersDictionary( i, Params, Temperature )
+    # Params = SetupParametersDictionary( i, Params, Temperature )
+    
 
 #==============================================================================
 # SetFreeParameters( Params, DataType, ProbCurveType, FitTemperature, 
@@ -732,19 +739,19 @@ for i in range( len( DataFiles)):
 
 # Generate Theta angles employed for angular averaging
 ThetaAngles = GenerateThetaAngles(                                  \
-    AveragingType=AveragingType, GridType=GridType,                 \
-    NPointsSource=NPointsSource, NPointsDetector=NPointsDetector,   \
-    ZSource = ZSource,           RSource = RSource,                 \
-    ZAperture = ZAperture,       RAperture = RAperture,             \
-    ZDetector = ZLaser,          LengthDetector = LLaser)
+    AveragingType=AveragingType, GridType=glbl.GridType,                 \
+    NPointsSource=glbl.NPointsSource, NPointsDetector=glbl.NPointsDetector,   \
+    ZSource = glbl.ZSource,           RSource = glbl.RSource,                 \
+    ZAperture = glbl.ZAperture,       RAperture = glbl.RAperture,             \
+    ZDetector = glbl.ZLaser,          LengthDetector = glbl.LLaser)
     #    ZDetector = ZFinal,          LengthDetector = 2.*RFinal         \
   
 print()
 print('Angular Averaging Parameters:')
-print('nps =', NPointsSource, 'npd =', NPointsDetector)
-print('zs  =', ZSource,       'rs  =', RSource )
-print('za  =', ZAperture,     'ra  =', RAperture)     
-print('zf  =', ZFinal,        'rf  =', RFinal)                                                
+print('nps =', glbl.NPointsSource, 'npd =', glbl.NPointsDetector)
+print('zs  =', glbl.ZSource,       'rs  =', glbl.RSource )
+print('za  =', glbl.ZAperture,     'ra  =', glbl.RAperture)     
+print('zf  =', glbl.ZFinal,        'rf  =', glbl.RFinal)                                                
 
 # Fit TOF
 fitResult = FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType, Label )

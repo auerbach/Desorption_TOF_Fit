@@ -8,8 +8,8 @@ Module to parse the control file for FitDesorbtionTOF
 __author__ = 'Daniel Auerbach'  
 __email__  = 'daniel@djauerbach.com'
 
-from lmfit import Parameters
-# from Parameters2 import Parameter2, Parameters2
+# from lmfit import Parameters
+from Parameters2 import Parameter2, Parameters2
 
 # Global Variables
 backgroundFiles = []
@@ -22,7 +22,8 @@ functions =  []
 
 globalParms=[]
 # parms = Parameters2()
-parms = Parameters()
+parms = Parameters2()
+
 
 signalFile = None
 signalFiles = []
@@ -32,7 +33,7 @@ signalFiles = []
 
 # names of parameters
 parmList = ['A', 'E0', 'W', 
-            'TCutC', 'TCutW', 'Temp', 'FFR', 'IonTOF', 'Yscale']
+            'TCutC', 'TCutW', 'Temp', 'FFR', 'IonTOF', 'Yscale', 'Baseline']
 
 
 #==============================================================================
