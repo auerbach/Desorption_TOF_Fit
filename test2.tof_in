@@ -8,8 +8,11 @@
 # test for unknown command
 # invalid_command
 
+#   Input Variables and Constants
+    Label,  'test2'
+
 #   Fit function
-    Function, Erf
+    Function, ERF
 
 #==============================================================================
 #     # Reaction probability parameters

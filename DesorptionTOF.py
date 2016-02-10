@@ -1,27 +1,13 @@
 #!/usr/bin/env python
 
 ###########################################################################
-## Time of Flight fitting program
-## 
-## Written by Alessandro Genova
-## July 2012, Leiden University
-##
-## Fit experimental TOF spectra using several sigmoid functions as a model (and pront the fitted curve to file).
-##
-## USAGE:
-##
-## Start the program with the following command and read the provided instructions:
-## ./TOF_v5.py --help
-##
-##
-###########################################################################
-## Modified by Francesco Nattino
-## Last update 06-2014
-##
-## Changes from vs6
-## - various angular averaging included (none and line detector)
-## - global fit for calibration implemented
-##
+# Based on Time of Flight fitting program
+#   Alessandro Genova
+#   July 2012, Leiden University
+#
+#   Francesco Nattino, Leiden University, June 2015  (vs 7)
+#
+#
 ###########################################################################
 
 # Importing the extra packages and modules needed
@@ -47,7 +33,7 @@ import GlobalVariables as glbl
 
 # Physical constants ###################################################
 
-#kb          = 8.6173324E-5           # Boltzmann constant in eV/K
+# kb          = 8.6173324E-5           # Boltzmann constant in eV/K
 # eV2J        = 1.602176565E-19           # eV to Joule 
 # J2eV        = 6.24150934E18           # Joule to eV 
 # AtomicMass  = 1.660538921E-27           # Atomic mass constant
@@ -120,7 +106,8 @@ import GlobalVariables as glbl
 
 ########################################################################
 
-def ReadData( DataFile, BackgroundFile = "", Tmin = '', Tmax = '', Threshold = 0.10):
+
+def read_data(DataFile, BackgroundFile ="", Tmin ='', Tmax ='', Threshold = 0.10):
     # Function to read Datafiles
     # Input: DataFile = name of the file to be read ;
     # BackgroundFile  = name of the file with background; 
@@ -175,7 +162,10 @@ def ReadData( DataFile, BackgroundFile = "", Tmin = '', Tmax = '', Threshold = 0
 
     DeltaTime = Time[1] - Time[0]
 
-    # Select good data: if max or min times are provided use them, otherwise use threshold (ratio signal/maximum signal)
+    #==============================================================================================
+    # Select good data: if max or min times are provided use them, otherwise use threshold
+    # ratio signal/maximum signal)
+    #==============================================================================================
     for n in range( len( Time )):
         if Tmin :
             if float( Tmin ) * 1.E-6 >= Time[n] and float( Tmin )* 1.E-6 < Time[n] + DeltaTime:
@@ -647,21 +637,14 @@ def WriteProbOutput( TOFTime, TOFData, State, Label, NDataSet, Params, Averaging
 cmdFilename = 'test2.tof_in'
 parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFilename)
 
-DataFiles = signalFiles
-BackgroundFiles = backgroundFiles
-#==============================================================================
-# print('\nFuncions: ', functions)    
-# print('\nsignalFiles\n', signalFiles)
-# print('\nbackgroundFiles\n', backgroundFiles)
-# print()
-# parms.pretty_print()
-#==============================================================================
-
 if len(errors) > 0:
     print('Errors\n', errors)
     raise SystemExit ('Error in command file' )
-
 # print('Finished parsing command file')
+
+DataFiles = signalFiles
+BackgroundFiles = backgroundFiles
+Label = glbl.Label
 
 #==============================================================================
 # francesco command line 
@@ -670,31 +653,33 @@ if len(errors) > 0:
 # -b 6009_Au_D2_v1J2_x=35_offRes.datv2 
 # --mintime 5  --maxtime 25
 #==============================================================================
-args_task = 'FitTOF'
-args_label = 'test2'
-args_function = 'ERF'
+# args_task = 'FitTOF'
+# args_label = 'test2'
+# args_function = 'ERF'
 
 angularaveragingList = ['None','PointDetector','LineDetector']
-args_angularaveraging = angularaveragingList[2]
+args_angularaveraging = angularaveragingList[1]
 
 # args_input = r'data\referenceline\6008_Au_D2_v1J2_x=35.datv2'
 # args_background = r'data\referenceline\6009_Au_D2_v1J2_x=35_offRes.datv2'
 args_mintime = 5
 args_maxtime = 25
-args_baseline = False
-args_cutoff = False
-args_corrtime = False
-args_temperature = False
+# args_baseline = False
+# args_cutoff = False
+# args_corrtime = False
+# args_temperature = False
 
 # Translate arguments into variables
-DataType = args_task
+# DataType = args_task
 
-Label = args_label
+# Label = args_label
 
-if DataType == 'Calibration':
-    ProbCurveType = 'Calibration'
-else:
-    ProbCurveType = args_function
+#==============================================================================
+# if DataType == 'Calibration':
+#     ProbCurveType = 'Calibration'
+# else:
+#     ProbCurveType = args_function
+#==============================================================================
     
 # DataFiles = args_input.split(",")
 AveragingType = args_angularaveraging
@@ -704,10 +689,10 @@ if len( BackgroundFiles ) != len( DataFiles ) and  BackgroundFiles  != [ "" ] :
     print("Number of Background files does not match number of Data files. Quit. ")
     quit()
 
-FitBaseline = args_baseline
-FitCutoffFunction = args_cutoff
-FitCorrectionTime = args_corrtime
-FitTemperature = args_temperature
+# FitBaseline = args_baseline
+# FitCutoffFunction = args_cutoff
+# FitCorrectionTime = args_corrtime
+# FitTemperature = args_temperature
 Tmin = args_mintime
 Tmax = args_maxtime
     
@@ -718,13 +703,15 @@ Params = parms
 
 # Read data from input
 for i in range( len( DataFiles)):
+    ProbCurveType = functions[0]
     DataFile = DataFiles[i]
     if BackgroundFiles  != [ "" ]:
         BackgroundFile = BackgroundFiles[i]
     else:
         BackgroundFile = BackgroundFiles[0]
         
-    State, Temperature, Time, Signal = ReadData( DataFile, BackgroundFile, Tmin, Tmax)
+    State, Temperature, Time, Signal = read_data(DataFile, BackgroundFile, Tmin, Tmax)
+    
     States.append( State )
     DataSets.append( [ Time, Signal ] )
   
@@ -774,13 +761,13 @@ for i in range( len( DataSets )):
     Time     =  DataSets[i][0]
     Signal   =  DataSets[i][1]
     State    =  States[i]
-    
-    baseFileName = Label + "_DataSet_" + str( NDataSet ) + "_" + State
-    PlotFit(baseFileName)
-    
+      
     WriteTOFOutput( Time, Signal, State, Label, NDataSet, fitResult.params, 
                    AveragingType, ThetaAngles, ProbCurveType)
 
-    if DataType != 'Calibration':
+    baseFileName = Label + "_DataSet_" + str( NDataSet ) + "_" + State
+    PlotFit(baseFileName)
+    # if DataType != 'Calibration':
+    if functions[i] != 'Calibration':
         WriteProbOutput(Time, Signal, State, Label, NDataSet, fitResult.params, 
                         AveragingType, ThetaAngles, ProbCurveType)                                                   

@@ -8,8 +8,8 @@ Module to parse the control file for FitDesorbtionTOF
 __author__ = 'Daniel Auerbach'  
 __email__  = 'daniel@djauerbach.com'
 
-# from lmfit import Parameters
-from Parameters2 import Parameter2, Parameters2
+from Parameters2 import Parameters2
+import GlobalVariables as glbl
 
 # Global Variables
 backgroundFiles = []
@@ -28,14 +28,17 @@ parms = Parameters2()
 signalFile = None
 signalFiles = []
 
-
-
-
-# names of parameters
+# names of parameters and constants
 parmList = ['A', 'E0', 'W', 
             'TCutC', 'TCutW', 'Temp', 'FFR', 'IonTOF', 'Yscale', 'Baseline']
 
-
+constList =['testConst', 'test1', 'test2', 'test3',
+            'Label',
+            'ThetaStep', 'ZDiffWall', 'RDiffWall', 
+            'ZRef', 'ZAperture', 'RAperture', 
+            'ZSource', 'RSource', 'ZLaser', 'LLaser', 'ZFinal', 'RFinal', 
+            'NPointsDetector', 'NPointsSource', 'GridType',
+            'DataLine', 'MassLine', 'TemperatureLine', 'VibStateLine', 'RotStateLine']
 #==============================================================================
 # open file for reading; abort if file not found
 #==============================================================================  
@@ -74,10 +77,20 @@ def getTokens(line):
             pass
     return tokens
 
+
+#==============================================================================
 # check if cmd is an add Parameter item 
 #==============================================================================
 def isParameterCmd(tokens):
-    return any(tokens[0] in s for s in parmList)         
+    return any(tokens[0] in s for s in parmList)
+
+
+#==============================================================================
+# check if cmd is an add Global Variable item 
+#==============================================================================
+def isGlobalConst(tokens):         
+    matching = [tokens[0] == s for s in constList]   
+    return any(matching)
 
 
 #==============================================================================
@@ -128,6 +141,24 @@ def addParameter(runNumber, tokens, line, lineNumber):
               max = max1
               )
               
+              
+#==============================================================================
+# add const
+#==============================================================================             
+def addGlobalConst(tokens, line, lineNumber):
+    if len(tokens) != 2:
+        error = 'wrong number of items for const on line #'
+        print('\n ***' + error, lineNumber)
+        print(' *** items found =', len(tokens), 
+              '. Should be 2')
+        print(' *** line =', line)
+        print(' *** items =', tokens)
+        errors.append((error, lineNumber))    
+        return
+    exec('glbl.' + tokens[0] + '=' + tokens[1])
+    
+
+
 #==============================================================================
 # add Parameter to the Parameters class instance 
 #==============================================================================
@@ -214,9 +245,12 @@ def parseCmdFile(filename):
         
         # check if line specifies a parameter
         if isParameterCmd(tokens):
-            addParameter(runNumber, 
-                         tokens, line, lineNumber)
+            addParameter(runNumber, tokens, line, lineNumber)
         
+        # check if line specifies a constant
+        elif isGlobalConst(tokens):
+            addGlobalConst(tokens, line, lineNumber)
+            
         # check if line specifies a function form
         elif tokens[0].upper() == 'FUNCTION':
             function = tokens[1]
@@ -247,6 +281,12 @@ def parseCmdFile(filename):
 if __name__ == '__main__':         
     
     filename = 'test2.tof_in'
+    const_filename = 'testSetVariables.dat'
+    
+    parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
+    
+    print('test1, test2, test3 =', glbl.test1, glbl.test2, glbl.test3)
+    
     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(filename)
     
     print('\nFuncions: ', functions)    
@@ -259,14 +299,5 @@ if __name__ == '__main__':
         print('Errors\n', errors)
         raise SystemExit ('Error in command file' )
     
+    print('test1, test2, test3 =', glbl.test1, glbl.test2, glbl.test3)
     print(' all done')
-    
-
-                
-        
-    
-    
-    
-
-
-
