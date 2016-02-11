@@ -1,29 +1,24 @@
 #!/usr/bin/env python
-
-###########################################################################
+""" 
+Desorption_TOF_Fit
+Fit data from post permeation desorption TOF
+"""
+#==============================================================================
+# 
 # Based on Time of Flight fitting program
 #   Alessandro Genova
 #   July 2012, Leiden University
 #
 #   Francesco Nattino, Leiden University, June 2015  (vs 7)
 #
-#
-###########################################################################
-
-# Importing the extra packages and modules needed
+#==============================================================================
 
 import os
 # import sys
-# import argparse
+import subprocess
 import numpy as np
-# import scipy as sp
-# from scipy.optimize import leastsq
 from scipy import special
-# from scipy import interpolate
-# from lmfit import minimize, Parameters, conf_interval, printfuncs, fit_report
 from lmfit import minimize, fit_report
-
-# from lmfit import minimize
 
 from ParseCmdFile import parseCmdFile
 from PlotFit import PlotFit
@@ -31,82 +26,10 @@ from PlotFit import PlotFit
 
 import GlobalVariables as glbl
 
-# Physical constants ###################################################
 
-# kb          = 8.6173324E-5           # Boltzmann constant in eV/K
-# eV2J        = 1.602176565E-19           # eV to Joule 
-# J2eV        = 6.24150934E18           # Joule to eV 
-# AtomicMass  = 1.660538921E-27           # Atomic mass constant
-# eVConst     = AtomicMass * J2eV
-# MassAmu     = 2. * 2.01410178           # Mass of molecule (amu)
-
-# Experimental apparatus constants #####################################
-
-# FFRDist           = 29.0E-3        # Distance travelled by the molecule in the fieldfree region as an ion (m)
-# FFRDistTolerance  = 0.5            # Percentage by which the field free region lenght can vary
-# TimeCorr          = 4.6            # Time correction (us)
-# TimeCorrTolerance = 0.8            # (see two lines above )
-# TCutC             = 28.6           # CutOff function 1st parameter (us) 
-# TCutCTolerance    = 0.5            # ...
-# TCutW             = 4.3            # CutOff function 2nd parameter (us)
-# TCutWTolerance    = 1.0
-
-# TemperatureTolerance = 1.         
-
-# Following parameters for point detector
-# AngRes               = 20.         # Angular resolusion (degrees)
-# ThetaStep            = 2.          # Theta step in averaging
-
-# Following parameters for line detector
-# ZDiffWall   = 0.0               # Poistion of inside (detector side)
-# RDiffWall   = 6.0               # Radius of the hole in differential wall        
-# ZRef = ZDiffWall                # Use Diff wall as reference point since
-                                #   Source and differential wall positions
-                                #   might be changed
-# ZAperture  = ZRef - 3.5        # Position of Aperture in Ta Sheiled   
-# RAperture   = 1.5               # Radius of aperture in Ta shield
-# ZSource     = glbl.ZAperture - 4.   # Position of Source
-# RSource     = 0.1               # Radius of the source (Source or knudsen)
-    
-# Detection volume is determined by length of REMPI laser.
-# the actual length is very long, so we should set this parameter to be 
-# long enough that it does not limit detection.  
-# ZLaser      = ZRef + 5.0        # Position of REMP laser beam
-# LLaser      = 9.3               # Length of REMPI detection volume.  
-
-# In the present code we don't us these parameter.  Instead
-# we use an effective detection line based on the acceptance
-# of ions at the final field free region, i.e we assume the length of the
-# REMPI detection volume is not a limiting factor
-       
-# ZFinal     = ZRef + 34.         # Position of the final grid
-# RFinal     = 10.0               # Effective acceptance radius for ions at
-                                #   at the final grid.  Because of strong
-                                #   accleration to extractor take this to
-                                #   be equal to the extrator radius
-
-# NPointsDetector = 101          # Number of points to consider on the line
-    
-# NPointsSource   = 1             # Number of points to consider on the Source
-                                #   If NPointsSource = 1 we treat this as
-                                #   point source
-
-# GridType = 'Cartesian'          # Generate a cartesian or radial grid on  
-                                #   the source. This parameter can have
-                                #   values of 'Cartesian' or'Radial'
-# Data Format ##########################################################
-
-# DataLine         = 34    # Line in DataFile where data start
-# MassLine         = 1
-# TemperatureLine  = 2     # Line in DataFile where temperature is reported
-                         #  (surface T for desorption experiments,
-                         #    nozzle T for Knudsen experiments) 
-# VibStateLine     = 3
-# RotStateLine     = 4
-
-########################################################################
-
-
+#------------------------------------------------------------------------------
+# read_data  function to read the data and subtract background
+#------------------------------------------------------------------------------
 def read_data(DataFile, BackgroundFile ="", Tmin ='', Tmax ='', Threshold = 0.10):
     # Function to read Datafiles
     # Input: DataFile = name of the file to be read ;
@@ -161,60 +84,51 @@ def read_data(DataFile, BackgroundFile ="", Tmin ='', Tmax ='', Threshold = 0.10
             Data.append( F - B )
 
     DeltaTime = Time[1] - Time[0]
+    Time = np.array(Time)
+    Data = np.array(Data)
 
     #==============================================================================================
-    # Select good data: if max or min times are provided use them, otherwise use threshold
-    # ratio signal/maximum signal)
+    # Select good data: if max or min times are provided use them, otherwise find times where
+    #     data is = max of data * Threshold
+    # Since the data is noisy, for point n average from n-n_delt to n+n_delt
     #==============================================================================================
-    for n in range( len( Time )):
+    n_delt = 5
+    data_max = np.array(Data[100:len(Data)]).max()
+        
+    # find Nmin = index of first point to use in fitting
+    for n in range(100, len( Time )-n_delt):
         if Tmin :
             if float( Tmin ) * 1.E-6 >= Time[n] and float( Tmin )* 1.E-6 < Time[n] + DeltaTime:
-                Nin = n
+                Nmin = n
                 break
         else:
-            #if n != 0 and n != ( len( Time ) -1 ):
-            if n >= 100 and n != ( len( Time ) -1 ):
-                if ( Data[n] + Data[n-1] + Data[n+1] ) / 3.  >= max( Data[50:len(Data)] ) * Threshold:
-                    Nin = n
-                    break
-    print('Readdata: Nin=',Nin, ' Time[Nin]=',Time[Nin])
-    print('Readdata: DataMax=',max( Data[50:len(Data)] ))
-    for n in range( len( Time ) -1, -1, -1 ):
+            # find time where Data[n] reaches threshold and subtract 1 microseconds
+            if np.array(Data[n-n_delt:n + n_delt]).mean() >= data_max * Threshold:
+                Nmin = int(n - 1 / (DeltaTime * 1E6))
+                break
+    
+    for n in range( len( Time ) -(n_delt+1), 100, -1 ):
         if Tmax :
             if float( Tmax )* 1.E-6 >= Time[n] and float( Tmax ) * 1.E-6 < Time[n] + DeltaTime:
-                Nfin = n
+                Nmax = n
                 break
         else:
-            if n >= 50 and n != ( len( Time ) -1 ):
-                if ( Data[n] + Data[n-1] + Data[n+1] ) / 3.  >= max( Data[50:len(Data)] ) * Threshold:
-                    Nfin = n
-                    break
+            # find time where Data[n] falls to threshold and add 1.5 microseconds
+            if np.array(Data[n-n_delt:n + n_delt]).mean()  >= data_max * Threshold:
+                Nmax = int(n + 1.5 / (DeltaTime * 1E6))
+                break
+                
+    print()
+    print('Range of points to use in fitting')                
+    print('Nmin=',Nmin,  ' Tmin=',Time[Nmin])
+    print('Nmax=',Nmax, ' Tmax=',Time[Nmax])
+    print('DataMax=',max( Data[50:len(Data)] ))
+    print()
 
-    # Set arrays for fitting: Time (X) in sec, data (Y) in arbitrary units    
-    VarX = np.array( Time[Nin:Nfin] )
-    VarY = np.array( Data[Nin:Nfin] )
+    return State, Temperature, Nmin, Nmax, Time, Data
 
-    return State, Temperature, VarX, VarY
 
-#==============================================================================
-# def SetupParametersDictionary( i, Params,  Temperature):
-#     
-#     
-# #==============================================================================
-# #     # Reaction probability parameters
-# #     Params.add('A_%i' %(i+1),  value=1.0 , vary=True, max=1. )           # Saturation value
-# #     Params.add('B_%i' %(i+1),  value=0.6 , vary=False, min=0., max=5.)    # ReacProb Curve E0 Parameter
-# #     Params.add('BI_%i'%(i+1), value=0.5 , vary=False )                   # ReacProb Curve E0 Parameter (for FPC)
-# #     Params.add('C_%i' %(i+1),  value=0.16, vary=False, min=0., max=1.)    # ReacProb Curve Width Parameter
-# #     Params.add('CI_%i'%(i+1), value=0.90, vary=False, min=0.)            # ReacProb Curve Width Parameter (for FPC)
-# #     Params.add('ni_%i'%(i+1), value=0.05, vary=False, min=1E-7, max=1.)  # ReacProb Curve 'ni' parameter  (for LGS)
-# #==============================================================================
-#     
-#==============================================================================
-
-    # Experimental apparatus
-    #Params.add('MaxTOF_%i'      %(i+1),  value=1.E-14 , vary=True)    # Max of the TOF spectrum
-    Params.add('Baseline_%i'    %(i+1),  value=0.  , vary=False)    # TOF spectrum Baseline Parameter
+    
 #==============================================================================
 #     Params.add('FFRDist_%i'     %(i+1), value=FFRDist,
 #                                         min=0.0,
@@ -505,76 +419,10 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
 
     return Energy, ProbFromTOF
 
-#==============================================================================
-# def SetFreeParameters( Params, DataType, ProbCurveType="ERF", FitTemperature=False, FitCutoffFunction=False, FitCorrectionTime=False, FitBaseline=False ):
-#     # Set the parameters free to vary in the fit
-#     
-# 
-#     # Loop over all the parameters
-#     for name, param in list(Params.items()):
-#         # Scaling constants
-#         if name.startswith('MaxTOF_'):
-#             param.vary = True
-#     
-#         if DataType == "FitTOF":
-#             # Parameters reaction probability
-#             if name.startswith('B_') or name.startswith('C_'):
-#                 param.vary = True
-#             if ProbCurveType == "LGS":
-#                 if name.startswith('ni_'): 
-#                     param.vary = True
-#             if ProbCurveType == "FPC":
-#                 if name.startswith('BI_') or name.startswith('CI_'):
-#                     param.vary = True
-# 
-#         elif DataType == "Calibration":
-#             # Constrain parameters of all datasets to be equal
-# 
-#             # Field free region distance
-#             if name.startswith('FFRDist_'):
-#                 param.vary = True
-#                 if not name.endswith('_1'):       
-#                     param.expr = 'FFRDist_1'   
-#                 
-#             # Correction time
-#             if FitCorrectionTime:
-#                 if name.startswith('TimeCorr_'): 
-#                     param.vary = True
-#                     if not name.endswith('_1'):       
-#                         param.expr = 'TimeCorr_1'
-# 
-#             # Cutoff function
-#             if FitCutoffFunction :
-#                 if name.startswith('TCutC_'): 
-#                     param.vary = True
-#                     if not name.endswith('_1'):      
-#                         param.expr = 'TCutC_1'
-#                 if name.startswith('TCutW_'):
-#                     param.vary = True
-#                     if not name.endswith('_1'):     
-#                         param.expr = 'TCutW_1'
-# 
-#         # Optionally, we can fit baseline or temperature
-#         if FitBaseline:
-#             if name.startswith('Baseline_'):
-#                 param.vary = True
-#         if FitTemperature:
-#             if name.startswith('Temp_'):
-#                 param.vary = True
-#
-#     return
-#==============================================================================
-                                       
 
+#============================================================================== 
+#   WriteTOFOutput - Write the TOF Data                                                        
 #==============================================================================
-# def LockParam(Params):
-#     for name, param in list(Params.items()):
-#         if param.vary == True :
-#             param.vary = False
-#     return
-#==============================================================================
-                                                       
-
 def WriteTOFOutput( TOFTime, TOFData, State, Label, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType):
     # Prints the fitted curve. 
     MinTime =  Params['IonTOF_1'].value*1.E-6 + 0.1E-6
@@ -594,17 +442,21 @@ def WriteTOFOutput( TOFTime, TOFData, State, Label, NDataSet, Params, AveragingT
 
     # Write file with intensity fitted (minus background) - both relative and absolute signal 
     np.savetxt( FileNoBackground , np.column_stack((np.array( TOFTime ), np.array( TOFData )/DataMax, np.array( TOFData ))) )
-    print()    
-    print("WriteTOFOutput: TOF data fitted written to file ", FileNoBackground)       
+    # print()    
+    # print("WriteTOFOutput: TOF data fitted written to file ", FileNoBackground)       
 
     # Calculate TOF fit curve
     TOFFitted = TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType)    
 
     # Write file with TOF fitted - both relative and absolute signal
     np.savetxt( TOFOutFile, np.column_stack((np.array( Time ), np.array( TOFFitted )/DataMax, np.array( TOFFitted ))) )
-    print("WriteTOFOutput: Fitted TOF spectrum written to file ", TOFOutFile)
+    # print("WriteTOFOutput: Fitted TOF spectrum written to file ", TOFOutFile)
     return
 
+
+#============================================================================= 
+#   WriteProbOutput - Write the Fitted S0                                                        
+#==============================================================================
 def WriteProbOutput( TOFTime, TOFData, State, Label, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType):
         # Name Output files
     ReactionProbabilityOutFile = "DataSet_" + str( NDataSet ) + "_" + State + "_" + Label + "_ReacProb_Fit_" + ProbCurveType + ".dat"
@@ -620,22 +472,54 @@ def WriteProbOutput( TOFTime, TOFData, State, Label, NDataSet, Params, Averaging
     # Calculate Reaction probability fitted curve
     ReactionProbability = Prob(Energy, NDataSet, Params, ProbCurveType)
     np.savetxt( ReactionProbabilityOutFile, np.column_stack(( Energy, ReactionProbability)))
-    print("WriteProbOutput: Reaction probability curve written to file ", ReactionProbabilityOutFile)
+    # print("WriteProbOutput: Reaction probability curve written to file ", ReactionProbabilityOutFile)
 
     # Reaction probability from TOF inversion; only possible with Point detector or no angular averaging (and normal energy scaling!)
     if AveragingType != "LineDetector":
         TOFEnergy, TOFReactionProbability = ProbFromTOFInversion(TOFTime, TOFData, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType)
         np.savetxt( TOFInvertedOutFile, np.column_stack(( TOFEnergy, TOFReactionProbability*Params['Yscale_%i' %NDataSet].value, Prob( TOFEnergy, NDataSet, Params, ProbCurveType)*Params['Yscale_%i' %NDataSet].value )))
-        print("WriteProbOutput: Inverted TOF written to file ", TOFInvertedOutFile)
-        print('WriteProbOutput: Exiting')
+        # print("WriteProbOutput: Inverted TOF written to file ", TOFInvertedOutFile)
+        # print('WriteProbOutput: Exiting')
     return                                               
 
 
-################################################################################
+#============================================================================= 
 # Main PROGRAM
-################################################################################
-cmdFilename = 'test2.tof_in'
-parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFilename)
+#============================================================================= 
+
+# define default path to control files and default command file name
+pathToFits = 'Fits\\'
+cmdFilename = 'fit000.tof_in'
+
+
+# Get Last fit number from FitNumber.dat, increment and write back
+file = open(pathToFits + 'FitNumber.dat', 'r+')
+oldFitNumber = int(file.readline())
+newFitNumber = oldFitNumber + 1
+oldFitNumber = '{:03d}'.format(oldFitNumber)
+newFitNumber = '{:03d}'.format(newFitNumber)
+oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
+newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
+
+# ans = input("make new command file? ")
+ans = 'no' 
+
+if ans.upper().startswith('Y'):
+    os.system('copy ' + oldFile + ' ' + newFile)   
+    # fitNumber = int(file.readline())+1
+    # fitNumber = '{:03d}'.format(fitNumber)
+    # print ('fitNumber =', fitNumber )
+    # file.seek(0)
+    # file.write(fitNumber)
+    # file.close()
+    subprocess.call(['npp.bat', newFile])
+    cmdFile = newFile
+
+else:
+    cmdFile = oldFile
+    
+# Parse the command file
+parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFile)
 
 if len(errors) > 0:
     print('Errors\n', errors)
@@ -664,22 +548,7 @@ args_angularaveraging = angularaveragingList[1]
 # args_background = r'data\referenceline\6009_Au_D2_v1J2_x=35_offRes.datv2'
 args_mintime = 5
 args_maxtime = 25
-# args_baseline = False
-# args_cutoff = False
-# args_corrtime = False
-# args_temperature = False
 
-# Translate arguments into variables
-# DataType = args_task
-
-# Label = args_label
-
-#==============================================================================
-# if DataType == 'Calibration':
-#     ProbCurveType = 'Calibration'
-# else:
-#     ProbCurveType = args_function
-#==============================================================================
     
 # DataFiles = args_input.split(",")
 AveragingType = args_angularaveraging
@@ -689,16 +558,12 @@ if len( BackgroundFiles ) != len( DataFiles ) and  BackgroundFiles  != [ "" ] :
     print("Number of Background files does not match number of Data files. Quit. ")
     quit()
 
-# FitBaseline = args_baseline
-# FitCutoffFunction = args_cutoff
-# FitCorrectionTime = args_corrtime
-# FitTemperature = args_temperature
-Tmin = args_mintime
-Tmax = args_maxtime
-    
-
-States = []; DataSets = []
-# Params = Parameters()
+# initialize variables and parametrs
+Tmin = glbl.Tmin
+Tmax = glbl.Tmax
+States = []
+DataSets = []
+PlotDataSets = []
 Params = parms
 
 # Read data from input
@@ -710,19 +575,16 @@ for i in range( len( DataFiles)):
     else:
         BackgroundFile = BackgroundFiles[0]
         
-    State, Temperature, Time, Signal = read_data(DataFile, BackgroundFile, Tmin, Tmax)
-    
+    State, Temperature, Nmin, Nmax, Time, Signal = read_data(DataFile, BackgroundFile, Tmin, Tmax)    
     States.append( State )
-    DataSets.append( [ Time, Signal ] )
+    DataSets.append([Time[Nmin:Nmax], Signal[Nmin:Nmax]])
+    PlotDataSets.append([Time, Signal])
   
-    # Add parameters to the dictionary
-    # Params = SetupParametersDictionary( i, Params, Temperature )
+    # Add default parameters to the dictionary
+    # Params.add('Baseline_%i'    %(i+1),  value=0.  , vary=False)    # TOF spectrum Baseline Parameter
+  
     
 
-#==============================================================================
-# SetFreeParameters( Params, DataType, ProbCurveType, FitTemperature, 
-#                   FitCutoffFunction, FitCorrectionTime, FitBaseline )
-#==============================================================================
 
 # Generate Theta angles employed for angular averaging
 ThetaAngles = GenerateThetaAngles(                                  \
@@ -733,12 +595,14 @@ ThetaAngles = GenerateThetaAngles(                                  \
     ZDetector = glbl.ZLaser,          LengthDetector = glbl.LLaser)
     #    ZDetector = ZFinal,          LengthDetector = 2.*RFinal         \
   
-print()
-print('Angular Averaging Parameters:')
-print('nps =', glbl.NPointsSource, 'npd =', glbl.NPointsDetector)
-print('zs  =', glbl.ZSource,       'rs  =', glbl.RSource )
-print('za  =', glbl.ZAperture,     'ra  =', glbl.RAperture)     
-print('zf  =', glbl.ZFinal,        'rf  =', glbl.RFinal)                                                
+#==============================================================================
+# print()
+# print('Angular Averaging Parameters:')
+# print('nps =', glbl.NPointsSource, 'npd =', glbl.NPointsDetector)
+# print('zs  =', glbl.ZSource,       'rs  =', glbl.RSource )
+# print('za  =', glbl.ZAperture,     'ra  =', glbl.RAperture)     
+# print('zf  =', glbl.ZFinal,        'rf  =', glbl.RFinal)                                                
+#==============================================================================
 
 # Fit TOF
 fitResult = FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType, Label )

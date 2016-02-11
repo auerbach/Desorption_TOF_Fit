@@ -38,7 +38,10 @@ constList =['testConst', 'test1', 'test2', 'test3',
             'ZRef', 'ZAperture', 'RAperture', 
             'ZSource', 'RSource', 'ZLaser', 'LLaser', 'ZFinal', 'RFinal', 
             'NPointsDetector', 'NPointsSource', 'GridType',
-            'DataLine', 'MassLine', 'TemperatureLine', 'VibStateLine', 'RotStateLine']
+            'DataLine', 'MassLine', 'TemperatureLine', 'VibStateLine', 'RotStateLine',
+            'Tmin', 'Tmax']
+            
+            
 #==============================================================================
 # open file for reading; abort if file not found
 #==============================================================================  
@@ -280,12 +283,11 @@ def parseCmdFile(filename):
 #==============================================================================
 if __name__ == '__main__':         
     
-    filename = 'test2.tof_in'
+    filename = 'Fits\\fit001.tof_in'
     const_filename = 'testSetVariables.dat'
     
-    parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
-    
-    print('test1, test2, test3 =', glbl.test1, glbl.test2, glbl.test3)
+    # parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
+    # print('test1, test2, test3 =', glbl.test1, glbl.test2, glbl.test3)
     
     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(filename)
     
@@ -299,5 +301,5 @@ if __name__ == '__main__':
         print('Errors\n', errors)
         raise SystemExit ('Error in command file' )
     
-    print('test1, test2, test3 =', glbl.test1, glbl.test2, glbl.test3)
+    print('Tmin, Tmax =', glbl.Tmin, glbl.Tmax)
     print(' all done')

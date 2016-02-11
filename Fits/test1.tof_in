@@ -1,12 +1,5 @@
 # comment
-# blank line should be ignored
 
-# following should give errors - wrong number of parameters
-# A                           # should give error on number of parameters
-# A, 1, 2, 3, 4, 5,
-# A, 1, 0
-# test for unknown command
-# invalid_command
 
 #   Function Type 
     Function, Erf   
@@ -23,7 +16,7 @@
     Background, firstBack.dat
 
 End Run
-    E00,    0.6,    2  # lte me comment
+    E00,    0.6,    2  # you can put comments after
     E01,    0.1,    1
 
     Signal,     secondSig with space.dat

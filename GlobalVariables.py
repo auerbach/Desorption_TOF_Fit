@@ -16,13 +16,11 @@ TimeCorrTolerance = 0.8            # (see two lines above )
 TCutC             = 28.6           # CutOff function 1st parameter (us) 
 TCutCTolerance    = 0.5            # ...
 TCutW             = 4.3            # CutOff function 2nd parameter (us)
-TCutWTolerance    = 1.0
 
 TemperatureTolerance = 1.         
 
-# Following parameters for point detector
-AngRes               = 20.         # Angular resolusion (degrees)
-ThetaStep            = 2.          # Theta step in averaging
+Tmin = ''
+Tmax = ''
 
 # Following parameters for point detector
 AngRes               = 20.         # Angular resolusion (degrees)
