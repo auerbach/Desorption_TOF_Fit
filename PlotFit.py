@@ -28,7 +28,7 @@ def PlotFit(filename):
     ax.set_xlabel('TOF [micro sec]', fontsize=16)
     # ax.set_ylabel('Sticking Proability', fontsize=16)
     
-    plt.xlim(4, 16)
+    plt.xlim(4, 20)
     plt.plot(t1 * 1E6, s1, 'b.')
     plt.plot(t2 * 1E6, f1, linewidth = 2.5)
     plt.show()

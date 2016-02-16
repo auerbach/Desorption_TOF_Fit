@@ -6,8 +6,8 @@
 
 #   Fit function valid values: Calibration, ERF, LGS
     Function,   ERF
-    Tmin,       6.0
-   Tmax,       12.0
+    Tmin,       7.0
+    Tmax,       18.0
 
 #   Fit Parameters
 #   Name,       Value,      Vary, Min,  Max
@@ -15,18 +15,18 @@
     Yscale,     0.25E-9,    1
     Baseline,   0.,         1
     E0,         1.0,        1,    0,    5.0
-    W,          0.3,        1,    0,    1.0      
+    W,          0.4,        1,    .2,   0.6      
 	
     TCutC,      28.6,       0
     TCutW,      4.3,        0
     
-    IonTOF,     4.5248,     0
-    FFR,		0.03172861, 0
-    Temp,       1061.5,     0
+    IonTOF,     4.6,        0
+    FFR,		 0.029,      0
+    Temp,       1063.,      0
 
 
 #   Data Files
 #   Type        Filename
-    Signal,     Data\2016.02.10\Au(111)_D2_v0J2.datv2
+    Signal,     Data\2016.02.10\Au(111)_D2_v2J2.datv2
 
 End Run

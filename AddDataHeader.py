@@ -8,7 +8,7 @@ import time
 
 data_path = 'd:\\users\\dja\\desktop\\permeation\\data\\2016.02.10\\Permeation Data\\Data'
 data_path = 'd:\\users\\dja\\desktop\\permeation\\data\\2016.01.18\\Permeation Data\\Reference Line'
-data_path = 'D:\\Users\\dja\\Git\\Desorption_TOF_Fit\\Data\\ReferenceLine'
+data_path = 'D:\\Users\\dja\\Git\\Desorption_TOF_Fit\\Data\\2016.02.10'
 os.chdir(data_path)
 #for file in os.listdir(data_path):
 for file in glob.glob('*.dat'):
@@ -72,18 +72,17 @@ for file in glob.glob('*.dat'):
             x1 = float(lines[i].split()[0])
             try: 
                 y1 = float(lines[i].split()[1])
-                #y2 = float(lines[i].split()[2])  
+                y2 = float(lines[i].split()[2])  
                 if not data_start:
                     data_start = i + header_rows + 1
                     
-                #data_lines.append('{0:6.2f} {1:20.5e} {2:20.5e}\n'.format(x1, y1, y2))    
-                data_lines.append('{0:6.2f} {1:20.5e}\n'.format(x1, y1))
+                data_lines.append('{0:6.2f} {1:20.5e} {2:20.5e}\n'.format(x1, y1, y2))    
             except:
                 y1 = lines[i].split()[1]
-                #y2 = lines[i].split()[2]
+                y2 = lines[i].split()[2]
                 # following line writes the lines of data with no y values
                 # data_lines.append('{0:6.2f} {1:20s} {2:20s}\n'.format(x1, y1, y2))
-                data_lines.append('{0:6.2f} {1:20s}\n'.format(x1, y1))
+                # data_lines.append('{0:6.2f} {1:20s}\n'.format(x1, y1))
             
         data_start = data_row  # since we don't write the lines with no y values
         outfile.write('#' + 47*'-' +                             '\n')

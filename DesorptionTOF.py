@@ -14,6 +14,8 @@ Fit data from post permeation desorption TOF
 #==============================================================================
 
 import os
+import shutil
+
 # import sys
 import subprocess
 import numpy as np
@@ -516,29 +518,43 @@ pathToFits = 'Fits\\'
 # Get Last fit number from FitNumber.dat, increment and write back
 fit_number_file = open(pathToFits + 'FitNumber.dat', 'r+')
 oldFitNumber = int(fit_number_file.readline())
-newFitNumber = oldFitNumber + 1
 oldFitNumber = '{:03d}'.format(oldFitNumber)
-newFitNumber = '{:03d}'.format(newFitNumber)
-oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
-newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
 
-#ans = input("make new command file? ")
-ans = 'n'
-if ans.upper().startswith('Y'):
-    os.system('copy ' + oldFile + ' ' + newFile)   
-    # fitNumber = int(file.readline())+1
-    # fitNumber = '{:03d}'.format(fitNumber)
-    # print ('fitNumber =', fitNumber )
-    # file.seek(0)
-    # file.write(fitNumber)
-    # file.close()
-    subprocess.call(['npp.bat', newFile])
-    cmdFile = newFile
+while True:
+    print('please enter oldfit number: ', '[', oldFitNumber, ']')
+    ans = input('?')
+    if ans:
+        old_n = '{:03d}'.format(int(ans))
+    else:
+        old_n = oldFitNumber
+    
+    if int(old_n) > int(oldFitNumber):
+        print('maximum allowed for old fit number is ', oldFitNumber)
+    else:
+        break
+    
+oldFitNumber = old_n
 
+ans = input ('make new command file? [no]')
+if ans:
+    if ans.upper()[0] == 'Y':
+        newFitNumber = '{:03d}'.format(int(oldFitNumber)+1)
+    fit_number_file.seek(0)
+    fit_number_file.write(newFitNumber)
 else:
-    cmdFile = oldFile
+    newFitNumber = oldFitNumber
 
 fit_number_file.close()
+
+oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
+newFile = oldFile
+
+if oldFitNumber != newFitNumber:
+    newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
+    shutil.copy2(oldFile, newFile)
+
+subprocess.call(['npp.bat', newFile])
+cmdFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
 
 # Parse the command file
 parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFile)
@@ -553,7 +569,7 @@ BackgroundFiles = backgroundFiles
 Label = glbl.Label
 
 angularaveragingList = ['None','PointDetector','LineDetector']
-args_angularaveraging = angularaveragingList[1]
+args_angularaveraging = angularaveragingList[0]
 
 # args_input = r'data\referenceline\6008_Au_D2_v1J2_x=35.datv2'
 # args_background = r'data\referenceline\6009_Au_D2_v1J2_x=35_offRes.datv2'
