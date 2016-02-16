@@ -30,7 +30,7 @@ import GlobalVariables as glbl
 #------------------------------------------------------------------------------
 # read_data  function to read the data and subtract background
 #------------------------------------------------------------------------------
-def read_data(DataFile, BackgroundFile ="", Tmin ='', Tmax ='', Threshold = 0.10):
+def read_data(data_file_name, background_file_name = '', Tmin ='', Tmax ='', Threshold = 0.10):
     # Function to read Datafiles
     # Input: DataFile = name of the file to be read ;
     # BackgroundFile  = name of the file with background; 
@@ -39,48 +39,69 @@ def read_data(DataFile, BackgroundFile ="", Tmin ='', Tmax ='', Threshold = 0.10
 
 
     # Check existence of the file
-    #    (only if Tmin, Tmax are not defined).
     if not os.path.isfile(DataFile):
-        print(DataFile + " : Data file does not exist! Quitting...")
-        quit()
-       
-    # Open input file
-    lines = open( DataFile ).readlines()
+        print(data_file_name + " : Data file does not exist! Quitting...")
+        raise SystemExit
     
-    # Read temperature, vib, rot states from head
-
-
-    Temperature = float( lines[glbl.TemperatureLine - 1].split()[3 ] )
-    # Mass        = float( lines[MassLine        - 1].split()[3 ] )
-    VibState    = float( lines[glbl.VibStateLine    - 1].split()[3 ] )
-    RotState    = float( lines[glbl.RotStateLine    - 1].split()[3 ] )
-    # Read rovibrational state (if not in input):
-    State = "v" + str( int(VibState)) + "J" + str( int(RotState))
+    # Open and read the data file    
+    with open(data_file_name, 'r') as data_file:
+        lines = data_file.readlines()
+    
+    DataFormat = lines[glbl.DataFormatLine -1].split()[3]
+    
+    if DataFormat != '2.1':
+        print('File ', data_file_name, ' is not in the right format')
+        print('Format = ', DataFormat)
+        raise SystemExit
+        
+    glbl.OriginalFile   = lines[glbl.OriginalFileLine       - 1].split()[3]
+    glbl.FileDate       = lines[glbl.FileDateLine           - 1].split()[3]
+    glbl.Molecule       = lines[glbl.MoleculeLine           - 1].split()[3]
+    Temperature         = float( lines[glbl.TemperatureLine - 1].split()[3])    
+    glbl.VibState       = float( lines[glbl.VibStateLine    - 1].split()[3])
+    glbl.RotState       = float( lines[glbl.RotStateLine    - 1].split()[3])
+    DataCol             = int(lines[glbl.DataColLine        - 1].split()[3])
+    DataRow             = int(lines[glbl.DataRowLine        - 1].split()[3])
+    
+    State = "v" + str( int(glbl.VibState)) + "J" + str( int(glbl.RotState))
+    
+    if glbl.Molecule  == 'H2':
+        glbl.MassAmu = glbl.massH2
+    elif glbl.Molecule == 'HD':
+        glbl.MassAmu = glbl.massHD
+    elif glbl.Molecule == 'D2':
+        glbl.MassAmu = glbl.massD2
+    else:
+        print('Error:  Unknown Molecule ', glbl.Molecule)
+        raise SystemExit
+    
+    State = "v" + str( int(glbl.VibState)) + "J" + str( int(glbl.RotState))
 
     # If Background file is provided, subtract it from intensities
-    if BackgroundFile :
-        if not os.path.isfile(BackgroundFile):
-            print(BackgroundFile + " : Background file does not exist! Quitting...")
+    if background_file_name :
+        if not os.path.isfile(background_file_name):
+            print(background_file_name + " : Background file does not exist! Quitting...")
             quit()
 
-        BackgroundLines = open( BackgroundFile ).readlines()
+        with open(background_file_name, 'r') as background_file:
+            BackgroundLines = background_file.readlines()
 
     # Assuming data last until end of the file
-    DataLineEnd = len( lines )
+    DataRowEnd = len( lines )
 
     # Read file
     Time = []
     Data = []
        
-    for n in range(glbl.DataLine - 1, DataLineEnd):
+    for n in range(DataRow - 1, DataRowEnd):
         # print(n,lines[n])
         T = float( lines[n].split()[0] )*1E-6   # T is ins sec , Gottingen data                                                # is in microsec
-        F = float( lines[n].split()[1] ) #
+        F = float( lines[n].split()[DataCol -1] ) #
         Time.append( T )
         if not BackgroundFile :
             Data.append( F )
         else:
-            B = float( BackgroundLines[n].split()[1] )
+            B = float( BackgroundLines[n].split()[DataCol -1] )
             Data.append( F - B )
 
     DeltaTime = Time[1] - Time[0]
@@ -489,21 +510,20 @@ def WriteProbOutput( TOFTime, TOFData, State, Label, NDataSet, Params, Averaging
 
 # define default path to control files and default command file name
 pathToFits = 'Fits\\'
-cmdFilename = 'fit000.tof_in'
+#cmdFilename = 'fit000.tof_in'
 
 
 # Get Last fit number from FitNumber.dat, increment and write back
-file = open(pathToFits + 'FitNumber.dat', 'r+')
-oldFitNumber = int(file.readline())
+fit_number_file = open(pathToFits + 'FitNumber.dat', 'r+')
+oldFitNumber = int(fit_number_file.readline())
 newFitNumber = oldFitNumber + 1
 oldFitNumber = '{:03d}'.format(oldFitNumber)
 newFitNumber = '{:03d}'.format(newFitNumber)
 oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
 newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
 
-# ans = input("make new command file? ")
-ans = 'no' 
-
+#ans = input("make new command file? ")
+ans = 'n'
 if ans.upper().startswith('Y'):
     os.system('copy ' + oldFile + ' ' + newFile)   
     # fitNumber = int(file.readline())+1
@@ -517,7 +537,9 @@ if ans.upper().startswith('Y'):
 
 else:
     cmdFile = oldFile
-    
+
+fit_number_file.close()
+
 # Parse the command file
 parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFile)
 
@@ -530,17 +552,6 @@ DataFiles = signalFiles
 BackgroundFiles = backgroundFiles
 Label = glbl.Label
 
-#==============================================================================
-# francesco command line 
-# -t FitTOF -l test1 -f ERF -a None 
-# -i 6008_Au_D2_v1J2_x=35.datv2 
-# -b 6009_Au_D2_v1J2_x=35_offRes.datv2 
-# --mintime 5  --maxtime 25
-#==============================================================================
-# args_task = 'FitTOF'
-# args_label = 'test2'
-# args_function = 'ERF'
-
 angularaveragingList = ['None','PointDetector','LineDetector']
 args_angularaveraging = angularaveragingList[1]
 
@@ -552,11 +563,6 @@ args_maxtime = 25
     
 # DataFiles = args_input.split(",")
 AveragingType = args_angularaveraging
-# BackgroundFiles = args_background.split(",")
-
-if len( BackgroundFiles ) != len( DataFiles ) and  BackgroundFiles  != [ "" ] :
-    print("Number of Background files does not match number of Data files. Quit. ")
-    quit()
 
 # initialize variables and parametrs
 Tmin = glbl.Tmin
@@ -606,19 +612,8 @@ ThetaAngles = GenerateThetaAngles(                                  \
 
 # Fit TOF
 fitResult = FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType, Label )
-
 print(fit_report(fitResult))
 
-# LockParam(Params)     
-
-#==============================================================================
-# print('\n' + 25*'#')
-# print('Main: After  FitData')
-# print('Params[E0_1].value = ', Params['E0_1'].value)
-# print(lmfit.fit_report(fitResult))
-#==============================================================================
-
-                                            
 for i in range( len( DataSets )):
     # Write output
     NDataSet =  i + 1

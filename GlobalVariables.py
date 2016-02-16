@@ -5,7 +5,12 @@ eV2J        = 1.602176565E-19           # eV to Joule
 J2eV        = 6.24150934E18           # Joule to eV 
 AtomicMass  = 1.660538921E-27           # Atomic mass constant
 eVConst     = AtomicMass * J2eV
-MassAmu     = 2. * 2.01410178           # Mass of molecule (amu)
+massH       = 1.00782503223
+massD       = 2.01410177812
+massH2      = 2 * massH
+massHD      = massH + massD
+massD2      = 2 * massD
+massAmu     = massD2
 
 # Experimental apparatus constants #####################################
 
@@ -65,10 +70,15 @@ GridType = 'Cartesian'          # Generate a cartesian or radial grid on
                                 #   values of 'Cartesian' or'Radial'
 # Data Format ##########################################################
 
-DataLine         = 34    # Line in DataFile where data start
-MassLine         = 1
-TemperatureLine  = 2     # Line in DataFile where temperature is reported
-                         #  (surface T for desorption experiments,
-                         #    nozzle T for Knudsen experiments) 
-VibStateLine     = 3
-RotStateLine     = 4
+
+DataFormatLine  = 2
+OriginalFileLine= 3
+FileDateLine    = 4
+MoleculeLine    = 5
+TemperatureLine = 6     # Line in DataFile where temperature is reported
+                        #  (surface T for desorption experiments,
+                        #    nozzle T for Knudsen experiments) 
+VibStateLine    = 7
+RotStateLine    = 8
+DataColLine     = 9
+DataRowLine     = 10

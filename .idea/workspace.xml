@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8aba0f36-6b83-4895-8310-bf8e1a6a991e" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/test1.tof_in" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/test2.tof_in" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.spyderproject" afterPath="$PROJECT_DIR$/.spyderproject" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DesorptionTOF.py" afterPath="$PROJECT_DIR$/DesorptionTOF.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/GlobalVariables.py" afterPath="$PROJECT_DIR$/GlobalVariables.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ParseCmdFile.py" afterPath="$PROJECT_DIR$/ParseCmdFile.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlotFit.py" afterPath="$PROJECT_DIR$/PlotFit.py" />
     </list>
@@ -34,11 +30,8 @@
         <entry file="file://$PROJECT_DIR$/ParseCmdFile.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="257" column="4" selection-start-line="257" selection-start-column="4" selection-end-line="257" selection-end-column="4" />
-              <folding>
-                <marker date="1455173398537" expanded="true" signature="46:108" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-                <marker date="1455173398537" expanded="false" signature="181:247" placeholder="import ..." />
-              </folding>
+              <caret line="231" column="25" selection-start-line="231" selection-start-column="25" selection-end-line="231" selection-end-column="25" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -46,8 +39,8 @@
       <file leaf-file-name="DesorptionTOF.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/DesorptionTOF.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.74285716">
-              <caret line="634" column="0" selection-start-line="634" selection-start-column="0" selection-end-line="634" selection-end-column="0" />
+            <state vertical-scroll-proportion="2.628345">
+              <caret line="525" column="24" selection-start-line="525" selection-start-column="24" selection-end-line="525" selection-end-column="24" />
               <folding />
             </state>
           </provider>
@@ -62,6 +55,7 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/testConstants.py" />
+        <option value="$PROJECT_DIR$/ParseCmdFile.py" />
         <option value="$PROJECT_DIR$/DesorptionTOF.py" />
       </list>
     </option>
@@ -369,11 +363,24 @@
     <entry file="file://$PROJECT_DIR$/ParseCmdFile.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
+          <caret line="257" column="4" selection-start-line="257" selection-start-column="4" selection-end-line="257" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DesorptionTOF.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ParseCmdFile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
           <caret line="255" column="4" selection-start-line="255" selection-start-column="4" selection-end-line="255" selection-end-column="4" />
-          <folding>
-            <marker date="1455173398537" expanded="true" signature="46:108" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1455173398537" expanded="false" signature="181:247" placeholder="import ..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -389,10 +396,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <marker date="1455173398537" expanded="true" signature="46:108" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1455173398537" expanded="false" signature="181:247" placeholder="import ..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -400,10 +404,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <marker date="1455173398537" expanded="true" signature="46:108" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1455173398537" expanded="false" signature="181:247" placeholder="import ..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -411,42 +412,22 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <marker date="1455173398537" expanded="true" signature="46:108" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1455173398537" expanded="false" signature="181:247" placeholder="import ..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/constants.dat">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/constants.dat">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ParseCmdFile.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="257" column="4" selection-start-line="257" selection-start-column="4" selection-end-line="257" selection-end-column="4" />
-          <folding>
-            <marker date="1455173398537" expanded="true" signature="46:108" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1455173398537" expanded="false" signature="181:247" placeholder="import ..." />
-          </folding>
+          <caret line="231" column="25" selection-start-line="231" selection-start-column="25" selection-end-line="231" selection-end-column="25" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DesorptionTOF.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.74285716">
-          <caret line="634" column="0" selection-start-line="634" selection-start-column="0" selection-end-line="634" selection-end-column="0" />
+        <state vertical-scroll-proportion="2.628345">
+          <caret line="525" column="24" selection-start-line="525" selection-start-column="24" selection-end-line="525" selection-end-column="24" />
           <folding />
         </state>
       </provider>

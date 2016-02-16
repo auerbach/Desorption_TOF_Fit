@@ -11,22 +11,10 @@ __email__  = 'daniel@djauerbach.com'
 from Parameters2 import Parameters2
 import GlobalVariables as glbl
 
-# Global Variables
-backgroundFiles = []
-backgroundFile = None
-
-errors = []    
-
-function = None
-functions =  []
-
-globalParms=[]
-# parms = Parameters2()
-parms = Parameters2()
 
 
-signalFile = None
-signalFiles = []
+
+
 
 # names of parameters and constants
 parmList = ['A', 'E0', 'W', 
@@ -228,6 +216,20 @@ def parseCmdFile(filename):
            globalParms, parms, signalFile, signalFiles
 
     # note initialization in global scope
+    # Global Variables
+    signalFile = None
+    signalFiles = []
+    
+    backgroundFile = None
+    backgroundFiles = []
+    
+    errors = []    
+    
+    function = None
+    functions =  []
+    
+    globalParms=[]
+    parms = Parameters2()
     runNumber = 1
     
     # open and read command file
@@ -275,6 +277,8 @@ def parseCmdFile(filename):
             print('\n *** unknown command on line', i+1)
             print(' *** line =', line)
             errors.append(('unknown command',i+1))
+    
+    cmdFile.close()  
     
     return parms, functions, signalFiles, backgroundFiles, errors
 
