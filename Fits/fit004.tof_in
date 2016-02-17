@@ -1,7 +1,6 @@
 # comment
 
 #   Input Variables and Constants
-    Label,  'testing_123'
     
 
 #   Fit function valid values: Calibration, ERF, LGS

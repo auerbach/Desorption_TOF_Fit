@@ -21,7 +21,6 @@ parmList = ['A', 'E0', 'W',
             'TCutC', 'TCutW', 'Temp', 'FFR', 'IonTOF', 'Yscale', 'Baseline']
 
 constList =['testConst', 'test1', 'test2', 'test3',
-            'Label',
             'ThetaStep', 'ZDiffWall', 'RDiffWall', 
             'ZRef', 'ZAperture', 'RAperture', 
             'ZSource', 'RSource', 'ZLaser', 'LLaser', 'ZFinal', 'RFinal', 
