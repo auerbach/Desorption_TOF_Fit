@@ -27,9 +27,14 @@ TemperatureTolerance = 1.
 Tmin = ''
 Tmax = ''
 
+
+#--------------------------------------------------------------------------------------------------
+# Angular averaging
+#--------------------------------------------------------------------------------------------------
+
 # Following parameters for point detector
-AngRes               = 20.         # Angular resolusion (degrees)
-ThetaStep            = 2.          # Theta step in averaging
+AngRes               = 20          # Angular resolusion (degrees)
+ThetaStep            = 1          # Theta step in averaging
 
 # Following parameters for line detector
 ZDiffWall   = 0.0               # Poistion of inside (detector side)
@@ -71,14 +76,17 @@ GridType = 'Cartesian'          # Generate a cartesian or radial grid on
 # Data Format ##########################################################
 
 
-DataFormatLine  = 2
-OriginalFileLine= 3
-FileDateLine    = 4
-MoleculeLine    = 5
-TemperatureLine = 6     # Line in DataFile where temperature is reported
-                        #  (surface T for desorption experiments,
-                        #    nozzle T for Knudsen experiments) 
-VibStateLine    = 7
-RotStateLine    = 8
-DataColLine     = 9
-DataRowLine     = 10
+DataFormatLine   =  2;   DataFormatLines  = []
+OriginalFileLine =  3;   OriginalFileLines= []
+FileDateLine     =  4;   FileDataLines    = []
+MoleculeLine     =  5;   MoleculeLines    = []
+TemperatureLine  =  6;   TemperatureLines = []     
+VibStateLine     =  7;   VibStateLines    = []
+RotStateLine     =  8;   RotStateLines    = []
+DataColLine      =  9;   DataColLines     = []
+DataRowLine      = 10;   DataRowLines     = []
+Tmin             = None; Tmins = []
+Tmax             = None; Tmaxs = []
+Function         = None; Functions = []
+# Valid values for Averaging Types are 'None', 'PointDetector', and 'LineDetector'
+AveragingType    = None; AveragingTypes=[]   

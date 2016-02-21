@@ -4,7 +4,7 @@
     
 
 #   Fit function valid values: Calibration, ERF, LGS
-    Function,   'ERF'
+    Function,   ERF
     Tmin,       4.5
     Tmax,       12.0
 

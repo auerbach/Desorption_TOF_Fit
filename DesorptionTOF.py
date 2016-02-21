@@ -23,13 +23,11 @@ from lmfit import minimize, fit_report
 
 from ParseCmdFile import parseCmdFile
 from PlotFit import PlotFit
+
 # from Parameters2 import Parameter2, Parameters2
 
 import GlobalVariables as glbl
-from read_data import read_data
-
-
-
+from read_data import Data
 
 def GenerateThetaAngles(AveragingType, GridType,        \
                         NPointsSource, NPointsDetector, \
@@ -98,7 +96,8 @@ def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType)
 
     for i in range( len( DataSets )):
         NDataSet = i + 1
-        Resid = Resid + list(  DataSets[i][1] - TOF( DataSets[i][0], NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType) )
+        Resid = Resid + list(DataSets[i][1] - TOF(DataSets[i][0], NDataSet, Params,
+                                                  AveragingType, ThetaAngles, ProbCurveType))
 
     return np.array( Resid )
     
@@ -109,7 +108,7 @@ def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType)
 def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType, Debug=False):
     # Time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
     #FFRDist  = Params['FFRDist_%i'   %NDataSet].value
-    MaxTOF   = Params['Yscale_%i'    %NDataSet].value
+    Yscale   = Params['Yscale_%i'    %NDataSet].value
     Baseline = Params['Baseline_%i'  %NDataSet].value
     TCutC    = Params['TCutC_%i'     %NDataSet].value
     TCutW    = Params['TCutW_%i'     %NDataSet].value
@@ -119,12 +118,12 @@ def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType, Debug
     CutOff = 0.5 * (1. - np.tanh((Time - TCutC*1E-6) / (TCutW*1E-6)))      # CutOff function
             #used to model the experimental loss of low energy ions
     Signal0 = AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles)       
-    Signal = Signal0 * CutOff * MaxTOF + Baseline
+    Signal  = Signal0 * CutOff * Yscale + Baseline
     
     if Debug :
         print('TOF     : Signal0 = ', Signal0)
         print('        : CutOff  = ', CutOff)
-        print('        : MaxTOF  = ', MaxTOF) 
+        print('        : Yscale  = ', Yscale) 
         print('        : Signal  = ', Signal)
 
     return Signal
@@ -140,26 +139,32 @@ def AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles):
 
     Signal = 0.  # Initialize Signal to 0
     
-
+    mass = data.mass_molecules[NDataSet-1]
     if AveragingType == "PointDetector":
         # Averaging performed  taking into account different flight time for different angles, but assuming ionization occurring in one point
-        for Theta in ThetaAngles :  
+        for Theta in ThetaAngles :
+        #for Theta in [0]:
             Velocity = FFRDist /(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-            Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
+            Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
             Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
-            Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * np.cos( np.radians(Theta) )**2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * np.sin( np.radians(Theta) ) * glbl.ThetaStep
+            Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * \
+                                np.cos( np.radians(Theta) )**2. *                         \
+                                Prob(Enorm, NDataSet, Params, ProbCurveType)) *           \
+                                np.sin( np.radians(Theta) ) * glbl.ThetaStep
+
     elif AveragingType == "None":
         # No angular averaging performed
-        Velocity = FFRDist / Time # v = L / t 
-        Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
+        Velocity = FFRDist / Time # v = L / t
+        Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
         Enorm = Ekin
-        Signal = (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * Prob(Enorm, NDataSet, Params, ProbCurveType))
+        Signal = (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * 
+                  Prob(Enorm, NDataSet, Params, ProbCurveType))
 
     elif AveragingType == "LineDetector":
         # Averaging along line, accounting for different flight time for different angles
         for Theta in ThetaAngles :
                         Velocity = FFRDist/(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-                        Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
+                        Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
                         Enorm = Ekin * np.cos( np.radians(Theta) )**2 # Reaction probability depends on normal energy
                         # Here no sin weight, since each Theta value has a weight of one
                         Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * np.cos( np.radians(Theta) )**2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * glbl.ThetaStep
@@ -228,7 +233,7 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
         # Averaging performed taking into account different flight time for different angles
         for Theta in ThetaAngles:
             Velocity = FFRDist /(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-            Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
+            Ekin = (0.5 * glbl.massAmu * Velocity**2.) * glbl.eVConst
             # Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
             VelocityDistribution = VelocityDistribution                   \
                                    + Velocity**4.                         \
@@ -240,7 +245,7 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
     elif AveragingType == "None":
         # No angular averaging
         Velocity = FFRDist / Time
-        Ekin = (0.5 * glbl.MassAmu * Velocity**2.) * glbl.eVConst
+        Ekin = (0.5 * glbl.massAmu * Velocity**2.) * glbl.eVConst
         # Enorm = Ekin
         VelocityDistribution = Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature))
         
@@ -251,65 +256,12 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
         
 
     ProbFromTOF = (Signal - Baseline ) / (MaxTOF * VelocityDistribution * CutOff)
-    Energy = 0.5 * glbl.MassAmu * ( FFRDist / Time )**2. * glbl.eVConst
+    Energy = 0.5 * glbl.massAmu * ( FFRDist / Time )**2. * glbl.eVConst
     
 
     return Energy, ProbFromTOF
 
 
-#============================================================================== 
-#   WriteTOFOutput - Write the TOF Data                                                        
-#==============================================================================
-#==============================================================================
-# def WriteTOFOutput( TOFTime, TOFData, State, fit_range, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType):
-#     # Prints the fitted curve. 
-#     MinTime =  Params['IonTOF_' + str(NDataSet)].value*1.E-6 + 0.1E-6
-#     MaxTime = MinTime + 30.E-6
-#     TimeIncr = 0.01E-6
-# 
-#     Time = np.arange( MinTime, MaxTime + TimeIncr, TimeIncr)
-# 
-#     # Name Output files
-#     result_filename ='fit' +_DataSet_" + str( NDataSet ) + "_" + State + "_" + "_TOF_DataFitted.dat"
-#     TOFOutFile                 = Label + "_DataSet_" + str( NDataSet ) + "_" + State + "_" + "_TOF_Fit_"      + ProbCurveType + ".dat"      
-# 
-#     # First determine the maximum (as average of 5 points) in the experimental signal
-#     NMax =  TOFData.argmax()
-#     DataMax = ( TOFData[NMax-2] + TOFData[NMax-1] + TOFData[NMax] + TOFData[NMax+1] + TOFData[NMax+2] ) / 5.
-# 
-#     # Write file with intensity fitted (minus background) - both relative and absolute signal 
-#     np.savetxt( FileNoBackground , np.column_stack((np.array( TOFTime ), np.array( TOFData )/DataMax, np.array( TOFData ))) )
-#     # print()    
-#     # print("WriteTOFOutput: TOF data fitted written to file ", FileNoBackground)       
-# 
-#     # Calculate TOF fit curve
-#     TOFFitted = TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType)    
-# 
-#     # Write file with TOF fitted - both relative and absolute signal
-#     np.savetxt( TOFOutFile, np.column_stack((np.array( Time ), np.array( TOFFitted )/DataMax, np.array( TOFFitted ))) )
-#     # print("WriteTOFOutput: Fitted TOF spectrum written to file ", TOFOutFile)
-#     return
-#==============================================================================
-
-
-#==============================================================================
-# #--------------------------------------------------------------------------------------------------
-# #   write_result                                                      
-# #--------------------------------------------------------------------------------------------------
-# # write_result(newFitNumber, NDataSet, cmdFile, fitResult, Time, Signal, State, fit_range,
-# #                    AveragingType, ThetaAngles, ProbCurveType)
-# def write_result(FitNumber, NDataSet, cmdFile, fitresult, Time, Signal, State, fit_range, 
-#                  AveragingType, ThetaAngles, ProbCurveType):
-# 
-#     # FitNumber is a 0 padded string
-#     result_file_name = 'Fit' + FitNumber + '_' + str(NDataSet) + '_' + State + '_'   \
-#                         + ProbCurveType + '.fit_out'
-#     #with open(result_file_name, 'w') as result_file:
-#     # fit_curve = TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType)
-#     np.savetxt(result_file_name , np.column_stack((np.array(Time), np.array(Signal))))
-#     
-#     return 
-#==============================================================================
 #==============================================================================
 #     TOFInvertedOutFile         = "DataSet_" + str( NDataSet ) + "_" + State + "_" + Label + "_ReacProb_Fit_" + ProbCurveType + "_FromTOFInversion.dat"
 #     # Reaction probability curve: minimum energy, maximum energy, deltaE (eV)
@@ -333,16 +285,28 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
 #    return                                               
 #==============================================================================
 
+
+
+
 #============================================================================= 
-# Main PROGRAM
+#============================================================================= 
+# ============================  Main PROGRAM  ================================
+#============================================================================= 
 #============================================================================= 
 
-# define default path to control files and default command file name
+# create a Data object to read and store the data
+data = Data()
+
+# define default path to control files and fit output
 pathToFits = 'Fits\\'
-#cmdFilename = 'fit000.tof_in'
 
+#==============================================================================
+# for testing
+#==============================================================================
+cmdFileName    = 'fit010_test1'
+cmdFileTesting = pathToFits + cmdFileName + '.tof_in'
 
-# Get Last fit number from FitNumber.dat, increment and write back
+# Get Last fit number from FitNumber.dat
 fit_number_file = open(pathToFits + 'FitNumber.dat', 'r+')
 fitNumber = '{:03d}'.format(int(fit_number_file.readline()))
 oldFitNumber = fitNumber
@@ -386,34 +350,31 @@ if oldFitNumber != newFitNumber:
 # subprocess.call(['npp.bat', newFile])
 cmdFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
 
-# Parse the command file
+#==============================================================================
+# # for testing
+#==============================================================================
+cmdFile = cmdFileTesting
+
+#==============================================================================
+# # Parse the command file
+#==============================================================================
 parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFile)
 
 if len(errors) > 0:
     print('Errors\n', errors)
     raise SystemExit ('Error in command file' )
-# print('Finished parsing command file')
+    
+AveragingType = glbl.AveragingTypes[0]
 
+#==============================================================================
+# # use Francesco's names until have time to change
+#==============================================================================
 DataFiles = signalFiles
 BackgroundFiles = backgroundFiles
-# Label = glbl.Label
 
-angularaveragingList = ['None','PointDetector','LineDetector']
-args_angularaveraging = angularaveragingList[0]
-
-# args_input = r'data\referenceline\6008_Au_D2_v1J2_x=35.datv2'
-# args_background = r'data\referenceline\6009_Au_D2_v1J2_x=35_offRes.datv2'
-args_mintime = 5
-args_maxtime = 25
-
-    
-# DataFiles = args_input.split(",")
-AveragingType = args_angularaveraging
-
-# initialize variables and parametrs
-Tmin = glbl.Tmin
-Tmax = glbl.Tmax
+# initalize lists
 states = []         # list if tuples (v, j)
+temperatures = []
 DataSets = []
 PlotDataSets = []
 Params = parms
@@ -421,103 +382,186 @@ Params = parms
 # Read data from input
 fit_ranges = []
 for i in range( len( DataFiles)):
-    ProbCurveType = functions[0]
+    Tmin = glbl.Tmins[i]
+    Tmax = glbl.Tmaxs[i]
+    ProbCurveType = functions[i]
     DataFile = DataFiles[i]
+    
     if BackgroundFiles  != [ "" ]:
         BackgroundFile = BackgroundFiles[i]
     else:
         BackgroundFile = BackgroundFiles[0]
-        
-    state, Temperature, Nmin, Nmax, Time, Signal = read_data(DataFile, BackgroundFile, Tmin, Tmax)    
-    states.append( state )
+          
+    data.read_data(DataFile, BackgroundFile, Tmin, Tmax)  
+    
+    Nmin = data.fit_ranges[i][0]
+    Nmax = data.fit_ranges[i][1]    
+    Tmin = data.datasets[i][0][Nmin]
+    Tmax = data.datasets[i][0][Nmax]
+    
+    fit_ranges.append([Nmin,Nmax])    
+    states.append( data.states[i] )
+    temperatures.append(data.temperatures[i])
+    
+    Time   = data.datasets[i][0]
+    Signal = data.datasets[i][1]
     DataSets.append([Time[Nmin:Nmax], Signal[Nmin:Nmax]])
     PlotDataSets.append([Time, Signal])
-    fit_ranges.append([Nmin,Nmax])
+    
   
 
 # Generate Theta angles employed for angular averaging
-ThetaAngles = GenerateThetaAngles(                                  \
-    AveragingType=AveragingType, GridType=glbl.GridType,                 \
-    NPointsSource=glbl.NPointsSource, NPointsDetector=glbl.NPointsDetector,   \
-    ZSource = glbl.ZSource,           RSource = glbl.RSource,                 \
-    ZAperture = glbl.ZAperture,       RAperture = glbl.RAperture,             \
-    ZDetector = glbl.ZLaser,          LengthDetector = glbl.LLaser)
-    #    ZDetector = ZFinal,          LengthDetector = 2.*RFinal         \
+#==============================================================================
+# def GenerateThetaAngles(AveragingType, GridType,        \
+#                         NPointsSource, NPointsDetector, \
+#                         ZSource,    RSource,            \
+#                         ZAperture, RAperture,           \
+#                         ZDetector,  LengthDetector):
+#==============================================================================
+ThetaAngles = GenerateThetaAngles(AveragingType=AveragingType, GridType=glbl.GridType,
+                                  NPointsSource=glbl.NPointsSource, 
+                                  NPointsDetector=glbl.NPointsDetector, 
+                                  ZSource = glbl.ZSource, RSource = glbl.RSource,
+                                  ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
+                                  ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
+#    ZDetector = ZFinal,          LengthDetector = 2.*RFinal         \
   
-#==============================================================================
-# print()
-# print('Angular Averaging Parameters:')
-# print('nps =', glbl.NPointsSource, 'npd =', glbl.NPointsDetector)
-# print('zs  =', glbl.ZSource,       'rs  =', glbl.RSource )
-# print('za  =', glbl.ZAperture,     'ra  =', glbl.RAperture)     
-# print('zf  =', glbl.ZFinal,        'rf  =', glbl.RFinal)                                                
-#==============================================================================
+print()
+print('#-----------------------------')
+print('Angular Averaging Parameters:')
+print('#-----------------------------')
+print('nps =', glbl.NPointsSource, 'npd =', glbl.NPointsDetector)
+print('zs  =', glbl.ZSource,       'rs  =', glbl.RSource )
+print('za  =', glbl.ZAperture,     'ra  =', glbl.RAperture)     
+print('zf  =', glbl.ZFinal,        'rf  =', glbl.RFinal)
+print('it mse')
+print('ThetaAngles =', ThetaAngles)
+print()
 
-# Fit TOF
+#--------------------------------------------------------------------------------------------------
+# Fit the data to model 
+#--------------------------------------------------------------------------------------------------
 fitResult = FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType)
 print(fit_report(fitResult))
 
 state_string = 'v' + str(states[0][0]) + 'j' +str(states[0][1])
-
 result_file_name = 'Fit' + newFitNumber + '_' + state_string + '_' + ProbCurveType + '.fit_out'
+
+#============================================================================== 
+# # for testing 
+#==============================================================================
+result_file_name = cmdFileName + '_' + state_string + '_' + ProbCurveType + '.fit_out'
+
 with open(pathToFits + result_file_name, 'w') as result_file:
-    
     result_file.write('#\n')
     result_file.write('# Fit {} Results\n'.format(newFitNumber))
     result_file.write('#\n')
-    result_file.write('#' + 40*'-' + '\n')
+    result_file.write('#' + 60*'-' + '\n')
     result_file.write('# Control file: {}\n'.format(cmdFile))
-    result_file.write('#' + 40*'-' + '\n')
+    result_file.write('#' + 60*'-' + '\n')
     
+    #----------------------------------------------------------------------------------------------
+    # write the control file to the result file
+    #----------------------------------------------------------------------------------------------
     with open(cmdFile,'r') as cmd:
         cmd_lines = cmd.readlines()
 
     for line in cmd_lines:
         result_file.write('# ' + line )
     
-    #result_file.write('#\n')
-    result_file.write('\n#' + 40*'-' + '\n')    
+    result_file.write('\n#' + 60*'-' + '\n')    
     result_file.write('# End Control File\n')
-    result_file.write('#' + 40*'-' + '\n')
-    result_file.write('#\n')
-    
-    result_file.write('#' + 40*'-' + '\n')    
+    result_file.write('#' + 60*'-' + '\n')
+    result_file.write('\n')
+
+    #----------------------------------------------------------------------------------------------
+    # write the fit report to the result file
+    #----------------------------------------------------------------------------------------------
+    result_file.write('#' + 60*'-' + '\n')
     result_file.write('# Fit Report\n')
-    result_file.write('#' + 40*'-' + '\n')    
-    result_file.write('#\n')
-    
+    result_file.write('#' + 60*'-' + '\n')    
+
     report = fit_report(fitResult).split('\n')
     for line in report:
         result_file.write('# ' + line + '\n')
-    
-    result_file.write('#' + 40*'-' + '\n')    
+    result_file.write('#' + 60*'-' + '\n')    
     result_file.write('# End Fit Report\n')
-    result_file.write('#' + 40*'-' + '\n')
+    result_file.write('#' + 60*'-' + '\n')
+    result_file.write('\n')
     
+    #----------------------------------------------------------------------------------------------
+    # the number of datasets to plot
+    #----------------------------------------------------------------------------------------------
+    result_file.write('#' + 60*'-' + '\n')
+    result_file.write('# Labels and data for plots\n')
+    result_file.write('#' + 60*'-' + '\n')
+    result_file.write('# Number of plots : ' + str(len(DataSets)) + '\n')
+    result_file.write('#' + 60*'-' + '\n')
+    result_file.write('\n')
+    
+    #----------------------------------------------------------------------------------------------
+    # for each data set, write plot title, labels, and data
+    #----------------------------------------------------------------------------------------------
     for i in range( len( DataSets )):
-        # Write output
-        NDataSet =  i + 1
-        Time     =  PlotDataSets[i][0] * 1E6  # convert to microseconds
-        Signal   =  PlotDataSets[i][1]
-        state    =  states[i]
-        fit_range=  fit_ranges[i]
+        n_dataset = i + 1
         
-        result_file.write('#\n')
-        result_file.write('#' + 40*'-' + '\n')    
-        result_file.write('# Begin Data Set {}\n'.format(NDataSet))
-        result_file.write('#     States: v ={} J={}\n'.format(states[0][0], states[0][1]))
-        result_file.write('#' + 40*'-' + '\n')
-        # for j in range(0,len(Time)):
-        for j in range(0,20):
-            result_file.write('{:6.2f} {:20.5e}\n'.format(Time[j], Signal[j]))
-      
-#==============================================================================
-#     write_result(newFitNumber, NDataSet, cmdFile, fitResult, Time, Signal, State, fit_range,
-#                    AveragingType, ThetaAngles, ProbCurveType)
-#==============================================================================
+        result_file.write('#' + 60*'-' + '\n')
+        result_file.write('# Plot ' + str(n_dataset) + '\n')
+        result_file.write('#' + 60*'-' + '\n')
+        
+        #------------------------------------------------------------------------------------------
+        # write the plot title
+        #------------------------------------------------------------------------------------------
+        result_file.write('# Title    : Fit {:03d}_{}'.format(int(newFitNumber), n_dataset) + '\n')
 
-    # baseFileName = Label + "_DataSet_" + str( NDataSet ) + "_" + State
-    # PlotFit(baseFileName)
+        #------------------------------------------------------------------------------------------
+        # write the plot label
+        #------------------------------------------------------------------------------------------
+        result_file.write('# Label    : ' + data.original_signal_names[i] + '\n')
+        
+        avg_type = AveragingType
+        print('avg_type=', avg_type)
+        result_file.write('# Label    : Averaging: ' + avg_type + '\n')
+        result_file.write('# Label    : Function:  ' + ProbCurveType + '\n')         
+        parms = fitResult.params     
+        parm_list = ['E0', 'W', 'TCutC', 'TCutW']
+        for p in parm_list:
+            p_ = p + '_' + str(i+1)
+            result_file.write('# Label    : {:6s}{:>7.3f}'.format(p, parms[p_].value))
+            if not parms[p_].vary:
+                result_file.write(' (fixed)\n')
+            else:
+                stderr = '{:6.3f}'.format(parms[p_].stderr)
+                result_file.write(' (\u00B1' + str(stderr) +')\n')
+        
+        
+        #------------------------------------------------------------------------------------------
+        # write the number of data lines
+        #-----------------------------------------------------------------------------------------
+        result_file.write('# N_points : ' + str(len(Time)) +'\n')        
+        result_file.write('#' + 60*'-' + '\n')
+        
+        #------------------------------------------------------------------------------------------
+        # write the plot data
+        #------------------------------------------------------------------------------------------
+        result_file.write('# Time            Signal                Fit\n')
+        result_file.write('#' + 60*'-' + '\n')
+        result_file.write('# Begin data : ' + str(len(Time)) +'\n')
+        
+        Time     =  PlotDataSets[i][0] *1E6  # convert to microseconds
+        Signal   =  PlotDataSets[i][1]
+        Fit      =  TOF(PlotDataSets[i][0], n_dataset, fitResult.params,
+                        AveragingType, ThetaAngles, ProbCurveType) 
+        for j in range(len(Time)):
+            result_file.write('{:6.2f} {:20.5e} {:20.5e}\n'.format(Time[j], Signal[j], Fit[j]))
+        
+        result_file.write('# End data')
+        result_file.write('#' + 60*'-' + '\n')
+        result_file.write('# End Plot ' + str(n_dataset))
+            
+        
+result_file.close()
+PlotFit(pathToFits + result_file_name)
     # if DataType != 'Calibration':
 #==============================================================================
 #     if functions[i] != 'Calibration':

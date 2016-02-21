@@ -1,24 +1,25 @@
 # comment
 
-
 #   Function Type 
-    Function, Erf   
+    Function, 'Erf'
+
+#   Averaging Type
+    AveragingType, 'None'   
 
 #   Fit Parameters
 #   Name,   Value,  Vary,   Min,    Max
-    E00,    0.5,    1,      0.2,    2.5
-    E01,    0.2,    1,         ,    1.0
+    E0,     0.2,    1,         ,    1.0
     W,      0.2,    1
 
 #   Data Files
 #   Type        Filename
     Signal,     firstSig v2.dat
     Background, firstBack.dat
-
 End Run
-    E00,    0.6,    2  # you can put comments after
-    E01,    0.1,    1
 
-    Signal,     secondSig with space.dat
+    E0,     0.6,    1  # you can put comments after
 
-END Run
+    Signal,     secondSigFile with space.dat
+    Tmin,   5
+    Tmax,   25
+End Run
