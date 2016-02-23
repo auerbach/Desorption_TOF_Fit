@@ -4,7 +4,7 @@
     Function, 'Erf'
 
 #   Averaging Type
-    AveragingType, 'None'   
+    AveragingType, 'No Averaging'   
 
 #   Fit Parameters
 #   Name,   Value,  Vary,   Min,    Max

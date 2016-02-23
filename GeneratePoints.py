@@ -162,15 +162,15 @@ if (__name__ == "__main__"):
                                     #   the source. This parameter can have
                                     #   values of 'Cartesian' or'Radial'
 
-    AveragingType = 'LineDetector'
+    AveragingType = 'Line Detector'
         
-    if AveragingType == 'None':
+    if AveragingType == 'No Averaging':
         ThetaAngles = [0.]
         
-    elif AveragingType == 'PointDetector':
+    elif AveragingType == 'Point Detector':
         ThetaAngles = np.arange( 0., AngRes + ThetaStep, ThetaStep ) 
         
-    elif AveragingType == 'LineDetector':
+    elif AveragingType == 'Line Detector':
         GridOfPointsSource  = PointsOnTheSource( GridType = GridType,\
             ZSource = ZSource ,\
             RSource = RSource,\

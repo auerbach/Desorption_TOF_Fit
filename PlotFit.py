@@ -12,6 +12,7 @@ def PlotFit(filename):
     
     import numpy as np
     import matplotlib.pyplot as plt
+    import unicodedata
     
     # time, sig, fit = np.loadtxt(filename, unpack=True)
     
@@ -32,7 +33,7 @@ def PlotFit(filename):
     for n_plot in range(n_plots):
         
         #------------------------------------------------------------------------------------------
-        # get the plot title and label from the result file        
+        # get the title, label, information for plot from result file        
         #------------------------------------------------------------------------------------------
         label = ''        
         for n_line in range(n_line + 1, len(lines)):
@@ -43,10 +44,18 @@ def PlotFit(filename):
             
             if line.startswith('# Label'):
                 label += line.split(':', 1)[1]
-            
-            if line.startswith('# Begin data'):
+                
+            if line.startswith('# Npoints'):
                 n_points = int(line.split(':')[1])
+                
+            if line.startswith('# Tmin'):
+               t_min, t_max = tuple(line.split(':')[1].strip().split(','))
+                    
+            if line.startswith('# Begin data'):
                 break
+        #------------------------------------------------------------------------------------------
+        # get the number of data points and minimum and maximum times used for the fit       
+        #------------------------------------------------------------------------------------------
             
         #------------------------------------------------------------------------------------------
         # get the data to plot
@@ -67,11 +76,22 @@ def PlotFit(filename):
         fig = plt.figure()
         fig.suptitle(title, fontsize=16)
         ax = plt.subplot(111)
-        ax.set_xlabel('TOF [micro sec]', fontsize=16)
+        ax.set_xlabel('TOF [' + unicodedata.lookup('micro sign') + 's]', fontsize=16)
         ax.set_ylabel('Signal', fontsize=16)
     
-        ax.annotate(label, xy = [0.5, 0.75, ], xycoords = 'axes fraction', 
-                    va = 'top', family='monospace')
+        ax.annotate(label, xy = [0.55, 0.95, ], xycoords = 'axes fraction', 
+                    va = 'top', family='monospace', )
+        
+        limit_bar_start = sig[100:300].max() * 0.2
+        pass
+        ax.annotate('test', xy = (t_min, 0), xytext =(t_min, limit_bar_start), xycoords = 'data')
+#==============================================================================
+#         ax.annotate('offset', xy=(4, 0.05), xycoords='data',
+#                 xytext=(4, 0.17), textcoords='offset points',
+#                 arrowprops=dict(facecolor='black', shrink=0.05),
+#                 horizontalalignment='right', verticalalignment='bottom',
+#                 )
+#==============================================================================
     
         print('max data, fit =', sig[100:300].max(), fit[100:300].max())
     
@@ -86,4 +106,5 @@ def PlotFit(filename):
 if __name__ == '__main__':
     
     plot_file_name = 'fits\\fit010_test1_v1j3_ERF.fit_out'
+    plot_file_name = 'fits\\fit010_v1j3_ERF.fit_out'
     PlotFit(plot_file_name)

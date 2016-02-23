@@ -10,7 +10,7 @@ massD       = 2.01410177812
 massH2      = 2 * massH
 massHD      = massH + massD
 massD2      = 2 * massD
-massAmu     = massD2
+# massAmu     = massD2
 
 # Experimental apparatus constants #####################################
 
@@ -88,5 +88,5 @@ DataRowLine      = 10;   DataRowLines     = []
 Tmin             = None; Tmins = []
 Tmax             = None; Tmaxs = []
 Function         = None; Functions = []
-# Valid values for Averaging Types are 'None', 'PointDetector', and 'LineDetector'
+# Valid values for Averaging Types are 'No Averaging', 'Point Detector', and 'Line Detector'
 AveragingType    = None; AveragingTypes=[]   

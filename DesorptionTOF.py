@@ -15,6 +15,7 @@ Fit data from post permeation desorption TOF
 
 # import os
 # import sys
+import unicodedata
 import shutil
 import subprocess
 import numpy as np
@@ -301,7 +302,7 @@ data = Data()
 pathToFits = 'Fits\\'
 
 #==============================================================================
-# for testing
+# for testing:
 #==============================================================================
 cmdFileName    = 'fit010_test1'
 cmdFileTesting = pathToFits + cmdFileName + '.tof_in'
@@ -313,6 +314,7 @@ oldFitNumber = fitNumber
 newFitNumber = fitNumber
 
 #==============================================================================
+# # comment out for testing
 # while True:
 #     print('please enter oldfit number: ', '[', oldFitNumber, ']')
 #     ans = input('?')
@@ -336,9 +338,9 @@ newFitNumber = fitNumber
 #     fit_number_file.write(newFitNumber)
 # else:
 #     newFitNumber = oldFitNumber
+# 
+# fit_number_file.close()
 #==============================================================================
-
-fit_number_file.close()
 
 oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
 newFile = oldFile
@@ -350,9 +352,7 @@ if oldFitNumber != newFitNumber:
 # subprocess.call(['npp.bat', newFile])
 cmdFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
 
-#==============================================================================
-# # for testing
-#==============================================================================
+# for testing
 cmdFile = cmdFileTesting
 
 #==============================================================================
@@ -407,6 +407,7 @@ for i in range( len( DataFiles)):
     Signal = data.datasets[i][1]
     DataSets.append([Time[Nmin:Nmax], Signal[Nmin:Nmax]])
     PlotDataSets.append([Time, Signal])
+    pass
     
   
 
@@ -426,17 +427,19 @@ ThetaAngles = GenerateThetaAngles(AveragingType=AveragingType, GridType=glbl.Gri
                                   ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
 #    ZDetector = ZFinal,          LengthDetector = 2.*RFinal         \
   
-print()
-print('#-----------------------------')
-print('Angular Averaging Parameters:')
-print('#-----------------------------')
-print('nps =', glbl.NPointsSource, 'npd =', glbl.NPointsDetector)
-print('zs  =', glbl.ZSource,       'rs  =', glbl.RSource )
-print('za  =', glbl.ZAperture,     'ra  =', glbl.RAperture)     
-print('zf  =', glbl.ZFinal,        'rf  =', glbl.RFinal)
-print('it mse')
-print('ThetaAngles =', ThetaAngles)
-print()
+#==============================================================================
+# print()
+# print('#-----------------------------')
+# print('Angular Averaging Parameters:')
+# print('#-----------------------------')
+# print('nps =', glbl.NPointsSource, 'npd =', glbl.NPointsDetector)
+# print('zs  =', glbl.ZSourceresult_file.write('rs  =', glbl.RSource )
+# print('za  =', glbl.ZAperture,     'ra  =', glbl.RAperture)     
+# print('zf  =', glbl.ZFinal,        'rf  =', glbl.RFinal)
+# print('it mse')
+# print('ThetaAngles =', ThetaAngles)
+# print()
+#==============================================================================
 
 #--------------------------------------------------------------------------------------------------
 # Fit the data to model 
@@ -448,7 +451,7 @@ state_string = 'v' + str(states[0][0]) + 'j' +str(states[0][1])
 result_file_name = 'Fit' + newFitNumber + '_' + state_string + '_' + ProbCurveType + '.fit_out'
 
 #============================================================================== 
-# # for testing 
+# for testing 
 #==============================================================================
 result_file_name = cmdFileName + '_' + state_string + '_' + ProbCurveType + '.fit_out'
 
@@ -473,7 +476,30 @@ with open(pathToFits + result_file_name, 'w') as result_file:
     result_file.write('# End Control File\n')
     result_file.write('#' + 60*'-' + '\n')
     result_file.write('\n')
-
+    
+    #----------------------------------------------------------------------------------------------
+    # write the angular averaging parameters
+    #----------------------------------------------------------------------------------------------
+    result_file.write('#' + 60*'-' + '\n')
+    result_file.write('# Angular Averaging Parameters\n')
+    result_file.write('#' + 60*'-' + '\n')
+    result_file.write('# NPointsSource   : ' + str(glbl.NPointsSource)   + '\n')
+    result_file.write('# NPointsDetector : ' + str(glbl.NPointsDetector) + '\n')
+    result_file.write('# ZSource         : ' + str(glbl.ZSource)         + '\n')
+    result_file.write('# RSource         : ' + str(glbl.RSource )        + '\n')
+    result_file.write('# ZAperture       : ' + str(glbl.ZAperture)       + '\n')
+    result_file.write('# RAperture       : ' + str(glbl.RAperture)       + '\n')    
+    result_file.write('# ZFinal          : ' + str(glbl.ZFinal)          + '\n')
+    result_file.write('# RFinal          : ' + str(glbl.RFinal)          + '\n')
+    # result_file.write('# it mse\n')
+    
+    for i in range(0, len(ThetaAngles), 10):
+        result_file.write('# ThetaAngles : ' + str(ThetaAngles[i : i+10]) + '\n')
+    result_file.write('#' + 60*'-' + '\n')    
+    result_file.write('# End Angular Averaging Parametern')
+    result_file.write('#' + 60*'-' + '\n')
+    result_file.write('\n')
+    
     #----------------------------------------------------------------------------------------------
     # write the fit report to the result file
     #----------------------------------------------------------------------------------------------
@@ -518,11 +544,21 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         # write the plot label
         #------------------------------------------------------------------------------------------
         result_file.write('# Label    : ' + data.original_signal_names[i] + '\n')
+        result_file.write('# Label    : \n')
+        # result_file.write('# Label    : ' + '----------------------\n')
         
         avg_type = AveragingType
-        print('avg_type=', avg_type)
-        result_file.write('# Label    : Averaging: ' + avg_type + '\n')
-        result_file.write('# Label    : Function:  ' + ProbCurveType + '\n')         
+        if avg_type == 'None' : 
+            avg_type = 'No Angular Averaging'
+        elif avg_type == 'PointDetector':
+            avg_type = 'Point Detector'
+        elif avg_type == 'LineDetector':
+            avg_type = 'Line Detector' 
+        
+        # result_file.write('# Label    : Averaging: ' + avg_type + '\n')
+        result_file.write('# Label    : Function:  ' + ProbCurveType + '\n')
+        result_file.write('# Label    : ' + avg_type + '\n')
+        result_file.write('# Label    : \n')         
         parms = fitResult.params     
         parm_list = ['E0', 'W', 'TCutC', 'TCutW']
         for p in parm_list:
@@ -532,13 +568,16 @@ with open(pathToFits + result_file_name, 'w') as result_file:
                 result_file.write(' (fixed)\n')
             else:
                 stderr = '{:6.3f}'.format(parms[p_].stderr)
-                result_file.write(' (\u00B1' + str(stderr) +')\n')
-        
+                result_file.write(' (' + unicodedata.lookup('plus-minus sign') 
+                                  + str(stderr) +')\n')
         
         #------------------------------------------------------------------------------------------
-        # write the number of data lines
+        # write the number of data lines and range of lines fit
         #-----------------------------------------------------------------------------------------
-        result_file.write('# N_points : ' + str(len(Time)) +'\n')        
+        result_file.write('# Npoints    : ' + str(len(Time)) +'\n')
+        result_file.write('# Nmin, Nmax : ' + str(Nmin) + ',' +str(Nmax) + '\n')
+        result_file.write('# Tmin, Tmax : ' + str(Tmin * 1E6) + ',' +str(Tmax * 1E6) + '\n')
+               
         result_file.write('#' + 60*'-' + '\n')
         
         #------------------------------------------------------------------------------------------
@@ -546,7 +585,7 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         #------------------------------------------------------------------------------------------
         result_file.write('# Time            Signal                Fit\n')
         result_file.write('#' + 60*'-' + '\n')
-        result_file.write('# Begin data : ' + str(len(Time)) +'\n')
+        result_file.write('# Begin data\n')
         
         Time     =  PlotDataSets[i][0] *1E6  # convert to microseconds
         Signal   =  PlotDataSets[i][1]
@@ -561,6 +600,7 @@ with open(pathToFits + result_file_name, 'w') as result_file:
             
         
 result_file.close()
+
 PlotFit(pathToFits + result_file_name)
     # if DataType != 'Calibration':
 #==============================================================================

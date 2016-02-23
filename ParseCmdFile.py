@@ -382,6 +382,7 @@ if __name__ == '__main__':
         
     filename = 'Fits\\test1.tof_in'
     filename = 'Fits\\fit010_test1.tof_in'
+    filename = 'Fits\\fit010.tof_in'
     const_filename = 'testSetVariables.dat'
     
     # parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
