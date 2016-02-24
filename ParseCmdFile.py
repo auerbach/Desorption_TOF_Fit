@@ -123,7 +123,15 @@ def isListItem(tokens):
     #print('isListItem: tokens=',tokens, 'any=', any(matching)) #, 'matching=', matching)
     return any(matching)
 
-
+#==============================================================================
+# check if token is a number 
+#==============================================================================
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 #==============================================================================
 # add Parameter to the Parameters class instance 
@@ -197,7 +205,7 @@ def addGlobalConst(tokens, line, lineNumber):
 #==============================================================================
 # append list item to list
 #==============================================================================             
-def appendListItem(tokens, line, lineNumber):
+def addListItem(tokens, line, lineNumber):
     
     global errors,  globalParms, parms
            
@@ -208,19 +216,16 @@ def appendListItem(tokens, line, lineNumber):
               '. Should be 2')
         print(' *** line =', line)
         print(' *** items =', tokens)
-        errors.append((error, 'line ' + str(lineNumber)))    
-        
+        errors.append((error, 'line ' + str(lineNumber)))
 #==============================================================================
-#     command1 = 'global backgroundFile, signalFile, function, Tmax, Tmin; '
-#     command2 = command1 + 'glbl.' + tokens[0] +'s.append(' +tokens[1] + ')'
-#     command3 = command1 + tokens[0] + '=' + tokens[1]
-#     exec(command2)
-#     exec(command3)
+#     # use this line to input strings with quotes e.g. 'ERF'    
+#     exec('glbl.' + tokens[0] + '=' + tokens[1])
 #==============================================================================
-    exec('glbl.' + tokens[0] + '=' + tokens[1])
-    # print('appendListItem: tokens[1] =', tokens[1])
-    # print('appendListItem: glbl.' + tokens[0] +'=', 'glbl.' + tokens[0])
-
+    # use this block to input strings without quotes e.g. ERF    
+    if is_number(tokens[1]):
+        exec('glbl.' + tokens[0] + '=' + tokens[1])
+    else:
+        exec('glbl.' + tokens[0] + '=' + "tokens[1]")
 
 #==============================================================================
 # add Parameter to the Parameters class instance 
@@ -324,21 +329,28 @@ def parseCmdFile(filename):
             addGlobalConst(tokens, line, lineNumber)
             
         elif isListItem(tokens):
-            appendListItem(tokens, line, lineNumber)
+            addListItem(tokens, line, lineNumber)
             pass
+        
         # check if line specifies a function form
 #==============================================================================
 #         elif tokens[0].upper() == 'FUNCTION':
-#             Function = tokens[1]
-#             Functions.append(Function)
+#             gllbl.Function = tokens[1]
+#             glbl.Functions.append(Function)
 #==============================================================================
         
         # check if line specifies a signal or background file name
         elif tokens[0].upper() == 'SIGNAL':
-            glbl.signalFile = tokens[1]
+            #use following line to input signal file name without quotes
+            glbl.signalFile = tokens[1]            
+            # use the following line to input signal file name with quotes
+            #exec('glbl.signalFile =' + tokens[1])
             continue
         elif tokens[0].upper() == 'BACKGROUND':
-            glbl.backgroundFile = tokens[1]        
+            # use following line to input background file name without quotes
+            glbl.backgroundFile = tokens[1]
+            # use the following line to file name with quotes
+            # exec('glbl.backgroundFile =' + tokens[1])
             continue
     
         # check if line indicates end of dataset section
@@ -379,34 +391,37 @@ if __name__ == '__main__':
     print('=====================')
     print_list_items()
     print()    
-        
-    filename = 'Fits\\test1.tof_in'
+
+#==============================================================================
+#     # parse the constants file    
+#     const_filename = 'testSetVariables.dat'   
+#     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
+#==============================================================================
+
+# filename = 'Fits\\test1.tof_in'
     filename = 'Fits\\fit010_test1.tof_in'
     filename = 'Fits\\fit010.tof_in'
-    const_filename = 'testSetVariables.dat'
-    
-    # parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
-    # print('test1, test2, test3 =', glbl.test1, glbl.test2, glbl.test3)
+
+
+
     
     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(filename)
-    pass
-#==============================================================================
-#     print()
-#     print('functions:            ', functions)
-#     print('glbl.Functions:       ', glbl.Functions)    
-#     print('signalFiles:          ', signalFiles)
-#     print('glbl.signalFiles:     ', glbl.signalFiles)
-#     print('backgroundFiles:      ', backgroundFiles)
-#     print('glbl.backgroundFiles: ', glbl.backgroundFiles)
-#     print('Tmins:                ', glbl.Tmins)
-#     print('Tmaxs:                ', glbl.Tmaxs)
-#     print()
-#==============================================================================
     
     print()
     print('=========================')    
     print('       Final State       ')
     print('=========================')
+    print()
+    print('functions:            ', functions)
+    print('glbl.Functions:       ', glbl.Functions)    
+    print('signalFiles:          ', signalFiles)
+    print('glbl.signalFiles:     ', glbl.signalFiles)
+    print('backgroundFiles:      ', backgroundFiles)
+    print('glbl.backgroundFiles: ', glbl.backgroundFiles)
+    print('Tmins:                ', glbl.Tmins)
+    print('Tmaxs:                ', glbl.Tmaxs)
+    print()
+    
     
     print_list_items()    
     print()        

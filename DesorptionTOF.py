@@ -301,46 +301,46 @@ data = Data()
 # define default path to control files and fit output
 pathToFits = 'Fits\\'
 
-#==============================================================================
-# for testing:
-#==============================================================================
-cmdFileName    = 'fit010_test1'
-cmdFileTesting = pathToFits + cmdFileName + '.tof_in'
 
+#==============================================================================
+# # uncomment for testing:
+# cmdFileName    = 'fit010_test1'
+# # cmdFileName    = 'fit010'
+# cmdFileTesting = pathToFits + cmdFileName + '.tof_in'
+# 
+#==============================================================================
 # Get Last fit number from FitNumber.dat
 fit_number_file = open(pathToFits + 'FitNumber.dat', 'r+')
 fitNumber = '{:03d}'.format(int(fit_number_file.readline()))
 oldFitNumber = fitNumber
 newFitNumber = fitNumber
 
-#==============================================================================
-# # comment out for testing
-# while True:
-#     print('please enter oldfit number: ', '[', oldFitNumber, ']')
-#     ans = input('?')
-#     if ans:
-#         old_n = '{:03d}'.format(int(ans))
-#     else:
-#         old_n = oldFitNumber
-#     
-#     if int(old_n) > int(oldFitNumber):
-#         print('maximum allowed for old fit number is ', oldFitNumber)
-#     else:
-#         break
-#     
-# oldFitNumber = old_n
-# 
-# ans = input ('make new command file? [no]')
-# if ans:
-#     if ans.upper()[0] == 'Y':
-#         newFitNumber = '{:03d}'.format(int(fitNumber)+1)
-#     fit_number_file.seek(0)
-#     fit_number_file.write(newFitNumber)
-# else:
-#     newFitNumber = oldFitNumber
-# 
-# fit_number_file.close()
-#==============================================================================
+# comment out for testing
+while True:
+    print('please enter oldfit number: ', '[', oldFitNumber, ']')
+    ans = input('?')
+    if ans:
+        old_n = '{:03d}'.format(int(ans))
+    else:
+        old_n = oldFitNumber
+    
+    if int(old_n) > int(oldFitNumber):
+        print('maximum allowed for old fit number is ', oldFitNumber)
+    else:
+        break
+    
+oldFitNumber = old_n
+
+ans = input ('make new command file? [no]')
+if ans:
+    if ans.upper()[0] == 'Y':
+        newFitNumber = '{:03d}'.format(int(fitNumber)+1)
+    fit_number_file.seek(0)
+    fit_number_file.write(newFitNumber)
+else:
+    newFitNumber = oldFitNumber
+
+fit_number_file.close()
 
 oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
 newFile = oldFile
@@ -352,8 +352,10 @@ if oldFitNumber != newFitNumber:
 # subprocess.call(['npp.bat', newFile])
 cmdFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
 
-# for testing
-cmdFile = cmdFileTesting
+#==============================================================================
+# # for testing
+# cmdFile = cmdFileTesting
+#==============================================================================
 
 #==============================================================================
 # # Parse the command file
@@ -450,10 +452,11 @@ print(fit_report(fitResult))
 state_string = 'v' + str(states[0][0]) + 'j' +str(states[0][1])
 result_file_name = 'Fit' + newFitNumber + '_' + state_string + '_' + ProbCurveType + '.fit_out'
 
-#============================================================================== 
-# for testing 
+
 #==============================================================================
-result_file_name = cmdFileName + '_' + state_string + '_' + ProbCurveType + '.fit_out'
+# # for testing 
+# result_file_name = cmdFileName + '_' + state_string + '_' + ProbCurveType + '.fit_out'
+#==============================================================================
 
 with open(pathToFits + result_file_name, 'w') as result_file:
     result_file.write('#\n')

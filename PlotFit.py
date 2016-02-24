@@ -5,11 +5,15 @@
 
 def PlotFit(filename):
 
+
     """ 
     Plot the data and result of fit 
-        parameter = base file name
+    
+    filename should include path/name.ext
+    plot will be saved as path/name.pdf
     """
     
+    import os
     import numpy as np
     import matplotlib.pyplot as plt
     import unicodedata
@@ -50,6 +54,8 @@ def PlotFit(filename):
                 
             if line.startswith('# Tmin'):
                t_min, t_max = tuple(line.split(':')[1].strip().split(','))
+               t_min = float(t_min)
+               t_max = float(t_max)
                     
             if line.startswith('# Begin data'):
                 break
@@ -82,9 +88,15 @@ def PlotFit(filename):
         ax.annotate(label, xy = [0.55, 0.95, ], xycoords = 'axes fraction', 
                     va = 'top', family='monospace', )
         
-        limit_bar_start = sig[100:300].max() * 0.2
-        pass
-        ax.annotate('test', xy = (t_min, 0), xytext =(t_min, limit_bar_start), xycoords = 'data')
+        sig_max = sig[100:300].max()
+        ax.annotate('$t_{min}$', xycoords = 'data', xy = (t_min-.1, sig_max * .2), 
+                    ha = 'right', va='center', fontsize=14)        
+        ax.annotate('$t_{max}$', xycoords = 'data', xy = (t_max+.1, sig_max * .2), 
+                    ha = 'left',  va='center', fontsize=14)                
+        ax.annotate('', xycoords = 'data', xy = (t_min , 0), xytext =(t_min, sig_max*.25), 
+                    arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-')) 
+        ax.annotate('', xycoords = 'data', xy = (t_max , 0), xytext =(t_max, sig_max*.25), 
+                    arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-'))
 #==============================================================================
 #         ax.annotate('offset', xy=(4, 0.05), xycoords='data',
 #                 xytext=(4, 0.17), textcoords='offset points',
@@ -94,14 +106,20 @@ def PlotFit(filename):
 #==============================================================================
     
         print('max data, fit =', sig[100:300].max(), fit[100:300].max())
-    
-    y1 = sig
-    y2 = fit
+      
+        y1 = sig
+        y2 = fit
+            
+        plt.xlim((3, 15))
+        plt.plot(time, y1, 'b.')
+        plt.plot(time, y2, 'r', linewidth = 2)
         
-    plt.xlim((3, 15))
-    plt.plot(time, y1, 'b.')
-    plt.plot(time, y2, 'r', linewidth = 2)
-    plt.show()
+        path_to_file = os.path.dirname(filename)
+        base_name    = os.path.basename(filename)
+        plot_filename = path_to_file + '\\' + base_name + '.pdf'
+        plt.savefig(plot_filename)
+        plt.show()
+    
     
 if __name__ == '__main__':
     

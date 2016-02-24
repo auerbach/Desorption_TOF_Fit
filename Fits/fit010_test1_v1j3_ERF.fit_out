@@ -2,7 +2,7 @@
 # Fit 010 Results
 #
 #------------------------------------------------------------
-# Control file: Fits\fit010_test1.tof_in
+# Control file: Fits\fit010.tof_in
 #------------------------------------------------------------
 # # comment
 # 
@@ -10,11 +10,11 @@
 #     
 # 
 # #   Fit function valid values: Calibration, ERF, LGS
-#     Function,   'ERF'
+#     Function,     'ERF'
 # #     Tmin,       8.0
 # #     Tmax,       12.0
 # 
-# #   Averaging type valid values: 'None', 'PointDetector', 'LineDetector'
+# #   Averaging type: None, PointDetector, or LineDetector
 #     AveragingType, 'None'
 #     # AveragingType, 'PointDetector'
 #     # AveragingType, 'LineDetector'
@@ -36,9 +36,6 @@
 #     FFR,		0.03199897,  0
 #     Temp,       1097.,      0
 # 
-#     # IonTOF,     4.6,        1
-#     # FFR,		 0.029,      1
-#     # Temp,       1063.,      0
 # 
 # 
 # #   Data Files
