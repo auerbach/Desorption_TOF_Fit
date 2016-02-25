@@ -7,12 +7,17 @@
     Function,   ERF
     Tmin,       7.0
     Tmax,       18.0
+	
+#   Averaging type: None, PointDetector, or LineDetector
+    AveragingType,	None
+    #AveragingType, 	PointDetector
+    #AveragingType, 	LineDetector
 
 #   Fit Parameters
 #   Name,       Value,      Vary, Min,  Max
     A,          1.0,        0
     Yscale,     0.25E-9,    1
-    Baseline,   0.,         1
+    Baseline,   0.,         0
     E0,         1.0,        1,    0,    5.0
     W,          0.4,        1,    .2,   0.6      
 	

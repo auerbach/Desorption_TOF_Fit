@@ -15,12 +15,13 @@ Fit data from post permeation desorption TOF
 
 # import os
 # import sys
-import unicodedata
+from lmfit import minimize, fit_report
+import numpy as np
+import openpyxl as pyxl
+from scipy import special
 import shutil
 import subprocess
-import numpy as np
-from scipy import special
-from lmfit import minimize, fit_report
+import unicodedata
 
 from ParseCmdFile import parseCmdFile
 from PlotFit import PlotFit
@@ -115,18 +116,20 @@ def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType, Debug
     TCutW    = Params['TCutW_%i'     %NDataSet].value
     TimeCorr = Params['IonTOF_%i'    %NDataSet].value
     #Temperature = Params['Temp_%i' %NDataSet].value
-    Time   = Time - TimeCorr * 1E-6                            # Correct the time
+    Time   = Time - TimeCorr * 1E-6  # Correct the time for the ion flight time
+    # if Time == 0, the function returns NAN.  (Velocity is infinite)
+    # to remove this artificial singularity, set the compute signal to 0 for time <= 0
     CutOff = 0.5 * (1. - np.tanh((Time - TCutC*1E-6) / (TCutW*1E-6)))      # CutOff function
             #used to model the experimental loss of low energy ions
     Signal0 = AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles)       
     Signal  = Signal0 * CutOff * Yscale + Baseline
     
-    if Debug :
-        print('TOF     : Signal0 = ', Signal0)
-        print('        : CutOff  = ', CutOff)
-        print('        : Yscale  = ', Yscale) 
-        print('        : Signal  = ', Signal)
-
+    # if Time == 0, the function returns NAN.  (Velocity is infinite)
+    # to remove this artificial singularity, set the compute signal to 0 if it is NAN and Time == 0
+    for i, sig in enumerate(Signal):
+        if np.isnan(sig) and Time[i] == 0.0:
+            Signal[i] = 0.
+        
     return Signal
     
 
@@ -315,47 +318,45 @@ fitNumber = '{:03d}'.format(int(fit_number_file.readline()))
 oldFitNumber = fitNumber
 newFitNumber = fitNumber
 
-# comment out for testing
-while True:
-    print('please enter oldfit number: ', '[', oldFitNumber, ']')
-    ans = input('?')
-    if ans:
-        old_n = '{:03d}'.format(int(ans))
-    else:
-        old_n = oldFitNumber
-    
-    if int(old_n) > int(oldFitNumber):
-        print('maximum allowed for old fit number is ', oldFitNumber)
-    else:
-        break
-    
-oldFitNumber = old_n
-
-ans = input ('make new command file? [no]')
-if ans:
-    if ans.upper()[0] == 'Y':
-        newFitNumber = '{:03d}'.format(int(fitNumber)+1)
-    fit_number_file.seek(0)
-    fit_number_file.write(newFitNumber)
-else:
-    newFitNumber = oldFitNumber
-
-fit_number_file.close()
-
-oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
-newFile = oldFile
-
-if oldFitNumber != newFitNumber:
-    newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
-    shutil.copy2(oldFile, newFile)
-
+#==============================================================================
+# # comment out for testing
+# while True:
+#     print('please enter oldfit number: ', '[', oldFitNumber, ']')
+#     ans = input('?')
+#     if ans:
+#         old_n = '{:03d}'.format(int(ans))
+#     else:
+#         old_n = oldFitNumber
+#     
+#     if int(old_n) > int(oldFitNumber):
+#         print('maximum allowed for old fit number is ', oldFitNumber)
+#     else:
+#         break
+#     
+# oldFitNumber = old_n
+# 
+# ans = input ('make new command file? [no]')
+# if ans:
+#     if ans.upper()[0] == 'Y':
+#         newFitNumber = '{:03d}'.format(int(fitNumber)+1)
+#     fit_number_file.seek(0)
+#     fit_number_file.write(newFitNumber)
+# else:
+#     newFitNumber = oldFitNumber
+# 
+# fit_number_file.close()
+# 
+# oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
+# newFile = oldFile
+# 
+# if oldFitNumber != newFitNumber:
+#     newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
+#     shutil.copy2(oldFile, newFile)
+# 
 # subprocess.call(['npp.bat', newFile])
+#==============================================================================
 cmdFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
 
-#==============================================================================
-# # for testing
-# cmdFile = cmdFileTesting
-#==============================================================================
 
 #==============================================================================
 # # Parse the command file
@@ -409,18 +410,9 @@ for i in range( len( DataFiles)):
     Signal = data.datasets[i][1]
     DataSets.append([Time[Nmin:Nmax], Signal[Nmin:Nmax]])
     PlotDataSets.append([Time, Signal])
-    pass
     
-  
-
 # Generate Theta angles employed for angular averaging
-#==============================================================================
-# def GenerateThetaAngles(AveragingType, GridType,        \
-#                         NPointsSource, NPointsDetector, \
-#                         ZSource,    RSource,            \
-#                         ZAperture, RAperture,           \
-#                         ZDetector,  LengthDetector):
-#==============================================================================
+
 ThetaAngles = GenerateThetaAngles(AveragingType=AveragingType, GridType=glbl.GridType,
                                   NPointsSource=glbl.NPointsSource, 
                                   NPointsDetector=glbl.NPointsDetector, 
@@ -450,7 +442,73 @@ fitResult = FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType
 print(fit_report(fitResult))
 
 state_string = 'v' + str(states[0][0]) + 'j' +str(states[0][1])
-result_file_name = 'Fit' + newFitNumber + '_' + state_string + '_' + ProbCurveType + '.fit_out'
+result_file_name = 'Fit' + newFitNumber + '_' + data.molecules[0] + \
+                   '_' + state_string + '_' + ProbCurveType + '.fit_out'
+
+#--------------------------------------------------------------------------------------------------
+# Enter fit results in results.xls
+#--------------------------------------------------------------------------------------------------
+xls_filename ='Fits\\fit_results.xlsx'
+wb = pyxl.load_workbook(xls_filename)
+ws = wb.active 
+   
+i_found = None
+row_to_write = None
+fit_name = 'Fit' + newFitNumber
+
+for i in range(1, ws.max_row+1):
+    if ws.cell(row=i,column=1).value == fit_name:
+        i_found = i
+        
+if i_found:
+    print('An entry for fit', fit_name, 'already exists')
+    
+    while True:        
+        ans = input('Overwrite (O)  Append (A)  or Skip (S): ').upper()
+        if ans.startswith('O'):
+            row_to_write = i_found
+            break
+        elif ans.startswith('A'):
+            row_to_write = ws.max_row+1
+            break
+        elif ans.startswith('S'):
+            row_to_write=None
+            break
+        else:
+            print('Please enter "O", "A", or "S" : ')
+            
+else: 
+    row_to_write = ws.max_row + 1
+            
+if(row_to_write):
+    ws.cell(row=row_to_write, column = 1).value = fit_name
+    ws.cell(row=row_to_write, column = 2).value = data.molecules[0]  # molecule
+    ws.cell(row=row_to_write, column = 3).value = data.states[0][0]
+    ws.cell(row=row_to_write, column = 4).value = data.states[0][1]
+    ws.cell(row=row_to_write, column = 5).value = glbl.Functions[0]
+    ws.cell(row=row_to_write, column = 6).value = glbl.AveragingTypes[0]
+    ws.cell(row=row_to_write, column = 7).value = fitResult.params['E0_1'].value
+    ws.cell(row=row_to_write, column = 8).value = fitResult.params['E0_1'].stderr
+    ws.cell(row=row_to_write, column = 9).value = fitResult.params['W_1'].value
+    ws.cell(row=row_to_write, column =10).value = fitResult.params['W_1'].stderr
+
+wb.save(xls_filename)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #==============================================================================

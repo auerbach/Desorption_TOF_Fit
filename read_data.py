@@ -132,7 +132,10 @@ class Data(object):
         signal_max = np.array(signal[100:len(signal)]).max()
             
         # find n_min = index of first point to use in fitting
-        for n in range(100, len( time )-n_delt):
+        # scan through the data and look for point where data exceeds a threshold
+        for n in range(n_delt+1, len( time )-(n_delt+1)):
+            if time[n] < 3E-6:
+                continue
             if t_min :
                 if float(t_min) * 1.E-6 >= time[n] and \
                    float(t_min) * 1.E-6 < time[n] + delta_time:

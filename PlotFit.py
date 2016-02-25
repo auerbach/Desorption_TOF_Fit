@@ -71,12 +71,24 @@ def PlotFit(filename):
         fit  = []
         for n_line in range(n_line + 1, n_line + 1 + n_points ):
             line = lines[n_line]
+            if float(line.split()[0]) < 3.0 :
+                continue
             time.append(float(line.split()[0]))
             sig.append (float(line.split()[1]))
             fit.append (float(line.split()[2]))
         time = np.array(time)
         sig  = np.array(sig)            
-        fit  = np.array(fit)            
+        fit  = np.array(fit)
+        sig_max = sig[:500].max()
+        sig_min = sig[:500].min()
+
+#==============================================================================
+#         print(25*'-')        
+#         print('sig.max, sig_max, fit.max =', sig.max(), sig_max, fit[10:300].max())
+#         print('sig.min, sig_min fit.mn =', sig.min(), sig_min, fit.min())
+#         print('time[0] , time[1] =', time[0], time[1])
+#         print()            
+#==============================================================================
     
         fig = plt.figure(figsize = (6,6), dpi = 200)
         fig = plt.figure()
@@ -88,31 +100,21 @@ def PlotFit(filename):
         ax.annotate(label, xy = [0.55, 0.95, ], xycoords = 'axes fraction', 
                     va = 'top', family='monospace', )
         
-        sig_max = sig[100:300].max()
-        ax.annotate('$t_{min}$', xycoords = 'data', xy = (t_min-.1, sig_max * .2), 
+        
+        ax.annotate('$t_{min}$', xycoords = 'data', xy = (t_min-.1, sig_max * .4), 
                     ha = 'right', va='center', fontsize=14)        
-        ax.annotate('$t_{max}$', xycoords = 'data', xy = (t_max+.1, sig_max * .2), 
+        ax.annotate('$t_{max}$', xycoords = 'data', xy = (t_max+.1, sig_max * .4), 
                     ha = 'left',  va='center', fontsize=14)                
-        ax.annotate('', xycoords = 'data', xy = (t_min , 0), xytext =(t_min, sig_max*.25), 
+        ax.annotate('', xycoords = 'data', xy = (t_min , 0), xytext =(t_min, sig_max*.7), 
                     arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-')) 
-        ax.annotate('', xycoords = 'data', xy = (t_max , 0), xytext =(t_max, sig_max*.25), 
-                    arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-'))
-#==============================================================================
-#         ax.annotate('offset', xy=(4, 0.05), xycoords='data',
-#                 xytext=(4, 0.17), textcoords='offset points',
-#                 arrowprops=dict(facecolor='black', shrink=0.05),
-#                 horizontalalignment='right', verticalalignment='bottom',
-#                 )
-#==============================================================================
-    
-        print('max data, fit =', sig[100:300].max(), fit[100:300].max())
+        ax.annotate('', xycoords = 'data', xy = (t_max , 0), xytext =(t_max, sig_max*.7), 
+                    arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-'))   
       
-        y1 = sig
-        y2 = fit
             
-        plt.xlim((3, 15))
-        plt.plot(time, y1, 'b.')
-        plt.plot(time, y2, 'r', linewidth = 2)
+        plt.xlim((2, 30))
+        plt.ylim((sig_min, sig_max * 1.05))
+        plt.plot(time, sig, 'b.')
+        plt.plot(time, fit, 'r', linewidth = 2)
         
         path_to_file = os.path.dirname(filename)
         base_name    = os.path.basename(filename)
@@ -124,5 +126,6 @@ def PlotFit(filename):
 if __name__ == '__main__':
     
     plot_file_name = 'fits\\fit010_test1_v1j3_ERF.fit_out'
-    plot_file_name = 'fits\\fit010_v1j3_ERF.fit_out'
+    plot_file_name = 'fits\\fit001_v0j2_ERF.fit_out'
+    plot_file_name = 'fits\\fit010_H2_v1j3_ERF.fit_out'
     PlotFit(plot_file_name)

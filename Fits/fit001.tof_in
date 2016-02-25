@@ -6,7 +6,12 @@
 #   Fit function valid values: Calibration, ERF, LGS
     Function,   ERF
     Tmin,       6.0
-   Tmax,       12.0
+    Tmax,       12.0
+	
+#   Averaging type: None, PointDetector, or LineDetector
+    AveragingType,	None
+    #AveragingType, 	PointDetector
+    #AveragingType, 	LineDetector
 
 #   Fit Parameters
 #   Name,       Value,      Vary, Min,  Max
