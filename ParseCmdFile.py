@@ -8,8 +8,8 @@ Module to parse the control file for FitDesorbtionTOF
 __author__ = 'Daniel Auerbach'  
 __email__  = 'daniel@djauerbach.com'
 
-from Parameters2 import Parameters2, Parameter2
-import ast
+from Parameters2 import Parameters2
+# import ast
 import GlobalVariables as glbl
 
 
@@ -22,7 +22,8 @@ constList =['ThetaStep', 'ZDiffWall', 'RDiffWall',
             'ZSource', 'RSource', 'ZLaser', 'LLaser', 'ZFinal', 'RFinal',
             'NPointsDetector', 'NPointsSource', 'GridType']
             
-listList = ['DataColLine', 'DataRowLine', 'MoleculeLine', 'TemperatureLine', 'VibStateLine', 'RotStateLine',
+listList = ['DataColLine', 'DataRowLine', 'MoleculeLine', 'TemperatureLine', 
+            'VibStateLine', 'RotStateLine',
             'Tmin', 'Tmax', 'Function', 'AveragingType']
 
             
@@ -203,7 +204,7 @@ def addGlobalConst(tokens, line, lineNumber):
 
 
 #==============================================================================
-# append list item to list
+# add list item
 #==============================================================================             
 def addListItem(tokens, line, lineNumber):
     
@@ -217,15 +218,20 @@ def addListItem(tokens, line, lineNumber):
         print(' *** line =', line)
         print(' *** items =', tokens)
         errors.append((error, 'line ' + str(lineNumber)))
-#==============================================================================
-#     # use this line to input strings with quotes e.g. 'ERF'    
-#     exec('glbl.' + tokens[0] + '=' + tokens[1])
-#==============================================================================
-    # use this block to input strings without quotes e.g. ERF    
+
+    # item is a string, need to add quotes to exec, e.g. ERF become 'ERF'
     if is_number(tokens[1]):
         exec('glbl.' + tokens[0] + '=' + tokens[1])
     else:
         exec('glbl.' + tokens[0] + '=' + "tokens[1]")
+        
+#==============================================================================
+#     # append the item to list
+#         cmd = 'glbl.' + tokens[0] + 's.append(glbl.' + tokens[0] +')'
+#         exec(cmd)
+#         # exec('glbl.' + tokens[0] + 's.append(glbl.' + tokens[0])
+#         pass
+#==============================================================================
 
 #==============================================================================
 # add Parameter to the Parameters class instance 
@@ -249,28 +255,25 @@ def addGlobalParameters(runNumber):
 #==============================================================================
 def processEndSection(runNumber, lineNumber):
     global errors,  globalParms, parms
-    # check if signalFile specified
-    if glbl.signalFile == None:
-        print('\n *** Error: No signal file name for')
-        print(' *** data section ending at line ', lineNumber)
-        errors.append(('no signal file','line ' + str(lineNumber)))
+    # check if signalFile specified.  Error if first section
+#==============================================================================
+#     if glbl.signalFile == None and runNumber == 1:
+#         print('\n *** Error: No signal file name for')
+#         print(' *** first data section ending at line ', lineNumber)
+#         errors.append(('no signal file','line ' + str(lineNumber)))
+#     
+#     # check function type is specified.  Error if first sectionIf not specified in this 
+#     if glbl.Function == None and runNumber == 1:
+#         print('\n *** Error: No function specified for')
+#         print(' *** data section ending at line ', lineNumber)
+#         errors.append(('no function','line ' + str(lineNumber)))
+#         
+#     if glbl.AveragingType == None and runNumber == 1:
+#         print('\n *** Error: No AveragingType specified for')
+#         print(' *** data section ending at line ', lineNumber)
+#         errors.append(('no function','line ' + str(lineNumber)))
+#==============================================================================
     
-    # check function type is specified.  If not specified in this 
-    # section of command file - use previously specified function type.
-    if glbl.Function == None:
-        if runNumber == 1:
-            print('\n *** Error: No function specified for')
-            print(' *** data section ending at line ', lineNumber)
-            errors.append(('no function','line ' + str(lineNumber)))
-        else:
-#==============================================================================
-#             print('\n *** Info: using previously specified function')
-#             print(' *** data section ending at line ', lineNumber)
-#==============================================================================
-            # -2 because we want the value for the previous run
-            # runNumber starts at 1; list indexing starts at 0
-            glbl.Function = glbl.Functions[runNumber - 2]
-        
     # if this is not the first section, add global parameters
     if runNumber > 1:
         addGlobalParameters(runNumber)
@@ -279,13 +282,29 @@ def processEndSection(runNumber, lineNumber):
     glbl.signalFiles.append(glbl.signalFile)
     glbl.backgroundFiles.append(glbl.backgroundFile)
     
+#==============================================================================
+#     for item in listList:
+#         if eval('glbl.' + item):
+#             exec('glbl.' + item + 's.append(glbl.' + item + ')')
+#         elif runNumber >1:
+#             exec('glbl.' + item + 's.append(glbl.' + item +'s[' + str(runNumber -2) +'])')
+#         else:
+#             print('item not foung', item)
+#==============================================================================
+    optionalList = ['Tmin', 'Tmax']
     for item in listList:
-        command = 'glbl.' + item + 's.append(glbl.' + item + ')'
-        exec(command)
+        exec('glbl.' + item + 's.append(glbl.' + item + ')')
+        if not eval('glbl.' + item) and not item in optionalList:
+            print('\n *** Error: No ', item, ' for')
+            print(' *** data section ending at line ', lineNumber)
+            errors.append('no ' + str(item) + ' for section ending at line ' +str(lineNumber))
+            
+            
          
     glbl.signalFile = None
     glbl.backgroundFile = None
     glbl.Function = None
+    glbl.AveragingType = None
     glbl.Tmin = None
     glbl.Tmax = None
 
@@ -332,20 +351,17 @@ def parseCmdFile(filename):
             addListItem(tokens, line, lineNumber)
             pass
         
-        # check if line specifies a function form
-#==============================================================================
-#         elif tokens[0].upper() == 'FUNCTION':
-#             gllbl.Function = tokens[1]
-#             glbl.Functions.append(Function)
-#==============================================================================
-        
-        # check if line specifies a signal or background file name
+        # check if line specifies a signal file name
+        # note this could be consolidatae with listList items
         elif tokens[0].upper() == 'SIGNAL':
             #use following line to input signal file name without quotes
             glbl.signalFile = tokens[1]            
             # use the following line to input signal file name with quotes
             #exec('glbl.signalFile =' + tokens[1])
             continue
+        
+        # check if line specifies a background file name
+        # note this could be consolidatae with listList items
         elif tokens[0].upper() == 'BACKGROUND':
             # use following line to input background file name without quotes
             glbl.backgroundFile = tokens[1]
@@ -366,14 +382,16 @@ def parseCmdFile(filename):
     return parms, glbl.Functions, glbl.signalFiles, glbl.backgroundFiles, errors
 
 
+#--------------------------------------------------------------------------------------------------
+# print list items
+#--------------------------------------------------------------------------------------------------
 def print_list_items():
     for item in listList:
-        eval_arg = 'glbl.' + item + 's'
-        #print('repr(eval_arg) =', repr(eval_arg))
-        #print('eval(eval_arg) =', eval(eval_arg))
-        #print('ast.literal_eval(eval_arg) =', ast.literal_eval(eval_arg))
         print('{:16s} = {}'.format(item + 's', eval('glbl.' + item + 's')))
-        #print('{:16s} = {}'.format(item + 's', ast.literal_eval('glbl.' + item + 's')))
+        
+        
+        
+        
     
 #==============================================================================
 # test parseCmdFile if executed as main
@@ -401,6 +419,7 @@ if __name__ == '__main__':
 # filename = 'Fits\\test1.tof_in'
     filename = 'Fits\\fit010_test1.tof_in'
     filename = 'Fits\\fit010.tof_in'
+    filename = 'Fits\\test1.tof_in'
 
 
 
@@ -433,7 +452,12 @@ if __name__ == '__main__':
     parms.pretty_print()
     
     if len(errors) > 0:
-        print('Errors\n', errors)
-        raise SystemExit ('Error in command file' )
+        print('*****')
+        print('***** Errors in command file found')
+        for error in errors:
+            print('***** ', error)
+        print('*****')
+        
+        raise SystemExit ('Error in command file')
     
     

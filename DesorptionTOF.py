@@ -366,8 +366,6 @@ parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFile)
 if len(errors) > 0:
     print('Errors\n', errors)
     raise SystemExit ('Error in command file' )
-    
-AveragingType = glbl.AveragingTypes[0]
 
 #==============================================================================
 # # use Francesco's names until have time to change
@@ -389,6 +387,7 @@ for i in range( len( DataFiles)):
     Tmax = glbl.Tmaxs[i]
     ProbCurveType = functions[i]
     DataFile = DataFiles[i]
+    AveragingType = glbl.AveragingTypes[i]
     
     if BackgroundFiles  != [ "" ]:
         BackgroundFile = BackgroundFiles[i]
@@ -444,72 +443,6 @@ print(fit_report(fitResult))
 state_string = 'v' + str(states[0][0]) + 'j' +str(states[0][1])
 result_file_name = 'Fit' + newFitNumber + '_' + data.molecules[0] + \
                    '_' + state_string + '_' + ProbCurveType + '.fit_out'
-
-#--------------------------------------------------------------------------------------------------
-# Enter fit results in results.xls
-#--------------------------------------------------------------------------------------------------
-xls_filename ='Fits\\fit_results.xlsx'
-wb = pyxl.load_workbook(xls_filename)
-ws = wb.active 
-   
-i_found = None
-row_to_write = None
-fit_name = 'Fit' + newFitNumber
-
-for i in range(1, ws.max_row+1):
-    if ws.cell(row=i,column=1).value == fit_name:
-        i_found = i
-        
-if i_found:
-    print('An entry for fit', fit_name, 'already exists')
-    
-    while True:        
-        ans = input('Overwrite (O)  Append (A)  or Skip (S): ').upper()
-        if ans.startswith('O'):
-            row_to_write = i_found
-            break
-        elif ans.startswith('A'):
-            row_to_write = ws.max_row+1
-            break
-        elif ans.startswith('S'):
-            row_to_write=None
-            break
-        else:
-            print('Please enter "O", "A", or "S" : ')
-            
-else: 
-    row_to_write = ws.max_row + 1
-            
-if(row_to_write):
-    ws.cell(row=row_to_write, column = 1).value = fit_name
-    ws.cell(row=row_to_write, column = 2).value = data.molecules[0]  # molecule
-    ws.cell(row=row_to_write, column = 3).value = data.states[0][0]
-    ws.cell(row=row_to_write, column = 4).value = data.states[0][1]
-    ws.cell(row=row_to_write, column = 5).value = glbl.Functions[0]
-    ws.cell(row=row_to_write, column = 6).value = glbl.AveragingTypes[0]
-    ws.cell(row=row_to_write, column = 7).value = fitResult.params['E0_1'].value
-    ws.cell(row=row_to_write, column = 8).value = fitResult.params['E0_1'].stderr
-    ws.cell(row=row_to_write, column = 9).value = fitResult.params['W_1'].value
-    ws.cell(row=row_to_write, column =10).value = fitResult.params['W_1'].stderr
-
-wb.save(xls_filename)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #==============================================================================
 # # for testing 
@@ -663,6 +596,59 @@ with open(pathToFits + result_file_name, 'w') as result_file:
 result_file.close()
 
 PlotFit(pathToFits + result_file_name)
+
+#--------------------------------------------------------------------------------------------------
+# Enter fit results in results.xls
+#--------------------------------------------------------------------------------------------------
+xls_filename ='Fits\\fit_results.xlsx'
+wb = pyxl.load_workbook(xls_filename)
+ws = wb.active 
+   
+i_found = None
+row_to_write = None
+fit_name = 'Fit' + newFitNumber
+
+for i in range(1, ws.max_row+1):
+    if ws.cell(row=i,column=1).value == fit_name:
+        i_found = i
+        
+if i_found:
+    print('An entry for fit', fit_name, 'already exists')
+    
+    while True:        
+        ans = input('Overwrite (O)  Append (A)  or Skip (S): ').upper()
+        if ans.startswith('O'):
+            row_to_write = i_found
+            break
+        elif ans.startswith('A'):
+            row_to_write = ws.max_row+1
+            break
+        elif ans.startswith('S'):
+            row_to_write=None
+            break
+        else:
+            print('Please enter "O", "A", or "S" : ')
+            
+else: 
+    row_to_write = ws.max_row + 1
+            
+if(row_to_write):
+    ws.cell(row=row_to_write, column = 1).value = fit_name
+    ws.cell(row=row_to_write, column = 2).value = data.molecules[0]  # molecule
+    ws.cell(row=row_to_write, column = 3).value = data.states[0][0]
+    ws.cell(row=row_to_write, column = 4).value = data.states[0][1]
+    ws.cell(row=row_to_write, column = 5).value = glbl.Functions[0]
+    ws.cell(row=row_to_write, column = 6).value = glbl.AveragingTypes[0]
+    ws.cell(row=row_to_write, column = 7).value = fitResult.params['E0_1'].value
+    ws.cell(row=row_to_write, column = 8).value = fitResult.params['E0_1'].stderr
+    ws.cell(row=row_to_write, column = 9).value = fitResult.params['W_1'].value
+    ws.cell(row=row_to_write, column =10).value = fitResult.params['W_1'].stderr
+
+wb.save(xls_filename)
+
+
+
+
     # if DataType != 'Calibration':
 #==============================================================================
 #     if functions[i] != 'Calibration':

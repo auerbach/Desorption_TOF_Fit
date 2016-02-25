@@ -13,7 +13,6 @@ massD2      = 2 * massD
 # massAmu     = massD2
 
 # Experimental apparatus constants #####################################
-
 FFRDist           = 29.0E-3        # Distance travelled by the molecule in the fieldfree region as an ion (m)
 FFRDistTolerance  = 0.5            # Percentage by which the field free region lenght can vary
 TimeCorr          = 4.6            # Time correction (us)
@@ -88,5 +87,4 @@ DataRowLine      = 10;   DataRowLines     = []
 Tmin             = None; Tmins = []
 Tmax             = None; Tmaxs = []
 Function         = None; Functions = []
-# Valid values for Averaging Types are 'No Averaging', 'Point Detector', and 'Line Detector'
 AveragingType    = None; AveragingTypes=[]   

@@ -1,10 +1,10 @@
 # comment
 
 #   Function Type 
-    Function, 'Erf'
+    Function, Erf
 
 #   Averaging Type
-    AveragingType, 'No Averaging'   
+    AveragingType, None   
 
 #   Fit Parameters
 #   Name,   Value,  Vary,   Min,    Max
