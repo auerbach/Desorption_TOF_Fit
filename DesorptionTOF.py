@@ -15,6 +15,7 @@ Fit data from post permeation desorption TOF
 
 # import os
 # import sys
+
 from lmfit import minimize, fit_report
 import numpy as np
 import openpyxl as pyxl
@@ -308,7 +309,7 @@ pathToFits = 'Fits\\'
 #==============================================================================
 # # uncomment for testing:
 # cmdFileName    = 'fit010_test1'
-# # cmdFileName    = 'fit010'
+# cmdFileName    = 'fit010'
 # cmdFileTesting = pathToFits + cmdFileName + '.tof_in'
 # 
 #==============================================================================
@@ -318,43 +319,41 @@ fitNumber = '{:03d}'.format(int(fit_number_file.readline()))
 oldFitNumber = fitNumber
 newFitNumber = fitNumber
 
-#==============================================================================
-# # comment out for testing
-# while True:
-#     print('please enter oldfit number: ', '[', oldFitNumber, ']')
-#     ans = input('?')
-#     if ans:
-#         old_n = '{:03d}'.format(int(ans))
-#     else:
-#         old_n = oldFitNumber
-#     
-#     if int(old_n) > int(oldFitNumber):
-#         print('maximum allowed for old fit number is ', oldFitNumber)
-#     else:
-#         break
-#     
-# oldFitNumber = old_n
-# 
-# ans = input ('make new command file? [no]')
-# if ans:
-#     if ans.upper()[0] == 'Y':
-#         newFitNumber = '{:03d}'.format(int(fitNumber)+1)
-#     fit_number_file.seek(0)
-#     fit_number_file.write(newFitNumber)
-# else:
-#     newFitNumber = oldFitNumber
-# 
-# fit_number_file.close()
-# 
-# oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
-# newFile = oldFile
-# 
-# if oldFitNumber != newFitNumber:
-#     newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
-#     shutil.copy2(oldFile, newFile)
-# 
-# subprocess.call(['npp.bat', newFile])
-#==============================================================================
+# comment out for testing
+while True:
+    print('please enter oldfit number: ', '[', oldFitNumber, ']')
+    ans = input('?')
+    if ans:
+        old_n = '{:03d}'.format(int(ans))
+    else:
+        old_n = oldFitNumber
+    
+    if int(old_n) > int(oldFitNumber):
+        print('maximum allowed for old fit number is ', oldFitNumber)
+    else:
+        break
+    
+oldFitNumber = old_n
+
+ans = input ('make new command file? [no]')
+if ans:
+    if ans.upper()[0] == 'Y':
+        newFitNumber = '{:03d}'.format(int(fitNumber)+1)
+    fit_number_file.seek(0)
+    fit_number_file.write(newFitNumber)
+else:
+    newFitNumber = oldFitNumber
+
+fit_number_file.close()
+
+oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
+newFile = oldFile
+
+if oldFitNumber != newFitNumber:
+    newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
+    shutil.copy2(oldFile, newFile)
+
+subprocess.call(['npp.bat', newFile])
 cmdFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
 
 
@@ -412,13 +411,16 @@ for i in range( len( DataFiles)):
     
 # Generate Theta angles employed for angular averaging
 
-ThetaAngles = GenerateThetaAngles(AveragingType=AveragingType, GridType=glbl.GridType,
-                                  NPointsSource=glbl.NPointsSource, 
-                                  NPointsDetector=glbl.NPointsDetector, 
-                                  ZSource = glbl.ZSource, RSource = glbl.RSource,
-                                  ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
-                                  ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
-#    ZDetector = ZFinal,          LengthDetector = 2.*RFinal         \
+ThetaAngles = GenerateThetaAngles(
+                AveragingType=AveragingType, 
+                GridType=glbl.GridType,
+                NPointsSource=glbl.NPointsSource, 
+                NPointsDetector=glbl.NPointsDetector, 
+                ZSource = glbl.ZSource, 
+                RSource = glbl.RSource,
+                ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
+                ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
+                # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \
   
 #==============================================================================
 # print()
@@ -588,9 +590,9 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         for j in range(len(Time)):
             result_file.write('{:6.2f} {:20.5e} {:20.5e}\n'.format(Time[j], Signal[j], Fit[j]))
         
-        result_file.write('# End data')
+        result_file.write('# End data\n')
         result_file.write('#' + 60*'-' + '\n')
-        result_file.write('# End Plot ' + str(n_dataset))
+        result_file.write('# End Plot ' + str(n_dataset) +'\n')
             
         
 result_file.close()
@@ -642,7 +644,12 @@ if(row_to_write):
     ws.cell(row=row_to_write, column = 7).value = fitResult.params['E0_1'].value
     ws.cell(row=row_to_write, column = 8).value = fitResult.params['E0_1'].stderr
     ws.cell(row=row_to_write, column = 9).value = fitResult.params['W_1'].value
-    ws.cell(row=row_to_write, column =10).value = fitResult.params['W_1'].stderr
+    ws.cell(row=row_to_write, column =10).value = glbl.Tmins[0]
+    ws.cell(row=row_to_write, column =11).value = glbl.Tmaxs[0]
+    ws.cell(row=row_to_write, column =12).value = fitResult.params['W_1'].stderr
+    ws.cell(row=row_to_write, column =13).value = fitResult.params['Baseline_1'].stderr
+    ws.cell(row=row_to_write, column =14).value = fitResult.params['Yscale_1'].stderr
+
 
 wb.save(xls_filename)
 

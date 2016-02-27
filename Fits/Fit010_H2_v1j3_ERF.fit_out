@@ -11,7 +11,7 @@
 # 
 # #   Fit function valid values: Calibration, ERF, LGS
 #     Function,     	ERF
-#     Tmin,       	5
+#     Tmin,       	5.0
 #     Tmax,     		14.0
 # 
 # #   Averaging type: None, PointDetector, or LineDetector

@@ -9,6 +9,13 @@ import os
 import numpy as np
 import GlobalVariables as glbl
 
+def is_number(s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
 class Data(object):
     def __init__(self):
         self.run_number         = 0
@@ -28,7 +35,7 @@ class Data(object):
         self.temperatures       = []
         
         
-
+    
 
     #------------------------------------------------------------------------------
     # read_data  function to read the data and subtract background
@@ -133,10 +140,12 @@ class Data(object):
             
         # find n_min = index of first point to use in fitting
         # scan through the data and look for point where data exceeds a threshold
+        
         for n in range(n_delt+1, len( time )-(n_delt+1)):
-            if time[n] < 3E-6:
+            if time[n] < 3E-6:      # ion flight time for H2 is 3.2E-6.  
+                                    # should changes this to be the ion flight time
                 continue
-            if t_min :
+            if is_number(t_min):
                 if float(t_min) * 1.E-6 >= time[n] and \
                    float(t_min) * 1.E-6 < time[n] + delta_time:
                     n_min = n
@@ -148,7 +157,7 @@ class Data(object):
                     break
         
         for n in range( len(time) -(n_delt + 1), 100, -1 ):
-            if t_max :
+            if is_number(t_max) :
                 if float(t_max) * 1.E-6 >= time[n] and \
                    float(t_max) * 1.E-6 <  time[n] + delta_time:
                     n_max = n

@@ -76,19 +76,12 @@ def PlotFit(filename):
             time.append(float(line.split()[0]))
             sig.append (float(line.split()[1]))
             fit.append (float(line.split()[2]))
+
         time = np.array(time)
         sig  = np.array(sig)            
         fit  = np.array(fit)
         sig_max = sig[:500].max()
         sig_min = sig[:500].min()
-
-#==============================================================================
-#         print(25*'-')        
-#         print('sig.max, sig_max, fit.max =', sig.max(), sig_max, fit[10:300].max())
-#         print('sig.min, sig_min fit.mn =', sig.min(), sig_min, fit.min())
-#         print('time[0] , time[1] =', time[0], time[1])
-#         print()            
-#==============================================================================
     
         fig = plt.figure(figsize = (6,6), dpi = 200)
         fig = plt.figure()
@@ -98,9 +91,7 @@ def PlotFit(filename):
         ax.set_ylabel('Signal', fontsize=16)
     
         ax.annotate(label, xy = [0.55, 0.95, ], xycoords = 'axes fraction', 
-                    va = 'top', family='monospace', )
-        
-        
+                    va = 'top', family='monospace', )    
         ax.annotate('$t_{min}$', xycoords = 'data', xy = (t_min-.1, sig_max * .4), 
                     ha = 'right', va='center', fontsize=14)        
         ax.annotate('$t_{max}$', xycoords = 'data', xy = (t_max+.1, sig_max * .4), 
@@ -109,9 +100,8 @@ def PlotFit(filename):
                     arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-')) 
         ax.annotate('', xycoords = 'data', xy = (t_max , 0), xytext =(t_max, sig_max*.7), 
                     arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-'))   
-      
-            
-        plt.xlim((2, 30))
+              
+        plt.xlim((2, 50))
         plt.ylim((sig_min, sig_max * 1.05))
         plt.plot(time, sig, 'b.')
         plt.plot(time, fit, 'r', linewidth = 2)
@@ -127,5 +117,5 @@ if __name__ == '__main__':
     
     plot_file_name = 'fits\\fit010_test1_v1j3_ERF.fit_out'
     plot_file_name = 'fits\\fit001_v0j2_ERF.fit_out'
-    plot_file_name = 'fits\\fit010_H2_v1j3_ERF.fit_out'
+    plot_file_name = 'fits\\fit015_D2_v0j2_ERF.fit_out'
     PlotFit(plot_file_name)

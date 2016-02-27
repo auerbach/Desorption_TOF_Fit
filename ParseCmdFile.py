@@ -420,6 +420,7 @@ if __name__ == '__main__':
     filename = 'Fits\\fit010_test1.tof_in'
     filename = 'Fits\\fit010.tof_in'
     filename = 'Fits\\test1.tof_in'
+    filename = 'Fits\\fit011.tof_in'
 
 
 
