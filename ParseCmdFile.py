@@ -15,7 +15,8 @@ import GlobalVariables as glbl
 
 # names of parameters constants and lists
 parmList = ['A', 'E0', 'W', 
-            'TCutC', 'TCutW', 'Temp', 'FFR', 'IonTOF', 'Yscale', 'Baseline']
+            'TCutC', 'TCutW', 'ECutM', 'ECutS',
+            'Temp', 'FFR', 'IonTOF', 'Yscale', 'Baseline']
 
 constList =['ThetaStep', 'ZDiffWall', 'RDiffWall', 
             'ZRef', 'ZAperture', 'RAperture', 
@@ -24,7 +25,7 @@ constList =['ThetaStep', 'ZDiffWall', 'RDiffWall',
             
 listList = ['DataColLine', 'DataRowLine', 'MoleculeLine', 'TemperatureLine', 
             'VibStateLine', 'RotStateLine',
-            'Tmin', 'Tmax', 'Function', 'AveragingType']
+            'Tmin', 'Tmax', 'Function', 'AveragingType', 'cutoff_type']
 
             
 
@@ -57,11 +58,6 @@ def initialize():
     glbl.Tmaxs = []
     glbl.Tmins = []
     
-#==============================================================================
-#     for item in listList:
-#         exec('global.' + item + '= []')
-#     
-#==============================================================================
 
 #==============================================================================
 # open file for reading; abort if file not found
@@ -91,11 +87,17 @@ def getTokens(line):
     for j in range(len(tokens)):
     # replace nule tokens (i.e. '') with None
         tokens[j] = tokens[j].strip()
-        if tokens[j] == '': tokens[j]=None
-        # remove comments and strip whitespace
+        if tokens[j] == '': tokens[j] = None
+        
         try:
+            #test if token has an embedded '#'
             ii = tokens[j].index('#')
+            # if so, remove rest of token and strip white space
             tokens[j] = tokens[j][0:ii].strip()
+            # ignore rest of tokens
+            for k in range(j + 1, len(tokens)):
+                tokens.pop(-1)
+            break 
         except:
             pass
     return tokens
@@ -120,7 +122,7 @@ def isGlobalConst(tokens):
 # check if cmd is a List item 
 #==============================================================================
 def isListItem(tokens):
-    matching = [tokens[0] == s for s in listList]   
+    matching = [tokens[0].upper() == s.upper() for s in listList]   
     #print('isListItem: tokens=',tokens, 'any=', any(matching)) #, 'matching=', matching)
     return any(matching)
 
@@ -145,7 +147,7 @@ def addParameter(runNumber, tokens, line, lineNumber):
     #   there should be name, and 2, 3 or 4 parameters
     #   i.e. 3 to 5 tokens on the line
     if len(tokens) < 3 or len(tokens) > 5:
-        print('\n *** wrong number of items on line #', lineNumber)
+        print('\n *** wrong number of items on line ', lineNumber)
         print(' *** items found =', len(tokens), 
               '. Should be 3, 4, or 5')
         print(' *** line =', line)
@@ -191,13 +193,13 @@ def addParameter(runNumber, tokens, line, lineNumber):
 #==============================================================================             
 def addGlobalConst(tokens, line, lineNumber):
     if len(tokens) != 2:
-        error = 'wrong number of items for const on line #'
+        error = 'wrong number of items for const on line ' + str(lineNumber)
         print('\n ***' + error, lineNumber)
         print(' *** items found =', len(tokens), 
               '. Should be 2')
         print(' *** line =', line)
         print(' *** items =', tokens)
-        errors.append((error, 'line ' + str(lineNumber)))    
+        errors.append(error)    
         return
     exec('glbl.' + tokens[0] + '=' + tokens[1])
     
@@ -211,13 +213,15 @@ def addListItem(tokens, line, lineNumber):
     global errors,  globalParms, parms
            
     if len(tokens) != 2:
-        error = 'wrong number of items for append to list on line #'
-        print('\n ***' + error, lineNumber)
+        error = 'wrong number of arguments items on line ' + str(lineNumber)
+        errors.append(error)
+        
+        print('\n ***' + error)
         print(' *** items found =', len(tokens), 
               '. Should be 2')
         print(' *** line =', line)
         print(' *** items =', tokens)
-        errors.append((error, 'line ' + str(lineNumber)))
+        
 
     # item is a string, need to add quotes to exec, e.g. ERF become 'ERF'
     if is_number(tokens[1]):
@@ -291,8 +295,16 @@ def processEndSection(runNumber, lineNumber):
 #         else:
 #             print('item not foung', item)
 #==============================================================================
+    
+    # add item to items list and check if required items have been supplied    
     optionalList = ['Tmin', 'Tmax']
     for item in listList:
+#==============================================================================
+#         if cutoff_type == 'Tanh' and item.startswith('ECut'):
+#             continue
+#         if cutoff_type == 'exp' and item.startswith('TCut'):
+#             continue
+#==============================================================================
         exec('glbl.' + item + 's.append(glbl.' + item + ')')
         if not eval('glbl.' + item) and not item in optionalList:
             print('\n *** Error: No ', item, ' for')
@@ -305,6 +317,7 @@ def processEndSection(runNumber, lineNumber):
     glbl.backgroundFile = None
     glbl.Function = None
     glbl.AveragingType = None
+    glbl.cutoff_type = None
     glbl.Tmin = None
     glbl.Tmax = None
 
@@ -376,8 +389,8 @@ def parseCmdFile(filename):
             
         else:
             print('\n *** unknown command on line', i+1)
-            print(' *** line =', line)
-            errors.append(('unknown command','line ' + str(i+1)))
+            print(' *** command =', tokens[0])
+            errors.append('unknown command on line ' + str(i+1) + ' command = ' + tokens[0])
     
     return parms, glbl.Functions, glbl.signalFiles, glbl.backgroundFiles, errors
 
@@ -416,11 +429,7 @@ if __name__ == '__main__':
 #     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
 #==============================================================================
 
-# filename = 'Fits\\test1.tof_in'
-    filename = 'Fits\\fit010_test1.tof_in'
-    filename = 'Fits\\fit010.tof_in'
-    filename = 'Fits\\test1.tof_in'
-    filename = 'Fits\\fit011.tof_in'
+    filename = 'Fits\\fit001.tof_in'
 
 
 

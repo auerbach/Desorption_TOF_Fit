@@ -1,7 +1,7 @@
 #   Fit function valid values: Calibration, ERF, LGS
     Function,       ERF
     AveragingType,  None    # valid values None, PointDetector, or LineDetector
-    cutoff_type,    Tanh
+    cutoff_type,    exp
 
     Tmin,           7.0
     Tmax,           10.0
@@ -15,8 +15,8 @@
     E0,             1.0,        1,    0,    5.0
     W,              0.3,        1,    0,    1.0      
 	
-    TCutC,          28.6,       0
-    TCutW,          4.3,        0
+    ECutM,          20,       	0
+    ECutS,          0.035,      0
     
     IonTOF,         4.5248,     0
     FFR,		     0.03172861, 0

@@ -1,9 +1,9 @@
 # Physical constants ###################################################
 
 kb          = 8.6173324E-5           # Boltzmann constant in eV/K
-eV2J        = 1.602176565E-19           # eV to Joule 
-J2eV        = 6.24150934E18           # Joule to eV 
-AtomicMass  = 1.660538921E-27           # Atomic mass constant
+eV2J        = 1.602176565E-19        # eV to Joule 
+J2eV        = 6.24150934E18          # Joule to eV 
+AtomicMass  = 1.660538921E-27        # AMU in kg
 eVConst     = AtomicMass * J2eV
 massH       = 1.00782503223
 massD       = 2.01410177812
@@ -13,24 +13,26 @@ massD2      = 2 * massD
 # massAmu     = massD2
 
 # Experimental apparatus constants #####################################
-FFRDist           = 29.0E-3        # Distance travelled by the molecule in the fieldfree region as an ion (m)
-FFRDistTolerance  = 0.5            # Percentage by which the field free region lenght can vary
-TimeCorr          = 4.6            # Time correction (us)
-TimeCorrTolerance = 0.8            # (see two lines above )
-TCutC             = 28.6           # CutOff function 1st parameter (us) 
-TCutCTolerance    = 0.5            # ...
-TCutW             = 4.3            # CutOff function 2nd parameter (us)
-
-TemperatureTolerance = 1.         
-
-Tmin = ''
-Tmax = ''
-
+#==============================================================================
+# FFRDist           = 29.0E-3        # Distance travelled by the molecule in the fieldfree region as an ion (m)
+# FFRDistTolerance  = 0.5            # Percentage by which the field free region lenght can vary
+# TimeCorr          = 4.6            # Time correction (us)
+# TimeCorrTolerance = 0.8            # (see two lines above )
+#
+# TCutC             = 28.6           # CutOff function 1st parameter (us) 
+# TCutCTolerance    = 0.5            # ...
+# TCutW             = 4.3            # CutOff function 2nd parameter (us)
+# 
+# TemperatureTolerance = 1.         
+# 
+# Tmin = ''
+# Tmax = ''
+# 
+#==============================================================================
 
 #--------------------------------------------------------------------------------------------------
-# Angular averaging
+# Angular averaging constants
 #--------------------------------------------------------------------------------------------------
-
 # Following parameters for point detector
 AngRes               = 20          # Angular resolusion (degrees)
 ThetaStep            = 1          # Theta step in averaging
@@ -63,9 +65,10 @@ RFinal     = 10.0               # Effective acceptance radius for ions at
                                 #   accleration to extractor take this to
                                 #   be equal to the extrator radius
 
-NPointsDetector = 101          # Number of points to consider on the line
-    
-NPointsSource   = 1             # Number of points to consider on the Source
+# NPointsDetector = 101         # Number of points to consider on the line
+NPointsDetector = 11            # Number of points to consider on the line   
+# NPointsSource   = 1           # Number of points to consider on the Source
+NPointsSource   = 10            # Number of points to consider on the Source
                                 #   If NPointsSource = 1 we treat this as
                                 #   point source
 
@@ -87,4 +90,5 @@ DataRowLine      = 10;   DataRowLines     = []
 Tmin             = None; Tmins = []
 Tmax             = None; Tmaxs = []
 Function         = None; Functions = []
-AveragingType    = None; AveragingTypes=[]   
+AveragingType    = None; AveragingTypes = []
+cutoff_type      = None; cutoff_types = []   
