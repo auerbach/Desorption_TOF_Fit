@@ -23,6 +23,7 @@ from scipy import special
 import shutil
 import subprocess
 import unicodedata
+from glob import glob
 
 from ParseCmdFile import parseCmdFile
 from PlotFit import PlotFit
@@ -83,7 +84,7 @@ def FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType):
         X = X + list( DataSet[0] )
         Y = Y + list( DataSet[1] )
         
-    # The fit is performed
+    # Perform NLLSQ fit
     result = minimize( Residual, Params, 
                       args=(X, Y, DataSets, AveragingType, ThetaAngles, 
                             ProbCurveType) )
@@ -113,7 +114,7 @@ def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType)
 def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, 
         ProbCurveType, cutoff_type, Debug=False):
     # Time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
-    #FFRDist  = Params['FFRDist_%i'   %NDataSet].value
+    #Dist  = Params['FFRDist_%i'   %NDataSet].value
     Yscale   = Params['Yscale_%i'    %NDataSet].value
     Baseline = Params['Baseline_%i'  %NDataSet].value
     # TCutC    = Params['TCutC_%i'     %NDataSet].value
@@ -130,7 +131,7 @@ def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles,
 #         CutOff = 0.5 * (1. - np.tanh((Time - TCutC*1E-6) / (TCutW*1E-6)))
 #     
 #     elif cutoff_type.lower == 'exp':
-#         FFRDist  = Params['FFR_%i'     %NDataSet].value
+#         FFRDist  = Params['FFR_%i'     %NDataSet].value * 1E-3
 #         ECutM    = Params['ECutM_%i' %NDataSet].value
 #         ECutS    = Params['ECutS_%i' %NDataSet].value
 #         mass = data.mass_molecules[NDataSet-1]
@@ -162,7 +163,7 @@ def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles,
 # -------------------------------------------------------------------------------------------------
 def AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles):
 
-    FFRDist  = Params['FFR_%i'   %NDataSet].value
+    FFRDist  = Params['FFR_%i'   %NDataSet].value * 1E-3
     Temperature = Params['Temp_%i' %NDataSet].value
 
     Signal = 0.  # Initialize Signal to 0
@@ -205,18 +206,20 @@ def AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles):
 # -------------------------------------------------------------------------------------------------
 def Prob(En, NDataSet, Params, ProbCurveType):
     # Reaction probability functions. Takes an Energy (eV) returns a reaction probability
-    A  = Params['A_%i' %NDataSet].value
-    B  = Params['E0_%i' %NDataSet].value
-    # BI = Params['BI_%i' %NDataSet].value
-    C  = Params['W_%i' %NDataSet].value
-    # CI = Params['CI_%i' %NDataSet].value
-    # ni = Params['ni_%i' %NDataSet].value
     
-    
-
+#==============================================================================
+#     A  = Params['A_%i' %NDataSet].value
+#     B  = Params['E0_%i' %NDataSet].value
+#     # BI = Params['BI_%i' %NDataSet].value
+#     C  = Params['W_%i' %NDataSet].value
+#     # CI = Params['CI_%i' %NDataSet].value
+#     # ni = Params['ni_%i' %NDataSet].value
+#==============================================================================
 
     if ProbCurveType == "ERF":
-        return A/2. * (1. + special.erf((En - B)/ C ))
+        E0 = Params['E0_%i' %NDataSet].value
+        W  = Params['W_%i' %NDataSet].value
+        return 1/2. * (1. + special.erf((En - E0)/ W ))
     
 #==============================================================================
 # 
@@ -244,7 +247,7 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
     # Time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
     
 
-    FFRDist  = Params['FFR_%i'      %NDataSet].value
+    FFRDist  = Params['FFR_%i'      %NDataSet].value * 1E-3
     MaxTOF   = Params['Yscale_%i'   %NDataSet].value
     Baseline = Params['Baseline_%i' %NDataSet].value
     TimeCorr = Params['IonTOF_%i'   %NDataSet].value
@@ -260,7 +263,7 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
 #         TCutW    = Params['TCutW_%i'     %NDataSet].value
 #         CutOff = 0.5 * (1. - np.tanh((Time - TCutC*1E-6) / (TCutW*1E-6)))
 #     elif cutoff_type.lower == 'exp':
-#         FFRDist  = Params['FFR_%i'     %NDataSet].value
+#         FFRDist  = Params['FFR_%i'     %NDataSet].value * 1E-3
 #         ECutM    = Params['ECutM_%i' %NDataSet].value
 #         ECutS    = Params['ECutS_%i' %NDataSet].value
 #         mass = data.mass_molecules[NDataSet-1]
@@ -333,6 +336,11 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
 
 
 
+
+
+
+
+
 #============================================================================= 
 #============================================================================= 
 # ============================  Main PROGRAM  ================================
@@ -344,13 +352,16 @@ data = Data()
 
 # define default path to control files and fit output
 pathToFits = 'Fits\\'
+# pathToFits = 'd:\\users\\dja\\desktop\\permeation\\All-DJA\\Fits'
 
-
+#------------------------------------------------------------------------------
 # uncomment for testing:
-# newFitNumber = '001'
+#------------------------------------------------------------------------------
+# newFitNumber = '017'
 
+#------------------------------------------------------------------------------
 # begin1 comment out for testing
-
+#------------------------------------------------------------------------------
 # Get Last fit number from FitNumber.dat
 fit_number_file = open(pathToFits + 'FitNumber.dat', 'r+')
 fitNumber = '{:03d}'.format(int(fit_number_file.readline()))
@@ -392,7 +403,9 @@ if oldFitNumber != newFitNumber:
 
 subprocess.call(['npp.bat', newFile])
 
+#------------------------------------------------------------------------------
 # end of comment out for testing
+#------------------------------------------------------------------------------
 
 cmdFile = pathToFits + 'fit' + str(newFitNumber) + '.tof_in'
 
@@ -583,7 +596,9 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         result_file.write('# Label    : \n')         
         final_params = fitResult.params     
         
-        parm_for_plot_label = ['E0', 'W', 'TCutC', 'TCutW', 'George']
+        parm_for_plot_label = ['E0', 'W', 'TCutC', 'TCutW', 'ECutM', 'ECutS']
+        if glbl.Functions[i].lower() == 'calibration':
+            parm_for_plot_label.append('FFR')
         for p in parm_for_plot_label:
             p_ = p + '_' + str(i+1)
             try:
@@ -606,8 +621,12 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         Time     =  PlotDataSets[i][0] *1E6  # convert to microseconds
         Signal   =  PlotDataSets[i][1]
         Fit      =  TOF(PlotDataSets[i][0], n_dataset, fitResult.params,
-                        AveragingType, ThetaAngles, ProbCurveType, cutoff_type) 
-        
+                        AveragingType, ThetaAngles, ProbCurveType, cutoff_type)
+        #  cutoff_function(params, data, NDataSet, Time, cutoff_type, debug = False)
+        ion_tof  = fitResult.params['IonTOF_%i'   %n_dataset].value
+        Cutoff   =  cutoff_function(fitResult.params, data, n_dataset, 
+                                    (Time - ion_tof) * 1E-6, cutoff_type ) 
+                                    
         #------------------------------------------------------------------------------------------
         # write the number of data lines and range of lines fit
         #------------------------------------------------------------------------------------------
@@ -615,21 +634,22 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         result_file.write('# Nmin, Nmax : ' + str(Nmin) + ',' +str(Nmax) + '\n')
         result_file.write('# Tmin, Tmax : ' + str(Tmin * 1E6) + ',' +str(Tmax * 1E6) + '\n')
                
-        result_file.write('#' + 60*'-' + '\n')
+        result_file.write('#' + 68*'-' + '\n')
         
         #------------------------------------------------------------------------------------------
         # write the plot data
         #------------------------------------------------------------------------------------------
-        result_file.write('# Time            Signal                Fit\n')
-        result_file.write('#' + 60*'-' + '\n')
+        result_file.write('# Time            Signal                Fit                 Cutoff\n')
+        result_file.write('#' + 68*'-' + '\n')
         result_file.write('# Begin data\n')
         
         
         for j in range(len(Time)):
-            result_file.write('{:6.2f} {:20.5e} {:20.5e}\n'.format(Time[j], Signal[j], Fit[j]))
+            result_file.write('{:6.2f} {:20.5e} {:20.5e} {:20.5e}\n'
+                                .format(Time[j], Signal[j], Fit[j], Cutoff[j]))
         
         result_file.write('# End data\n')
-        result_file.write('#' + 60*'-' + '\n')
+        result_file.write('#' + 68*'-' + '\n')
         result_file.write('# End Plot ' + str(n_dataset) +'\n')
             
         
@@ -638,7 +658,7 @@ result_file.close()
 PlotFit(pathToFits + result_file_name)
 
 #--------------------------------------------------------------------------------------------------
-# Enter fit results in results.xls
+# Enter fit results in results.xlsx
 #--------------------------------------------------------------------------------------------------
 xls_filename ='Fits\\fit_results.xlsx'
 wb = pyxl.load_workbook(xls_filename)
@@ -649,6 +669,7 @@ row_to_write = None
 fit_name = 'Fit' + newFitNumber
 
 for i in range(1, ws.max_row+1):
+    test = ws.cell(row=i, column=1).value
     if ws.cell(row=i,column=1).value == fit_name:
         i_found = i
         
@@ -679,17 +700,16 @@ if(row_to_write):
     ws.cell(row=row_to_write, column = 4).value = data.states[0][1]
     ws.cell(row=row_to_write, column = 5).value = glbl.Functions[0]
     ws.cell(row=row_to_write, column = 6).value = glbl.AveragingTypes[0]
-    ws.cell(row=row_to_write, column = 7).value = fitResult.params['E0_1'].value
-    ws.cell(row=row_to_write, column = 8).value = fitResult.params['E0_1'].stderr
-    ws.cell(row=row_to_write, column = 9).value = fitResult.params['W_1'].value
-    ws.cell(row=row_to_write, column =10).value = fitResult.params['W_1'].stderr
-    ws.cell(row=row_to_write, column =11).value = glbl.Tmins[0]
-    ws.cell(row=row_to_write, column =12).value = glbl.Tmaxs[0]
-    ws.cell(row=row_to_write, column =13).value = fitResult.params['W_1'].stderr
-    ws.cell(row=row_to_write, column =14).value = fitResult.params['Baseline_1'].stderr
-    ws.cell(row=row_to_write, column =15).value = fitResult.params['Yscale_1'].stderr
-
-
+    if glbl.Functions[0].lower() == 'erf':
+        ws.cell(row=row_to_write, column = 7).value = fitResult.params['E0_1'].value
+        ws.cell(row=row_to_write, column = 8).value = fitResult.params['E0_1'].stderr
+        ws.cell(row=row_to_write, column = 9).value = fitResult.params['W_1'].value
+        ws.cell(row=row_to_write, column =10).value = fitResult.params['W_1'].stderr
+    ws.cell(row=row_to_write, column = 11).value = glbl.Tmins[0]
+    ws.cell(row=row_to_write, column = 12).value = glbl.Tmaxs[0]
+    ws.cell(row=row_to_write, column = 13).value = fitResult.params['FFR_1'].value
+    ws.cell(row=row_to_write, column = 14).value = fitResult.params['ECutM_1'].value 
+    ws.cell(row=row_to_write, column = 15).value = fitResult.params['ECutS_1'].value
 wb.save(xls_filename)
 
 

@@ -1,0 +1,30 @@
+#   Fit function valid values: Calibration, ERF, LGS
+    Function,       Calibration
+	
+#   AveragingType valid values: None, PointDetector, or LineDetector
+    AveragingType,  None
+
+#   cutoff_type valid values: tanh, exp    
+    cutoff_type,    exp
+                                
+    Tmin,			7.0
+    Tmax,			43.0
+	
+
+#   Fit Parameters
+#   Name,           Value,      Vary, Min,  Max
+    Yscale,         0.25E-9,    1,
+    IonTOF,         4.5248,     0
+    FFR,			31.72861,   1	
+    Baseline,       0.,         0
+    
+    ECutM,          20,         1
+    ECutS,          0.035,      1
+    
+    Temp,           296,        0
+
+#   Data Files
+    Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6085*.datv2
+    Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6086*.datv2
+
+End Run

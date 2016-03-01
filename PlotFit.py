@@ -66,22 +66,27 @@ def PlotFit(filename):
         #------------------------------------------------------------------------------------------
         # get the data to plot
         #------------------------------------------------------------------------------------------
-        time = []
-        sig  = []
-        fit  = []
+        time   = []
+        sig    = []
+        fit    = []
+        cutoff = []
         for n_line in range(n_line + 1, n_line + 1 + n_points ):
             line = lines[n_line]
             if float(line.split()[0]) < 3.0 :
                 continue
-            time.append(float(line.split()[0]))
-            sig.append (float(line.split()[1]))
-            fit.append (float(line.split()[2]))
+            time.append  (float(line.split()[0]))
+            sig.append   (float(line.split()[1]))
+            fit.append   (float(line.split()[2]))
+            cutoff.append(float(line.split()[3]))
 
         time = np.array(time)
         sig  = np.array(sig)            
         fit  = np.array(fit)
-        sig_max = sig[:500].max()
-        sig_min = sig[:500].min()
+        cutoff = np.array(cutoff) * fit.max()
+        
+        sig_max = sig.max()
+        sig_min = sig.min()
+        
     
         fig = plt.figure(figsize = (6,6), dpi = 200)
         fig = plt.figure()
@@ -96,15 +101,16 @@ def PlotFit(filename):
                     ha = 'right', va='center', fontsize=14)        
         ax.annotate('$t_{max}$', xycoords = 'data', xy = (t_max+.1, sig_max * .4), 
                     ha = 'left',  va='center', fontsize=14)                
-        ax.annotate('', xycoords = 'data', xy = (t_min , 0), xytext =(t_min, sig_max*.7), 
+        ax.annotate('', xycoords = 'data', xy = (t_min , 0), xytext =(t_min, sig_max*.5), 
                     arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-')) 
-        ax.annotate('', xycoords = 'data', xy = (t_max , 0), xytext =(t_max, sig_max*.7), 
+        ax.annotate('', xycoords = 'data', xy = (t_max , 0), xytext =(t_max, sig_max*.5), 
                     arrowprops=dict(linewidth = 1.5, linestyle = '--', arrowstyle = '-'))   
               
-        plt.xlim((2, 50))
+        plt.xlim((2, 60))
         plt.ylim((sig_min, sig_max * 1.05))
         plt.plot(time, sig, 'b.')
         plt.plot(time, fit, 'r', linewidth = 2)
+        plt.plot(time, cutoff, 'k', linestyle = '--', linewidth = 2)
         
         path_to_file = os.path.dirname(filename)
         base_name    = os.path.basename(filename)
@@ -118,4 +124,5 @@ if __name__ == '__main__':
     plot_file_name = 'fits\\fit010_test1_v1j3_ERF.fit_out'
     plot_file_name = 'fits\\fit001_v0j2_ERF.fit_out'
     plot_file_name = 'fits\\fit015_D2_v0j2_ERF.fit_out'
+    plot_file_name = 'fits\\fit017_D2_v0j2_Calibration.fit_out'
     PlotFit(plot_file_name)

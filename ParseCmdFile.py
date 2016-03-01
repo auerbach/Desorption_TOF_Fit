@@ -8,6 +8,7 @@ Module to parse the control file for FitDesorbtionTOF
 __author__ = 'Daniel Auerbach'  
 __email__  = 'daniel@djauerbach.com'
 
+from glob import glob
 from Parameters2 import Parameters2
 # import ast
 import GlobalVariables as glbl
@@ -133,7 +134,7 @@ def is_number(s):
     try:
         float(s)
         return True
-    except ValueError:
+    except:
         return False
 
 #==============================================================================
@@ -259,62 +260,74 @@ def addGlobalParameters(runNumber):
 #==============================================================================
 def processEndSection(runNumber, lineNumber):
     global errors,  globalParms, parms
-    # check if signalFile specified.  Error if first section
-#==============================================================================
-#     if glbl.signalFile == None and runNumber == 1:
-#         print('\n *** Error: No signal file name for')
-#         print(' *** first data section ending at line ', lineNumber)
-#         errors.append(('no signal file','line ' + str(lineNumber)))
-#     
-#     # check function type is specified.  Error if first sectionIf not specified in this 
-#     if glbl.Function == None and runNumber == 1:
-#         print('\n *** Error: No function specified for')
-#         print(' *** data section ending at line ', lineNumber)
-#         errors.append(('no function','line ' + str(lineNumber)))
-#         
-#     if glbl.AveragingType == None and runNumber == 1:
-#         print('\n *** Error: No AveragingType specified for')
-#         print(' *** data section ending at line ', lineNumber)
-#         errors.append(('no function','line ' + str(lineNumber)))
-#==============================================================================
     
-    # if this is not the first section, add global parameters
+    optionalList = ['Tmin', 'Tmax']
+   
+    # if this is not the first section, add global parameters 
+    #   and duplicate old list items if needed
     if runNumber > 1:
         addGlobalParameters(runNumber)
         
-    # save filenames and reset to None for entry to next section
-    glbl.signalFiles.append(glbl.signalFile)
-    glbl.backgroundFiles.append(glbl.backgroundFile)
+        # if item was not supplied, use value from previous run if available
+        for item in listList:
+            if not eval('glbl.' + item):
+                try:
+                    exec('glbl.' + item + ' = glbl.' + item + 's[' + str(runNumber -2) + ']')
+                except:
+                    pass
+            
+        
     
-#==============================================================================
-#     for item in listList:
-#         if eval('glbl.' + item):
-#             exec('glbl.' + item + 's.append(glbl.' + item + ')')
-#         elif runNumber >1:
-#             exec('glbl.' + item + 's.append(glbl.' + item +'s[' + str(runNumber -2) +'])')
-#         else:
-#             print('item not foung', item)
-#==============================================================================
-    
-    # add item to items list and check if required items have been supplied    
-    optionalList = ['Tmin', 'Tmax']
+        
+    # add item to items list and check if required items have been supplied        
     for item in listList:
-#==============================================================================
-#         if cutoff_type == 'Tanh' and item.startswith('ECut'):
-#             continue
-#         if cutoff_type == 'exp' and item.startswith('TCut'):
-#             continue
-#==============================================================================
         exec('glbl.' + item + 's.append(glbl.' + item + ')')
         if not eval('glbl.' + item) and not item in optionalList:
             print('\n *** Error: No ', item, ' for')
             print(' *** data section ending at line ', lineNumber)
             errors.append('no ' + str(item) + ' for section ending at line ' +str(lineNumber))
             
-            
-         
+    # check if required parameters have been supplied
+    required_parms = ['Yscale', 'Baseline', 'IonTOF', 'FFR', 'Temp']
+
+    if glbl.cutoff_type.lower() == 'exp':
+        required_parms.append('ECutM')
+        required_parms.append('ECutS')
+    
+    elif glbl.cutoff_type.lower() == 'tanh':
+        required_parms.append('TCutC')
+        required_parms.append('TCutW')
+        
+    if glbl.Function.lower() == 'erf':
+        required_parms.append('E0')
+        required_parms.append('W')
+        
+    
+    for p in required_parms:
+        try:
+            parms[p + '_' + str(runNumber) ].value
+            continue
+        except:
+            if runNumber > 1:
+                oldparm = parms[p + '_' + str(runNumber - 1)]
+                parms.add(p + '_' + str(runNumber),
+                  value = oldparm.value,
+                  vary = oldparm.vary,
+                  min = oldparm.min,
+                  max = oldparm.max,
+                  expr = oldparm.expr)
+            else:
+                print('\n *** Error: No parameter', p, ' for')
+                print(' *** data section ending at line ', lineNumber)
+                errors.append('no parameter' + p + ' for section ending at line ' +str(lineNumber))
+                
+        
+    # save filenames and reset to None for entry to next section
+    glbl.signalFiles.append(glbl.signalFile)
+    glbl.backgroundFiles.append(glbl.backgroundFile)     
     glbl.signalFile = None
     glbl.backgroundFile = None
+    
     glbl.Function = None
     glbl.AveragingType = None
     glbl.cutoff_type = None
@@ -367,8 +380,18 @@ def parseCmdFile(filename):
         # check if line specifies a signal file name
         # note this could be consolidatae with listList items
         elif tokens[0].upper() == 'SIGNAL':
-            #use following line to input signal file name without quotes
-            glbl.signalFile = tokens[1]            
+            #use following code to input signal file name without quotes
+            filelist = []
+            for file in glob(tokens[1]):
+                filelist.append(file)
+            if len(filelist) > 1:
+                print('***** error nonunique match to file pattern \n') 
+                print('*****', tokens[1])
+                print('***** filelist =', filelist)
+                errors.append(' nonunique match for file patern' + tokens[1] + 
+                                ' on line ' + str(lineNumber))
+            glbl.signalFile = file
+            
             # use the following line to input signal file name with quotes
             #exec('glbl.signalFile =' + tokens[1])
             continue
@@ -376,8 +399,17 @@ def parseCmdFile(filename):
         # check if line specifies a background file name
         # note this could be consolidatae with listList items
         elif tokens[0].upper() == 'BACKGROUND':
-            # use following line to input background file name without quotes
-            glbl.backgroundFile = tokens[1]
+            # use following code to input background file name without quotes
+            filelist = []
+            for file in glob(tokens[1]):
+                filelist.append(file)
+            if len(filelist) > 1:
+                print('***** error nonunique match to file pattern \n') 
+                print('*****', tokens[1])
+                print('***** filelist =', filelist)
+                errors.append(' nonunique match for file patern' + tokens[1] + 
+                                ' on line ' + str(lineNumber))
+            glbl.backgroundFile = file
             # use the following line to file name with quotes
             # exec('glbl.backgroundFile =' + tokens[1])
             continue
@@ -429,7 +461,7 @@ if __name__ == '__main__':
 #     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
 #==============================================================================
 
-    filename = 'Fits\\fit001.tof_in'
+    filename = 'Fits\\fit021.tof_in'
 
 
 

@@ -15,6 +15,8 @@ def is_number(s):
             return True
         except ValueError:
             return False
+        except:
+            return False
 
 class Data(object):
     def __init__(self):
@@ -62,7 +64,7 @@ class Data(object):
         if background_file_name :
             if not os.path.isfile(background_file_name):
                 print(background_file_name + " : Background file does not exist! Quitting...")
-                quit()
+                raise SystemExit
     
             with open(background_file_name, 'r') as background_file:
                 back_lines = background_file.readlines()
