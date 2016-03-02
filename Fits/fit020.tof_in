@@ -1,5 +1,8 @@
-#   Fit function valid values: Calibration, ERF, LGS
-    Function,       Calibration
+# 	Comment for excel file
+	comment_xlsx,	'6151_Kn  vary FFR; ECutM; ECutS'
+
+#   Fit function valid values: starts with cal, ERF, or LGS (case insensitive)
+    Function,       cal
 	
 #   AveragingType valid values: None, PointDetector, or LineDetector
     AveragingType,  None

@@ -239,7 +239,7 @@ def Prob(En, NDataSet, Params, ProbCurveType):
 #         return A *(np.exp(-np.exp(-(En - B)/C)) / (1. +  np.exp(-(En - B)/C)) )
 #==============================================================================
 
-    elif ProbCurveType == "Calibration":
+    elif ProbCurveType.lower().startswith('cal'):
         return 1.
 
 def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAngles, 
@@ -394,11 +394,11 @@ else:
 
 fit_number_file.close()
 
-oldFile = pathToFits + 'fit' + oldFitNumber + '.tof_in'
+oldFile = pathToFits + 'Fit' + oldFitNumber + '.tof_in'
 newFile = oldFile
 
 if oldFitNumber != newFitNumber:
-    newFile = pathToFits + 'fit' + newFitNumber + '.tof_in'
+    newFile = pathToFits + 'Fit' + newFitNumber + '.tof_in'
     shutil.copy2(oldFile, newFile)
 
 subprocess.call(['npp.bat', newFile])
@@ -407,7 +407,7 @@ subprocess.call(['npp.bat', newFile])
 # end of comment out for testing
 #------------------------------------------------------------------------------
 
-cmdFile = pathToFits + 'fit' + str(newFitNumber) + '.tof_in'
+cmdFile = pathToFits + 'Fit' + str(newFitNumber) + '.tof_in'
 
 
 #==============================================================================
@@ -582,23 +582,22 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         result_file.write('# Label    : \n')
         # result_file.write('# Label    : ' + '----------------------\n')
         
-        avg_type = AveragingType
-        if avg_type == 'None' : 
-            avg_type = 'No Angular Averaging'
-        elif avg_type == 'PointDetector':
-            avg_type = 'Point Detector'
-        elif avg_type == 'LineDetector':
-            avg_type = 'Line Detector' 
+        if AveragingType == 'None' : 
+            avg_type_label = 'No Angular Averaging'
+        elif AveragingType == 'PointDetector':
+            avg_type_label = 'Point Detector'
+        elif AveragingType == 'LineDetector':
+            avg_type_label = 'Line Detector' 
         
         # result_file.write('# Label    : Averaging: ' + avg_type + '\n')
         result_file.write('# Label    : Function:  ' + ProbCurveType + '\n')
-        result_file.write('# Label    : ' + avg_type + '\n')
+        result_file.write('# Label    : ' + avg_type_label + '\n')
         result_file.write('# Label    : \n')         
         final_params = fitResult.params     
         
-        parm_for_plot_label = ['E0', 'W', 'TCutC', 'TCutW', 'ECutM', 'ECutS']
-        if glbl.Functions[i].lower() == 'calibration':
-            parm_for_plot_label.append('FFR')
+        parm_for_plot_label = ['E0', 'W', 'TCutC', 'TCutW', 'ECutM', 'ECutS', 'FFR']
+        # if glbl.Functions[i].lower().startswith('cal'):
+        #     parm_for_plot_label.append('FFR')
         for p in parm_for_plot_label:
             p_ = p + '_' + str(i+1)
             try:
@@ -616,23 +615,31 @@ with open(pathToFits + result_file_name, 'w') as result_file:
                 pass
         
         #------------------------------------------------------------------------------------------
+        # Get the point where time > 3E-6 sec and ignore earlier points to avoid noise
+        #------------------------------------------------------------------------------------------
+        i_start = np.where(PlotDataSets[i][0] > 3.0E-6)[0][0]        
+        
+        #------------------------------------------------------------------------------------------
         # Get the plot data and convert time to microseconds
         #-----------------------------------------------------------------------------------------
-        Time     =  PlotDataSets[i][0] *1E6  # convert to microseconds
-        Signal   =  PlotDataSets[i][1]
-        Fit      =  TOF(PlotDataSets[i][0], n_dataset, fitResult.params,
-                        AveragingType, ThetaAngles, ProbCurveType, cutoff_type)
-        #  cutoff_function(params, data, NDataSet, Time, cutoff_type, debug = False)
+        Time     =  PlotDataSets[i][0][i_start:] 
+        Signal   =  PlotDataSets[i][1][i_start:]
+        Fit      =  TOF(Time, n_dataset, fitResult.params, AveragingType, ThetaAngles, 
+                        ProbCurveType, cutoff_type)        
         ion_tof  = fitResult.params['IonTOF_%i'   %n_dataset].value
         Cutoff   =  cutoff_function(fitResult.params, data, n_dataset, 
-                                    (Time - ion_tof) * 1E-6, cutoff_type ) 
+                                    (Time - ion_tof * 1E-6), cutoff_type )
                                     
+        Time = Time * 1E6    # convert to microseconds for plotting
+        
         #------------------------------------------------------------------------------------------
         # write the number of data lines and range of lines fit
         #------------------------------------------------------------------------------------------
         result_file.write('# Npoints    : ' + str(len(Time)) +'\n')
         result_file.write('# Nmin, Nmax : ' + str(Nmin) + ',' +str(Nmax) + '\n')
         result_file.write('# Tmin, Tmax : ' + str(Tmin * 1E6) + ',' +str(Tmax * 1E6) + '\n')
+        result_file.write('# Baseline   : ' + 
+                            str(fitResult.params['Baseline_' + str(n_dataset)].value) +'\n')
                
         result_file.write('#' + 68*'-' + '\n')
         
@@ -665,13 +672,16 @@ wb = pyxl.load_workbook(xls_filename)
 ws = wb.active 
    
 i_found = None
-row_to_write = None
+next_row = None
 fit_name = 'Fit' + newFitNumber
 
 for i in range(1, ws.max_row+1):
     test = ws.cell(row=i, column=1).value
-    if ws.cell(row=i,column=1).value == fit_name:
-        i_found = i
+    try:
+        if ws.cell(row=i,column=1).value.startswith(fit_name):
+            i_found = i
+    except:
+        pass
         
 if i_found:
     print('An entry for fit', fit_name, 'already exists')
@@ -679,45 +689,49 @@ if i_found:
     while True:        
         ans = input('Overwrite (O)  Append (A)  or Skip (S): ').upper()
         if ans.startswith('O'):
-            row_to_write = i_found
+            next_row = i_found
             break
         elif ans.startswith('A'):
-            row_to_write = ws.max_row+1
+            next_row = ws.max_row+1
             break
         elif ans.startswith('S'):
-            row_to_write=None
+            next_row=None
             break
         else:
             print('Please enter "O", "A", or "S" : ')
             
 else: 
-    row_to_write = ws.max_row + 1
+    next_row = ws.max_row + 1
             
-if(row_to_write):
-    ws.cell(row=row_to_write, column = 1).value = fit_name
-    ws.cell(row=row_to_write, column = 2).value = data.molecules[0]  # molecule
-    ws.cell(row=row_to_write, column = 3).value = data.states[0][0]
-    ws.cell(row=row_to_write, column = 4).value = data.states[0][1]
-    ws.cell(row=row_to_write, column = 5).value = glbl.Functions[0]
-    ws.cell(row=row_to_write, column = 6).value = glbl.AveragingTypes[0]
-    if glbl.Functions[0].lower() == 'erf':
-        ws.cell(row=row_to_write, column = 7).value = fitResult.params['E0_1'].value
-        ws.cell(row=row_to_write, column = 8).value = fitResult.params['E0_1'].stderr
-        ws.cell(row=row_to_write, column = 9).value = fitResult.params['W_1'].value
-        ws.cell(row=row_to_write, column =10).value = fitResult.params['W_1'].stderr
-    ws.cell(row=row_to_write, column = 11).value = glbl.Tmins[0]
-    ws.cell(row=row_to_write, column = 12).value = glbl.Tmaxs[0]
-    ws.cell(row=row_to_write, column = 13).value = fitResult.params['FFR_1'].value
-    ws.cell(row=row_to_write, column = 14).value = fitResult.params['ECutM_1'].value 
-    ws.cell(row=row_to_write, column = 15).value = fitResult.params['ECutS_1'].value
+if(next_row):
+    for n in range(len(signalFiles)):
+        ws.cell(row=next_row, column = 1).value = fit_name + '_' + str(n+1)
+        ws.cell(row=next_row, column = 2).value = data.molecules[n]  # molecule
+        ws.cell(row=next_row, column = 3).value = data.states[n][0]
+        ws.cell(row=next_row, column = 4).value = data.states[n][1]
+        ws.cell(row=next_row, column = 5).value = glbl.Functions[n]
+        ws.cell(row=next_row, column = 6).value = glbl.AveragingTypes[n]
+        if glbl.Functions[0].lower() == 'erf':
+            ws.cell(row=next_row, column = 7).value = fitResult.params['E0_' + str(n+1)].value
+            ws.cell(row=next_row, column = 8).value = fitResult.params['E0_' + str(n+1)].stderr
+            ws.cell(row=next_row, column = 9).value = fitResult.params['W_'  + str(n+1)].value
+            ws.cell(row=next_row, column =10).value = fitResult.params['W_'  + str(n+1)].stderr
+        ws.cell(row=next_row, column = 11).value = glbl.Tmins[0]
+        ws.cell(row=next_row, column = 12).value = glbl.Tmaxs[0]
+        ws.cell(row=next_row, column = 13).value = fitResult.params['FFR_'   + str(n+1)].value
+        ws.cell(row=next_row, column = 14).value = fitResult.params['ECutM_' + str(n+1)].value 
+        ws.cell(row=next_row, column = 15).value = fitResult.params['ECutS_' + str(n+1)].value
+        if n == 0:
+            ws.cell(row=next_row, column = 16).value = glbl.comment_xlsx
+        next_row += 1
 wb.save(xls_filename)
 
 
 
 
-    # if DataType != 'Calibration':
+    # if not calibration run
 #==============================================================================
-#     if functions[i] != 'Calibration':
+#     if not functions[i].lower().startswith('cal'):
 #         WriteProbOutput(Time, Signal, State, Label, NDataSet, fitResult.params, 
 #                         AveragingType, ThetaAngles, ProbCurveType)                                                   
 #==============================================================================

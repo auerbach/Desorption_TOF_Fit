@@ -22,7 +22,8 @@ parmList = ['A', 'E0', 'W',
 constList =['ThetaStep', 'ZDiffWall', 'RDiffWall', 
             'ZRef', 'ZAperture', 'RAperture', 
             'ZSource', 'RSource', 'ZLaser', 'LLaser', 'ZFinal', 'RFinal',
-            'NPointsDetector', 'NPointsSource', 'GridType']
+            'NPointsDetector', 'NPointsSource', 'GridType',
+            'comment_xlsx']
             
 listList = ['DataColLine', 'DataRowLine', 'MoleculeLine', 'TemperatureLine', 
             'VibStateLine', 'RotStateLine',
@@ -474,13 +475,14 @@ if __name__ == '__main__':
     print('=========================')
     print()
     print('functions:            ', functions)
-    print('glbl.Functions:       ', glbl.Functions)    
+    # print('glbl.Functions:       ', glbl.Functions)    
     print('signalFiles:          ', signalFiles)
-    print('glbl.signalFiles:     ', glbl.signalFiles)
+    # print('glbl.signalFiles:     ', glbl.signalFiles)
     print('backgroundFiles:      ', backgroundFiles)
-    print('glbl.backgroundFiles: ', glbl.backgroundFiles)
+    # print('glbl.backgroundFiles: ', glbl.backgroundFiles)
     print('Tmins:                ', glbl.Tmins)
     print('Tmaxs:                ', glbl.Tmaxs)
+    print('Comment_xlsx          ', glbl.comment_xlsx)
     print()
     
     

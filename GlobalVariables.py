@@ -92,3 +92,9 @@ Tmax             = None; Tmaxs = []
 Function         = None; Functions = []
 AveragingType    = None; AveragingTypes = []
 cutoff_type      = None; cutoff_types = []   
+
+
+#--------------------------------------------------------------------------------------------------
+#   Miscelaneous Constants and Variables
+#--------------------------------------------------------------------------------------------------
+comment_xlsx = None
