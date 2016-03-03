@@ -70,7 +70,7 @@ def GenerateThetaAngles(AveragingType, GridType,        \
 # -------------------------------------------------------------------------------------------------
 #   FitData -- function to perform the fit
 # -------------------------------------------------------------------------------------------------
-def FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType):
+def FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType, mass_molecules):
     # Fit the data
     # Give to the datasets a form that "minimize" likes
     X, Y = [], []
@@ -84,7 +84,7 @@ def FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType):
     # Perform NLLSQ fit
     result = minimize( Residual, Params, 
                       args=(X, Y, DataSets, AveragingType, ThetaAngles, 
-                            ProbCurveType) )
+                            ProbCurveType, mass_molecules) )
     
     return result
 
@@ -92,7 +92,7 @@ def FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType):
 # -------------------------------------------------------------------------------------------------
 #   Residual -- residual function used in fit
 # -------------------------------------------------------------------------------------------------
-def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType):
+def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType, mass_molecules):
     # Residual function needed by minimize
     Resid = []
 
@@ -100,7 +100,7 @@ def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType)
         NDataSet = i + 1
         Resid = Resid + list(DataSets[i][1] \
                 - TOF(DataSets[i][0], NDataSet, Params, AveragingType, ThetaAngles, 
-                      ProbCurveType, cutoff_type))
+                      ProbCurveType, cutoff_type, mass_molecules))
 
     return np.array( Resid )
     
@@ -109,14 +109,15 @@ def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType)
 #   TOF - compute the signal vs time
 # -------------------------------------------------------------------------------------------------
 def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, 
-        ProbCurveType, cutoff_type, Debug=False):
+        ProbCurveType, cutoff_type, mass_molecules, Debug=False):
     # Time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
     #Dist  = Params['FFRDist_%i'   %NDataSet].value
+    mass_factor = np.sqrt(mass_molecules[NDataSet -1] / glbl.massH2)
     Yscale   = Params['Yscale_%i'    %NDataSet].value
     Baseline = Params['Baseline_%i'  %NDataSet].value
     # TCutC    = Params['TCutC_%i'     %NDataSet].value
     # TCutW    = Params['TCutW_%i'     %NDataSet].value
-    TimeCorr = Params['IonTOF_%i'    %NDataSet].value
+    TimeCorr = Params['IonTOF_%i'    %NDataSet].value * mass_factor
     #Temperature = Params['Temp_%i' %NDataSet].value
     Time   = Time - TimeCorr * 1E-6  # Correct the time for the ion flight time
     
@@ -219,14 +220,14 @@ def Prob(En, NDataSet, Params, ProbCurveType):
         return 1.
 
 def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAngles, 
-                         ProbCurveType, cutoff_type):
+                         ProbCurveType, cutoff_type, mass_molecules):
     # Time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
     
-
+    mass_factor = np.sqrt(mass_molecules[NDataSet -1] / glbl.massH2)
     FFRDist  = Params['FFR_%i'      %NDataSet].value * 1E-3
     MaxTOF   = Params['Yscale_%i'   %NDataSet].value
     Baseline = Params['Baseline_%i' %NDataSet].value
-    TimeCorr = Params['IonTOF_%i'   %NDataSet].value
+    TimeCorr = Params['IonTOF_%i'   %NDataSet].value * mass_factor
     Temperature = Params['Temp_%i'  %NDataSet].value
 
     Time   = Time - TimeCorr * 1E-6                            # Correct the time
@@ -454,7 +455,8 @@ ThetaAngles = GenerateThetaAngles(
 #--------------------------------------------------------------------------------------------------
 # Fit the data to model 
 #--------------------------------------------------------------------------------------------------
-fitResult = FitData( DataSets, initial_params, AveragingType, ThetaAngles, ProbCurveType)
+fitResult = FitData( DataSets, initial_params, AveragingType, ThetaAngles, 
+                    ProbCurveType, data.mass_molecules)
 print(fit_report(fitResult))
 
 state_string = 'v' + str(states[0][0]) + 'j' +str(states[0][1])
@@ -601,8 +603,10 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         Time     =  PlotDataSets[i][0][i_start:] 
         Signal   =  PlotDataSets[i][1][i_start:]
         Fit      =  TOF(Time, n_dataset, fitResult.params, AveragingType, ThetaAngles, 
-                        ProbCurveType, cutoff_type)        
-        ion_tof  = fitResult.params['IonTOF_%i'   %n_dataset].value
+                        ProbCurveType, cutoff_type, data.mass_molecules)
+        
+        mass_factor = np.sqrt(data.mass_molecules[i] / glbl.massH2)
+        ion_tof  = fitResult.params['IonTOF_%i'   %n_dataset].value * mass_factor 
         Cutoff   =  cutoff_function(fitResult.params, data, n_dataset, 
                                     (Time - ion_tof * 1E-6), cutoff_type )
                                     

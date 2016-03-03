@@ -42,7 +42,7 @@ class Data(object):
     #------------------------------------------------------------------------------
     # read_data  function to read the data and subtract background
     #------------------------------------------------------------------------------
-    def read_data(self, signal_file_name, background_file_name = '', t_min ='', t_max ='', Threshold = 0.10):
+    def read_data(self, signal_file_name, background_file_name = '', t_min ='', t_max ='', Threshold = 0.05):
         # Function to read Datafiles
         # Input: DataFile = name of the file to be read ;
         # BackgroundFile  = name of the file with background; 
@@ -137,7 +137,7 @@ class Data(object):
         #     data is = max of data * Threshold
         # Since the data is noisy, for point n average from n-n_delt to n+n_delt
         #==============================================================================================
-        n_delt = 10
+        n_delt = 30
         signal_max = np.array(signal[100:len(signal)]).max()
             
         # find n_min = index of first point to use in fitting

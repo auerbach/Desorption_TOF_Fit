@@ -15,8 +15,8 @@
 
 #   Fit Parameters
 #   Name,           Value,      Vary, Min,  Max
-    Yscale,         0.25E-9,    1,
-    IonTOF,         4.5248,     0
+    Yscale,         0.25E-9,    1
+    IonTOF,         3.2,     	0					# this is the ion TOF for H2;
     FFR,			31.72861,   1	
     Baseline,       0.,         0
     
