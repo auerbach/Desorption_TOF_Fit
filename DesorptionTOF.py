@@ -13,9 +13,6 @@ Fit data from post permeation desorption TOF
 #
 #==============================================================================
 
-# import os
-# import sys
-
 from lmfit import minimize, fit_report
 import numpy as np
 import openpyxl as pyxl
@@ -23,7 +20,7 @@ from scipy import special
 import shutil
 import subprocess
 import unicodedata
-from glob import glob
+# from glob import glob
 
 from ParseCmdFile import parseCmdFile
 from PlotFit import PlotFit
@@ -124,27 +121,6 @@ def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles,
     Time   = Time - TimeCorr * 1E-6  # Correct the time for the ion flight time
     
     CutOff = cutoff_function(Params, data, NDataSet, Time, cutoff_type)    
-#==============================================================================
-#     if cutoff_type.lower() == 'tanh':
-#         TCutC    = Params['TCutC_%i'     %NDataSet].value
-#         TCutW    = Params['TCutW_%i'     %NDataSet].value
-#         CutOff = 0.5 * (1. - np.tanh((Time - TCutC*1E-6) / (TCutW*1E-6)))
-#     
-#     elif cutoff_type.lower == 'exp':
-#         FFRDist  = Params['FFR_%i'     %NDataSet].value * 1E-3
-#         ECutM    = Params['ECutM_%i' %NDataSet].value
-#         ECutS    = Params['ECutS_%i' %NDataSet].value
-#         mass = data.mass_molecules[NDataSet-1]
-#         Velocity = FFRDist / Time 
-#         Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
-#         if Ekin > ECutM:
-#             CutOff = 1.0 - np.exp(-ECutS * (Ekin - ECutM))
-#         else:
-#             CutOff = 0.0
-#     else:
-#         print('***** Error unknown cutoff type = ', cutoff_type)
-#         raise SystemExit 
-#==============================================================================
         
     Signal0 = AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles)       
     Signal  = Signal0 * CutOff * Yscale + Baseline
@@ -701,7 +677,7 @@ if i_found:
             print('Please enter "O", "A", or "S" : ')
             
 else: 
-    next_row = ws.max_row + 1
+    next_row = ws.max_row + 2
             
 if(next_row):
     for n in range(len(signalFiles)):

@@ -5,101 +5,152 @@ import os
 import glob
 # import string
 import time
+import re
 
 # data_path = 'd:\\users\\dja\\desktop\\permeation\\data\\2016.02.10\\Permeation Data\\Data'
 # data_path = 'd:\\users\\dja\\desktop\\permeation\\data\\2016.01.18\\Permeation Data\\Reference Line'
 # data_path = 'D:\\Users\\dja\\Git\\Desorption_TOF_Fit\\Data\\2016.02.10'
 # data_path = 'd:\\users\\dja\desktop\\Permeation\\All-DJA\\2016.02.26\\Dataset\\D2v0'
 # data_path = 'd:\\users\\dja\desktop\\Permeation\\All-DJA\\2016.02.26\\Dataset\\H2v1'
-data_path = 'd:\\users\\dja\desktop\\Permeation\\All-DJA\\2016.02.26\\Dataset\\Knudsen'
+# data_path = 'd:\\users\\dja\desktop\\Permeation\\All-DJA\\2016.02.26\\Dataset\\Knudsen'
 # data_path = 'd:\\users\\dja\desktop\\Permeation\\All-DJA\\2016.02.26\\Dataset\\Reference Lines'
+data_path = 'd:\\users\\dja\desktop\\Permeation\\All-DJA\\2016.03.02'
 
+# find all files with extension .dat in data_path
 os.chdir(data_path)
-#for file in os.listdir(data_path):
 for file in glob.glob('*.dat'):
-    # fn, ft = file.split('.')[0], file.split('.')[1]
-    fn = os.path.splitext(file)[0] 
+    default_temperature = None
+    print('processing file: ',file)
     
-    if fn[0:3].isdigit():
-        orig_data_row = 28
-        header_rows   = 12 + 3  # 3 for text block 'original header'
-        data_row      = orig_data_row + header_rows + 4        
-        temperature = 1061
-        data_col = 2
-    else:
-        orig_data_row = 4
-        header_rows   = 12 + 3  # 3 for text block 'original header'
-        data_row      = orig_data_row + header_rows + 4        
-        temperature = 1061
-        data_col = 3
-            
-        
-    
-    # if not os.path.exists(data_path + '\\' + fn + '.datv2') or True:
-    print('processing file', file)
-    v = fn[fn.find('v')+1]
-    ij = fn.find('J')
-    
-    if file[ij + 2].isdigit():
-        j = fn[ij + 1 : ij + 3]
-    else:
-        j = fn[ij + 1]
+    # get the filename without path or extension
+    fn_with_path = os.path.splitext(file)[0]
+    fn = os.path.basename(fn_with_path)
 
-    if 'D2' in fn.upper(): 
-        molecule = 'D2'
-    elif 'H2' in fn.upper():
-        molecule = 'H2'
-    else:
-        print('opps no molecule name in filename ', fn)
     
     time_modified = time.ctime(os.path.getmtime(file))
     
-    infile  = open(fn + '.dat' , 'r')        
-    outfile = open(fn + '.datv2' , 'w')
+    # find the type of the file
+    #   if filename starts with numbers it is a raw data file with header
+    #   if not, it is a corrected file
+    #   if filename contains 'Kn' it is a Knudsen data file
+    if fn[0:3].isdigit():
+        data_col = 2
+        
+#==============================================================================
+#         if 'KN' in fn.upper():
+#             file_type = 'Knudsen v1'
+#         else:
+#             file_type = 'Permeation v1'
+#==============================================================================
+    
+    else:
+        file_format = 'Processed_data v1'
+        # processed data files do not have a temperature in the header: assume 1061
+        temperature = 1061
+        data_col = 3
+        print('file format is processed data:  assuming temperature = 1061K')
+            
+#==============================================================================
+#     # Get v and J from the file name
+#     print('processing file', file)
+#     v = fn[fn.find('v')+1]
+#     ij = fn.find('J')
+#     
+#     if file[ij + 2].isdigit():
+#         j = fn[ij + 1 : ij + 3]
+#     else:
+#         j = fn[ij + 1]
+#         
+#     # get molecule from the filename
+#     if 'D2' in fn.upper(): 
+#         molecule = 'D2'
+#     elif 'H2' in fn.upper():
+#         molecule = 'H2'
+#     else:
+#         print('opps no molecule name in filename ', fn)
+#==============================================================================
+    
+    infile  = open(fn_with_path + '.dat'   , 'r')        
+    outfile = open(fn_with_path + '.datv2' , 'w')
     lines = infile.readlines()
 
-    if 'KN' in fn.upper():
-        for line in lines:
-            if line.startswith('Knnew'):
-                temperature = line.split()[1]
-                tt = temperature.find('C')
-                temperature = float(temperature[:tt].strip()) + 273.
-                break
+    for n_line, line in enumerate(lines):
+        if line.upper() in ['H2,HD,D2']:
+            molecule = line.upper()
+        
+        if line.lower().startswith('v'):
+            v = int(line[1:])
+
+        if line.lower().startswith('j'):
+            j = int(line[1:])
+        
+        if line.startswith('Knnew'):
+            t_knudsen = float(re.search(r'(\d+)', line).group(1)) + 273.
+            pass
+
+        if line.lower()[0:2] in ['ag', 'au', 'cu']:
+            t_xtal = float(re.search(r'(\d+)', line).group(1))
             
+        if line.lower()[0:2] in ['h2', 'hd', 'd2']:
+            molecule = line.upper()[0:2]
+            
+        if line.lower().startswith('time'):
+            data_row = n_line +2            # +2 becuase lines[0] is line 1 of the file
+            header_rows = n_line + 1
+        
+    try:
+        if t_xtal > 500:
+            temperature = t_xtal
+        else:
+            temperature = t_knudsen
+    except:
+        if not default_temperature:
+            default_temperature = input('No temperatures found. Please input temperature: ')
+        temperature = float(default_temperature)
+        
     data_start = None
     data_lines = []        
     
     data_lines.append('#' + 47*'-' + '\n')
     data_lines.append('# Original Header\n')
     data_lines.append('#' + 47*'-' + '\n')
-    for i in range(0,orig_data_row -1 ):
+    for i in range(data_row -1 ):
         data_lines.append('# ' + lines[i])
-
     data_lines.append('\n')
     data_lines.append('#' + 47*'-' + '\n')
     data_lines.append('# Begin Data\n')
     data_lines.append('#' + 47*'-' + '\n')
+    
+    header_length = len(data_lines)
+    
                             
-    for i in range(orig_data_row -1, len(lines)):
+    for i in range(data_row -1, len(lines)):
         
-        x1 = float(lines[i].split()[0])
+        # find the start of valid data        
+        #   some data sets have 'time - -' rather than numbers for several lines
+        #   test if we can convert second column to a float; if not ignore line        
         try: 
             y1 = float(lines[i].split()[1])
-            if data_col == 3:
-                y2 = float(lines[i].split()[2])  
-            if not data_start:
-                data_start = i + header_rows + 1    
-            data_lines.append('{0:6.2f} {1:20.5e} {2:20.5e}\n'.format(x1, y1, y2))    
-        
+            break
         except:
             pass
-            # y1 = lines[i].split()[1]
-            # y2 = lines[i].split()[2]
-            # following line writes the lines of data with no y values
-            # data_lines.append('{0:6.2f} {1:20s} {2:20s}\n'.format(x1, y1, y2))
-            # data_lines.append('{0:6.2f} {1:20s}\n'.format(x1, y1))
         
-    data_start = data_row  # since we don't write the lines with no y values
+    data_start = i
+
+    
+    for i in range(data_start, len(lines)):
+        x1 = float(lines[i].split()[0])
+        y1 = float(lines[i].split()[1])
+        
+        if data_col == 2:
+            data_lines.append('{0:6.2f} {1:20.5e} \n'.format(x1, y1))                
+        
+        if data_col == 3:
+            y2 = float(lines[i].split()[2])        
+            data_lines.append('{0:6.2f} {1:20.5e} {2:20.5e}\n'.format(x1, y1, y2))    
+    
+    data_row = header_length + 13
+    # write the .datv2 header 
     outfile.write('#' + 47*'-' +                             '\n')
     outfile.write('# data_format   :  ' + '2.1'            + '\n')        
     outfile.write('# original_file :  ' + file             + '\n')
@@ -108,11 +159,12 @@ for file in glob.glob('*.dat'):
     outfile.write('# temperature   :  ' + str(temperature) + '\n')
     outfile.write('# v             :  ' + str(v)           + '\n')
     outfile.write('# J             :  ' + str(j)           + '\n')
-    outfile.write('# data_col      :  ' + str(data_col)     + '\n')
-    outfile.write('# data_row      :  ' + str(data_start)  + '\n')
+    outfile.write('# data_col      :  ' + str(data_col)    + '\n')
+    outfile.write('# data_row      :  ' + str(data_row)    + '\n')
     outfile.write('#' + 47*'-' +                             '\n')
     outfile.write('\n')
-    
+
+    # write the original header and valid data    
     for line in data_lines:
         outfile.write(line)
     

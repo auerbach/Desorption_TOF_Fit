@@ -385,17 +385,23 @@ def parseCmdFile(filename):
             filelist = []
             for file in glob(tokens[1]):
                 filelist.append(file)
+            
+            if len(filelist) == 0:
+                print('***** error no file found \n') 
+                print('*****', tokens[1])
+                errors.append(' no match for file patern' + tokens[1] + 
+                                ' on line ' + str(lineNumber))
+                file = 'no match for pattern'
+                
             if len(filelist) > 1:
                 print('***** error nonunique match to file pattern \n') 
                 print('*****', tokens[1])
                 print('***** filelist =', filelist)
                 errors.append(' nonunique match for file patern' + tokens[1] + 
                                 ' on line ' + str(lineNumber))
-            glbl.signalFile = file
+                return
             
-            # use the following line to input signal file name with quotes
-            #exec('glbl.signalFile =' + tokens[1])
-            continue
+            glbl.signalFile = file
         
         # check if line specifies a background file name
         # note this could be consolidatae with listList items
@@ -462,10 +468,11 @@ if __name__ == '__main__':
 #     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
 #==============================================================================
 
-    filename = 'Fits\\fit021.tof_in'
+    filename = 'Fits\\fit031.tof_in'
 
 
 
+    # parse_result = parseCmdFile(filename)
     
     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(filename)
     
