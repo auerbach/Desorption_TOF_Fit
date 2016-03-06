@@ -3,9 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="8aba0f36-6b83-4895-8310-bf8e1a6a991e" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.spyderproject" afterPath="$PROJECT_DIR$/.spyderproject" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Fits/Fit034_D2_v0j2_CAL.pdf" afterPath="$PROJECT_DIR$/Fits/Fit034_D2_v0j2_CAL.pdf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Fits/fit_results.xlsx" afterPath="$PROJECT_DIR$/Fits/fit_results.xlsx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DesorptionTOF.py" afterPath="$PROJECT_DIR$/DesorptionTOF.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ParseCmdFile.py" afterPath="$PROJECT_DIR$/ParseCmdFile.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlotFit.py" afterPath="$PROJECT_DIR$/PlotFit.py" />
     </list>
     <ignored path="Desorption_TOF_Fit.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -30,8 +30,10 @@
         <entry file="file://$PROJECT_DIR$/ParseCmdFile.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="231" column="25" selection-start-line="231" selection-start-column="25" selection-end-line="231" selection-end-column="25" />
-              <folding />
+              <caret line="349" column="17" selection-start-line="349" selection-start-column="17" selection-end-line="349" selection-end-column="17" />
+              <folding>
+                <marker date="1456969152353" expanded="false" signature="181:186" placeholder="import ..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -39,8 +41,8 @@
       <file leaf-file-name="DesorptionTOF.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/DesorptionTOF.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="2.628345">
-              <caret line="525" column="24" selection-start-line="525" selection-start-column="24" selection-end-line="525" selection-end-column="24" />
+            <state vertical-scroll-proportion="2.1793854">
+              <caret line="394" column="24" selection-start-line="394" selection-start-column="24" selection-end-line="394" selection-end-column="24" />
               <folding />
             </state>
           </provider>
@@ -90,6 +92,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
@@ -111,7 +114,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -321,9 +323,9 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="394" y="0" width="1430" height="1170" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14214993" sideWeight="0.4948605" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29844412" sideWeight="0.4948605" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32892805" sideWeight="0.51233095" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="right" auto_hide="true" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4526167" sideWeight="0.5040128" order="3" side_tool="true" content_ui="tabs" x="1028" y="54" width="624" height="770" />
@@ -363,8 +365,28 @@
     <entry file="file://$PROJECT_DIR$/ParseCmdFile.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="257" column="4" selection-start-line="257" selection-start-column="4" selection-end-line="257" selection-end-column="4" />
+          <caret line="231" column="25" selection-start-line="231" selection-start-column="25" selection-end-line="231" selection-end-column="25" />
+          <folding>
+            <marker date="1456969152353" expanded="false" signature="181:186" placeholder="import ..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DesorptionTOF.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ParseCmdFile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="257" column="4" selection-start-line="257" selection-start-column="4" selection-end-line="257" selection-end-column="4" />
+          <folding>
+            <marker date="1456969152353" expanded="false" signature="181:186" placeholder="import ..." />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -380,7 +402,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="255" column="4" selection-start-line="255" selection-start-column="4" selection-end-line="255" selection-end-column="4" />
-          <folding />
+          <folding>
+            <marker date="1456969152353" expanded="false" signature="181:186" placeholder="import ..." />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -396,7 +420,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1456969152353" expanded="false" signature="181:186" placeholder="import ..." />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -404,7 +430,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1456969152353" expanded="false" signature="181:186" placeholder="import ..." />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -412,22 +440,26 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1456969152353" expanded="false" signature="181:186" placeholder="import ..." />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ParseCmdFile.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="231" column="25" selection-start-line="231" selection-start-column="25" selection-end-line="231" selection-end-column="25" />
-          <folding />
+          <caret line="349" column="17" selection-start-line="349" selection-start-column="17" selection-end-line="349" selection-end-column="17" />
+          <folding>
+            <marker date="1456969152353" expanded="false" signature="181:186" placeholder="import ..." />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DesorptionTOF.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="2.628345">
-          <caret line="525" column="24" selection-start-line="525" selection-start-column="24" selection-end-line="525" selection-end-column="24" />
+        <state vertical-scroll-proportion="2.1793854">
+          <caret line="394" column="24" selection-start-line="394" selection-start-column="24" selection-end-line="394" selection-end-column="24" />
           <folding />
         </state>
       </provider>

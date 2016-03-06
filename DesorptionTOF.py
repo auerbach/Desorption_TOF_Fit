@@ -334,55 +334,57 @@ pathToFits = 'Fits\\'
 #------------------------------------------------------------------------------
 # uncomment for testing:
 #------------------------------------------------------------------------------
-# newFitNumber = '017'
+newFitNumber = '034'
 
-#------------------------------------------------------------------------------
-# begin1 comment out for testing
-#------------------------------------------------------------------------------
-# Get Last fit number from FitNumber.dat
-fit_number_file = open(pathToFits + 'FitNumber.dat', 'r+')
-fitNumber = '{:03d}'.format(int(fit_number_file.readline()))
-oldFitNumber = fitNumber
-newFitNumber = fitNumber
-
-while True:
-    print('please enter oldfit number: ', '[', oldFitNumber, ']')
-    ans = input('?')
-    if ans:
-        old_n = '{:03d}'.format(int(ans))
-    else:
-        old_n = oldFitNumber
-    
-    if int(old_n) > int(oldFitNumber):
-        print('maximum allowed for old fit number is ', oldFitNumber)
-    else:
-        break
-    
-oldFitNumber = old_n
-
-ans = input ('make new command file? [no]')
-if ans:
-    if ans.upper()[0] == 'Y':
-        newFitNumber = '{:03d}'.format(int(fitNumber)+1)
-    fit_number_file.seek(0)
-    fit_number_file.write(newFitNumber)
-else:
-    newFitNumber = oldFitNumber
-
-fit_number_file.close()
-
-oldFile = pathToFits + 'Fit' + oldFitNumber + '.tof_in'
-newFile = oldFile
-
-if oldFitNumber != newFitNumber:
-    newFile = pathToFits + 'Fit' + newFitNumber + '.tof_in'
-    shutil.copy2(oldFile, newFile)
-
-subprocess.call(['npp.bat', newFile])
-
-#------------------------------------------------------------------------------
-# end of comment out for testing
-#------------------------------------------------------------------------------
+#==============================================================================
+# #------------------------------------------------------------------------------
+# # begin1 comment out for testing
+# #------------------------------------------------------------------------------
+# # Get Last fit number from FitNumber.dat
+# fit_number_file = open(pathToFits + 'FitNumber.dat', 'r+')
+# fitNumber = '{:03d}'.format(int(fit_number_file.readline()))
+# oldFitNumber = fitNumber
+# newFitNumber = fitNumber
+# 
+# while True:
+#     print('please enter oldfit number: ', '[', oldFitNumber, ']')
+#     ans = input('?')
+#     if ans:
+#         old_n = '{:03d}'.format(int(ans))
+#     else:
+#         old_n = oldFitNumber
+#     
+#     if int(old_n) > int(oldFitNumber):
+#         print('maximum allowed for old fit number is ', oldFitNumber)
+#     else:
+#         break
+#     
+# oldFitNumber = old_n
+# 
+# ans = input ('make new command file? [no]')
+# if ans:
+#     if ans.upper()[0] == 'Y':
+#         newFitNumber = '{:03d}'.format(int(fitNumber)+1)
+#     fit_number_file.seek(0)
+#     fit_number_file.write(newFitNumber)
+# else:
+#     newFitNumber = oldFitNumber
+# 
+# fit_number_file.close()
+# 
+# oldFile = pathToFits + 'Fit' + oldFitNumber + '.tof_in'
+# newFile = oldFile
+# 
+# if oldFitNumber != newFitNumber:
+#     newFile = pathToFits + 'Fit' + newFitNumber + '.tof_in'
+#     shutil.copy2(oldFile, newFile)
+# 
+# subprocess.call(['npp.bat', newFile])
+# 
+# #------------------------------------------------------------------------------
+# # end of comment out for testing
+# #------------------------------------------------------------------------------
+#==============================================================================
 
 cmdFile = pathToFits + 'Fit' + str(newFitNumber) + '.tof_in'
 
@@ -642,69 +644,74 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         
 result_file.close()
 
-PlotFit(pathToFits + result_file_name)
-
-#--------------------------------------------------------------------------------------------------
-# Enter fit results in results.xlsx
-#--------------------------------------------------------------------------------------------------
-xls_filename ='Fits\\fit_results.xlsx'
-wb = pyxl.load_workbook(xls_filename)
-ws = wb.active 
-   
-i_found = None
-next_row = None
-fit_name = 'Fit' + newFitNumber
-
-for i in range(1, ws.max_row+1):
-    test = ws.cell(row=i, column=1).value
-    try:
-        if ws.cell(row=i,column=1).value.startswith(fit_name):
-            i_found = i
-    except:
-        pass
-        
-if i_found:
-    print('An entry for fit', fit_name, 'already exists')
-    
-    while True:        
-        ans = input('Overwrite (O)  Append (A)  or Skip (S): ').upper()
-        if ans.startswith('O'):
-            next_row = i_found
-            break
-        elif ans.startswith('A'):
-            next_row = ws.max_row+1
-            break
-        elif ans.startswith('S'):
-            next_row=None
-            break
-        else:
-            print('Please enter "O", "A", or "S" : ')
-            
-else: 
-    next_row = ws.max_row + 2
-            
-if(next_row):
-    for n in range(len(signalFiles)):
-        ws.cell(row=next_row, column = 1).value = fit_name + '_' + str(n+1)
-        ws.cell(row=next_row, column = 2).value = data.molecules[n]  # molecule
-        ws.cell(row=next_row, column = 3).value = data.states[n][0]
-        ws.cell(row=next_row, column = 4).value = data.states[n][1]
-        ws.cell(row=next_row, column = 5).value = glbl.Functions[n]
-        ws.cell(row=next_row, column = 6).value = glbl.AveragingTypes[n]
-        if glbl.Functions[0].lower() == 'erf':
-            ws.cell(row=next_row, column = 7).value = fitResult.params['E0_' + str(n+1)].value
-            ws.cell(row=next_row, column = 8).value = fitResult.params['E0_' + str(n+1)].stderr
-            ws.cell(row=next_row, column = 9).value = fitResult.params['W_'  + str(n+1)].value
-            ws.cell(row=next_row, column =10).value = fitResult.params['W_'  + str(n+1)].stderr
-        ws.cell(row=next_row, column = 11).value = glbl.Tmins[0]
-        ws.cell(row=next_row, column = 12).value = glbl.Tmaxs[0]
-        ws.cell(row=next_row, column = 13).value = fitResult.params['FFR_'   + str(n+1)].value
-        ws.cell(row=next_row, column = 14).value = fitResult.params['ECutM_' + str(n+1)].value 
-        ws.cell(row=next_row, column = 15).value = fitResult.params['ECutS_' + str(n+1)].value
-        if n == 0:
-            ws.cell(row=next_row, column = 16).value = glbl.comment_xlsx
-        next_row += 1
-wb.save(xls_filename)
+# PlotFit(pathToFits + result_file_name)
+#==============================================================================
+# # Begin comment out for testing
+#
+# #--------------------------------------------------------------------------------------------------
+# # Enter fit results in results.xlsx
+# #--------------------------------------------------------------------------------------------------
+# xls_filename ='Fits\\fit_results.xlsx'
+# wb = pyxl.load_workbook(xls_filename)
+# ws = wb.active 
+#    
+# i_found = None
+# next_row = None
+# fit_name = 'Fit' + newFitNumber
+# 
+# for i in range(1, ws.max_row+1):
+#     test = ws.cell(row=i, column=1).value
+#     try:
+#         if ws.cell(row=i,column=1).value.startswith(fit_name):
+#             i_found = i
+#     except:
+#         pass
+#         
+# if i_found:
+#     print('An entry for fit', fit_name, 'already exists')
+#     
+#     while True:        
+#         ans = input('Overwrite (O)  Append (A)  or Skip (S): ').upper()
+#         if ans.startswith('O'):
+#             next_row = i_found
+#             break
+#         elif ans.startswith('A'):
+#             next_row = ws.max_row+1
+#             break
+#         elif ans.startswith('S'):
+#             next_row=None
+#             break
+#         else:
+#             print('Please enter "O", "A", or "S" : ')
+#             
+# else: 
+#     next_row = ws.max_row + 2
+#             
+# if(next_row):
+#     for n in range(len(signalFiles)):
+#         ws.cell(row=next_row, column = 1).value = fit_name + '_' + str(n+1)
+#         ws.cell(row=next_row, column = 2).value = data.molecules[n]  # molecule
+#         ws.cell(row=next_row, column = 3).value = data.states[n][0]
+#         ws.cell(row=next_row, column = 4).value = data.states[n][1]
+#         ws.cell(row=next_row, column = 5).value = glbl.Functions[n]
+#         ws.cell(row=next_row, column = 6).value = glbl.AveragingTypes[n]
+#         if glbl.Functions[0].lower() == 'erf':
+#             ws.cell(row=next_row, column = 7).value = fitResult.params['E0_' + str(n+1)].value
+#             ws.cell(row=next_row, column = 8).value = fitResult.params['E0_' + str(n+1)].stderr
+#             ws.cell(row=next_row, column = 9).value = fitResult.params['W_'  + str(n+1)].value
+#             ws.cell(row=next_row, column =10).value = fitResult.params['W_'  + str(n+1)].stderr
+#         ws.cell(row=next_row, column = 11).value = glbl.Tmins[0]
+#         ws.cell(row=next_row, column = 12).value = glbl.Tmaxs[0]
+#         ws.cell(row=next_row, column = 13).value = fitResult.params['FFR_'   + str(n+1)].value
+#         ws.cell(row=next_row, column = 14).value = fitResult.params['ECutM_' + str(n+1)].value 
+#         ws.cell(row=next_row, column = 15).value = fitResult.params['ECutS_' + str(n+1)].value
+#         if n == 0:
+#             ws.cell(row=next_row, column = 16).value = glbl.comment_xlsx
+#         next_row += 1
+# wb.save(xls_filename)
+#
+# end comment out for testing
+#==============================================================================
 
 
 
