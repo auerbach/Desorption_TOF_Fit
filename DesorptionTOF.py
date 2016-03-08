@@ -6,9 +6,7 @@ Fit data from post permeation desorption TOF
 #==============================================================================
 # 
 # Based on Time of Flight fitting program
-#   Alessandro Genova
-#   July 2012, Leiden University
-#
+#   Alessandro Genova, Leiden University, July 2012 
 #   Francesco Nattino, Leiden University, June 2015  (vs 7)
 #
 #==============================================================================
@@ -25,6 +23,7 @@ import unicodedata
 from ParseCmdFile import parseCmdFile
 from PlotFit import PlotFit
 from Cutoff import cutoff_function
+from compute_tof import TOF
 
 # from Parameters2 import Parameter2, Parameters2
 
@@ -99,125 +98,12 @@ def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType,
     for i in range( len( DataSets )):
         NDataSet = i + 1
         Resid = Resid + list(DataSets[i][1] \
-                - TOF(DataSets[i][0], NDataSet, Params, AveragingType, ThetaAngles, 
+                - TOF(DataSets[i][0], NDataSet, Params, data, AveragingType, ThetaAngles, 
                       ProbCurveType, cutoff_type, mass_molecules))
 
     return np.array( Resid )
     
 
-# -------------------------------------------------------------------------------------------------
-#   TOF - compute the signal vs time
-# -------------------------------------------------------------------------------------------------
-def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, 
-        ProbCurveType, cutoff_type, mass_molecules, Debug=False):
-    # Time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
-    #Dist  = Params['FFRDist_%i'   %NDataSet].value
-    mass_factor = np.sqrt(mass_molecules[NDataSet -1] / glbl.massH2)
-    Yscale   = Params['Yscale_%i'    %NDataSet].value
-    Baseline = Params['Baseline_%i'  %NDataSet].value
-    # TCutC    = Params['TCutC_%i'     %NDataSet].value
-    # TCutW    = Params['TCutW_%i'     %NDataSet].value
-    TimeCorr = Params['IonTOF_%i'    %NDataSet].value * mass_factor
-    #Temperature = Params['Temp_%i' %NDataSet].value
-    Time   = Time - TimeCorr * 1E-6  # Correct the time for the ion flight time
-    
-    CutOff = cutoff_function(Params, data, NDataSet, Time, cutoff_type)    
-        
-    Signal0 = AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles)       
-    Signal  = Signal0 * CutOff * Yscale + Baseline
-    
-    # if Time == 0, the function returns NAN.  (Velocity is infinite)
-    # to remove this artificial singularity, set the compute signal to 0 if it is NAN and Time == 0
-    for i, sig in enumerate(Signal):
-        if np.isnan(sig) and Time[i] == 0.0:
-            Signal[i] = 0.
-        
-    return Signal
-    
-
-# -------------------------------------------------------------------------------------------------
-#   Angular Averaging
-# -------------------------------------------------------------------------------------------------
-def AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles):
-
-    FFRDist  = Params['FFR_%i'   %NDataSet].value * 1E-3
-    Temperature = Params['Temp_%i' %NDataSet].value
-
-    Signal = 0.  # Initialize Signal to 0
-    
-    mass = data.mass_molecules[NDataSet-1]
-    if AveragingType == "PointDetector":
-        # Averaging performed  taking into account different flight time for different angles, but assuming ionization occurring in one point
-        for Theta in ThetaAngles :
-        #for Theta in [0]:
-            Velocity = FFRDist /(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-            Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
-            Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
-            Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * \
-                                np.cos( np.radians(Theta) )**2. *                         \
-                                Prob(Enorm, NDataSet, Params, ProbCurveType)) *           \
-                                np.sin( np.radians(Theta) ) * glbl.ThetaStep
-
-    elif AveragingType == "None":
-        # No angular averaging performed
-        Velocity = FFRDist / Time # v = L / t
-        Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
-        Enorm = Ekin
-        Signal = (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * 
-                  Prob(Enorm, NDataSet, Params, ProbCurveType))
-
-    elif AveragingType == "LineDetector":
-        # Averaging along line, accounting for different flight time for different angles
-        for Theta in ThetaAngles :
-                        Velocity = FFRDist/(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-                        Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
-                        Enorm = Ekin * np.cos( np.radians(Theta) )**2 # Reaction probability depends on normal energy
-                        # Here no sin weight, since each Theta value has a weight of one
-                        Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * np.cos( np.radians(Theta) )**2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * glbl.ThetaStep
-
-    return Signal
-
-
-# -------------------------------------------------------------------------------------------------
-#   Prob -- reaction probability depending on curve type
-# -------------------------------------------------------------------------------------------------
-def Prob(En, NDataSet, Params, ProbCurveType):
-    # Reaction probability functions. Takes an Energy (eV) returns a reaction probability
-    
-#==============================================================================
-#     A  = Params['A_%i' %NDataSet].value
-#     B  = Params['E0_%i' %NDataSet].value
-#     # BI = Params['BI_%i' %NDataSet].value
-#     C  = Params['W_%i' %NDataSet].value
-#     # CI = Params['CI_%i' %NDataSet].value
-#     # ni = Params['ni_%i' %NDataSet].value
-#==============================================================================
-
-    if ProbCurveType == "ERF":
-        E0 = Params['E0_%i' %NDataSet].value
-        W  = Params['W_%i' %NDataSet].value
-        return 1/2. * (1. + special.erf((En - E0)/ W ))
-    
-#==============================================================================
-# 
-#     elif ProbCurveType == "GMP":
-#         return ( A * np.exp(-np.exp(-(En - B)/C)) )
-#     
-# 
-#     elif ProbCurveType == "LGS":
-#         return (A / np.power((1. + ni * np.exp(-(En - B)/C)), (1./ni)) )
-#     
-# 
-#     elif ProbCurveType == "FPC":
-#         return A *(np.exp(-np.exp(-(En - B)/C)) / (1. +  np.exp(-(En - BI)/CI)) )
-#     
-# 
-#     elif ProbCurveType == "TPC":
-#         return A *(np.exp(-np.exp(-(En - B)/C)) / (1. +  np.exp(-(En - B)/C)) )
-#==============================================================================
-
-    elif ProbCurveType.lower().startswith('cal'):
-        return 1.
 
 def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAngles, 
                          ProbCurveType, cutoff_type, mass_molecules):
@@ -230,8 +116,10 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
     TimeCorr = Params['IonTOF_%i'   %NDataSet].value * mass_factor
     Temperature = Params['Temp_%i'  %NDataSet].value
 
-    Time   = Time - TimeCorr * 1E-6                            # Correct the time
-    
+    # subtract the ion flight time and eliminate singularity that would occur at Time = 0    
+    Time = Time - TimeCorr * 1E-6  
+    Time = np.where(Time != 0, Time, np.repeat(0.01E-6, len(Time)))
+            
     CutOff = cutoff_function(Params, data, NDataSet, Time, cutoff_type)
     
 #==============================================================================
@@ -257,7 +145,8 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
     if AveragingType == "PointDetector":    
         # Averaging performed taking into account different flight time for different angles
         for Theta in ThetaAngles:
-            Velocity = FFRDist /(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
+            # v = x / t = ( L / cos(theta) ) / t
+            Velocity = FFRDist /(Time * np.cos(np.radians(Theta))) 
             Ekin = (0.5 * glbl.massAmu * Velocity**2.) * glbl.eVConst
             # Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
             VelocityDistribution = VelocityDistribution                   \
@@ -323,6 +212,11 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
 # ============================  Main PROGRAM  ================================
 #============================================================================= 
 #============================================================================= 
+
+import time
+start_time = time.time()
+
+
 
 # create a Data object to read and store the data
 data = Data()
@@ -595,22 +489,24 @@ with open(pathToFits + result_file_name, 'w') as result_file:
                 pass
         
         #------------------------------------------------------------------------------------------
-        # Get the point where time > 3E-6 sec and ignore earlier points to avoid noise
+        # Get the point where time > 2E-6 sec and ignore earlier points to avoid noise
         #------------------------------------------------------------------------------------------
-        i_start = np.where(PlotDataSets[i][0] > 3.0E-6)[0][0]        
+        i_start = np.where(PlotDataSets[i][0] > 2.0E-6)[0][0]        
         
         #------------------------------------------------------------------------------------------
         # Get the plot data and convert time to microseconds
         #-----------------------------------------------------------------------------------------
         Time     =  PlotDataSets[i][0][i_start:] 
         Signal   =  PlotDataSets[i][1][i_start:]
-        Fit      =  TOF(Time, n_dataset, fitResult.params, AveragingType, ThetaAngles, 
+        Fit      =  TOF(Time, n_dataset, fitResult.params, data, AveragingType, ThetaAngles, 
                         ProbCurveType, cutoff_type, data.mass_molecules)
         
+                
         mass_factor = np.sqrt(data.mass_molecules[i] / glbl.massH2)
         ion_tof  = fitResult.params['IonTOF_%i'   %n_dataset].value * mass_factor 
-        Cutoff   =  cutoff_function(fitResult.params, data, n_dataset, 
-                                    (Time - ion_tof * 1E-6), cutoff_type )
+        Time2 = Time - ion_tof * 1E-6  
+        Time2 = np.where(Time2 != 0, Time2, np.repeat(0.01E-6, len(Time)))
+        Cutoff   =  cutoff_function(fitResult.params, data, n_dataset, Time2, cutoff_type )
                                     
         Time = Time * 1E6    # convert to microseconds for plotting
         
@@ -643,8 +539,9 @@ with open(pathToFits + result_file_name, 'w') as result_file:
             
         
 result_file.close()
+print("--- %s seconds ---" % (time.time() - start_time))
 
-# PlotFit(pathToFits + result_file_name)
+PlotFit(pathToFits + result_file_name)
 #==============================================================================
 # # Begin comment out for testing
 #

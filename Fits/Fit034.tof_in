@@ -12,7 +12,7 @@
 #   Fit Parameters
 #   Name,           Value,    	Vary, 	Min, 	Max
     Yscale,         0.25E-9,    1
-	IonTOF,         3.2,     	0					 # for H2 -- scaled by mass factor 
+	IonTOF,         3.200,   	0					 # for H2 -- scaled by mass factor 
     FFR,			30,      	2	
     Baseline,       0.,         0
     

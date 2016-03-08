@@ -1,0 +1,171 @@
+
+Range of points to use in fitting
+n_min      = 350      t_min= 7e-06
+n_max      = 2000      t_max= 3.9999999999999996e-05
+signal_max = 93.0
+
+
+Range of points to use in fitting
+n_min      = 350      t_min= 7e-06
+n_max      = 2000      t_max= 3.9999999999999996e-05
+signal_max = 76.0
+
+
+Range of points to use in fitting
+n_min      = 350      t_min= 7e-06
+n_max      = 2000      t_max= 3.9999999999999996e-05
+signal_max = 63.0
+
+
+Range of points to use in fitting
+n_min      = 350      t_min= 7e-06
+n_max      = 2000      t_max= 3.9999999999999996e-05
+signal_max = 49.0
+
+
+Range of points to use in fitting
+n_min      = 350      t_min= 7e-06
+n_max      = 2000      t_max= 3.9999999999999996e-05
+signal_max = 187.0
+
+
+Range of points to use in fitting
+n_min      = 350      t_min= 7e-06
+n_max      = 2000      t_max= 3.9999999999999996e-05
+signal_max = 136.0
+
+
+Range of points to use in fitting
+n_min      = 350      t_min= 7e-06
+n_max      = 2000      t_max= 3.9999999999999996e-05
+signal_max = 136.0
+
+
+Range of points to use in fitting
+n_min      = 350      t_min= 7e-06
+n_max      = 2000      t_max= 3.9999999999999996e-05
+signal_max = 117.0
+
+[[Fit Statistics]]
+    # function evals   = 147
+    # data points      = 13200
+    # variables        = 11
+    chi-square         = 552397.448
+    reduced chi-square = 41.883
+[[Variables]]
+    Yscale_1:     1.1222e-10 +/- 2.00e-12 (1.79%) (init= 2.5e-10)
+    IonTOF_1:     3.2 (fixed)
+    FFR_1:        29.1362188 +/- 0.073684 (0.25%) (init= 30)
+    Baseline_1:   0 (fixed)
+    ECutM_1:      7.00499715 +/- 0.203588 (2.91%) (init= 7.17795)
+    ECutS_1:      0.02370315 +/- 0.000879 (3.71%) (init= 0.02)
+    Temp_1:       299 (fixed)
+    Temp_2:       491 (fixed)
+    FFR_2:        29.1362188 +/- 0.073684 (0.25%)  == 'FFR_1'
+    ECutM_2:      7.00499715 +/- 0.203588 (2.91%)  == 'ECutM_1'
+    ECutS_2:      0.02370315 +/- 0.000879 (3.71%)  == 'ECutS_1'
+    Yscale_2:     2.3588e-11 +/- 3.26e-13 (1.38%) (init= 2.5e-10)
+    Baseline_2:   0 (fixed)
+    IonTOF_2:     3.2 (fixed)
+    Temp_3:       648 (fixed)
+    FFR_3:        29.1362188 +/- 0.073684 (0.25%)  == 'FFR_1'
+    ECutM_3:      7.00499715 +/- 0.203588 (2.91%)  == 'ECutM_1'
+    ECutS_3:      0.02370315 +/- 0.000879 (3.71%)  == 'ECutS_1'
+    Yscale_3:     1.0642e-11 +/- 1.34e-13 (1.26%) (init= 2.5e-10)
+    Baseline_3:   0 (fixed)
+    IonTOF_3:     3.2 (fixed)
+    Temp_4:       836 (fixed)
+    FFR_4:        29.1362188 +/- 0.073684 (0.25%)  == 'FFR_1'
+    ECutM_4:      7.00499715 +/- 0.203588 (2.91%)  == 'ECutM_1'
+    ECutS_4:      0.02370315 +/- 0.000879 (3.71%)  == 'ECutS_1'
+    Yscale_4:     5.1154e-12 +/- 6.58e-14 (1.29%) (init= 2.5e-10)
+    Baseline_4:   0 (fixed)
+    IonTOF_4:     3.2 (fixed)
+    Temp_5:       298 (fixed)
+    FFR_5:        29.1362188 +/- 0.073684 (0.25%)  == 'FFR_1'
+    ECutM_5:      7.00499715 +/- 0.203588 (2.91%)  == 'ECutM_1'
+    ECutS_5:      0.02370315 +/- 0.000879 (3.71%)  == 'ECutS_1'
+    Yscale_5:     6.2818e-11 +/- 1.10e-12 (1.74%) (init= 2.5e-10)
+    Baseline_5:   0 (fixed)
+    IonTOF_5:     3.2 (fixed)
+    Temp_6:       490 (fixed)
+    FFR_6:        29.1362188 +/- 0.073684 (0.25%)  == 'FFR_1'
+    ECutM_6:      7.00499715 +/- 0.203588 (2.91%)  == 'ECutM_1'
+    ECutS_6:      0.02370315 +/- 0.000879 (3.71%)  == 'ECutS_1'
+    Yscale_6:     1.3050e-11 +/- 1.62e-13 (1.24%) (init= 2.5e-10)
+    Baseline_6:   0 (fixed)
+    IonTOF_6:     3.2 (fixed)
+    Temp_7:       646 (fixed)
+    FFR_7:        29.1362188 +/- 0.073684 (0.25%)  == 'FFR_1'
+    ECutM_7:      7.00499715 +/- 0.203588 (2.91%)  == 'ECutM_1'
+    ECutS_7:      0.02370315 +/- 0.000879 (3.71%)  == 'ECutS_1'
+    Yscale_7:     7.8089e-12 +/- 7.42e-14 (0.95%) (init= 2.5e-10)
+    Baseline_7:   0 (fixed)
+    IonTOF_7:     3.2 (fixed)
+    Temp_8:       835 (fixed)
+    FFR_8:        29.1362188 +/- 0.073684 (0.25%)  == 'FFR_1'
+    ECutM_8:      7.00499715 +/- 0.203588 (2.91%)  == 'ECutM_1'
+    ECutS_8:      0.02370315 +/- 0.000879 (3.71%)  == 'ECutS_1'
+    Yscale_8:     3.3242e-12 +/- 2.69e-14 (0.81%) (init= 2.5e-10)
+    Baseline_8:   0 (fixed)
+    IonTOF_8:     3.2 (fixed)
+[[Correlations]] (unreported correlations are <  0.100)
+    C(ECutS_1, Yscale_5)         = -0.979 
+    C(Yscale_1, ECutS_1)         = -0.955 
+    C(Yscale_1, Yscale_5)        =  0.954 
+    C(ECutS_1, Yscale_6)         = -0.944 
+    C(FFR_1, Yscale_5)           =  0.942 
+    C(Yscale_5, Yscale_6)        =  0.936 
+    C(FFR_1, ECutS_1)            = -0.930 
+    C(ECutS_1, Yscale_7)         = -0.919 
+    C(Yscale_1, FFR_1)           =  0.917 
+    C(Yscale_1, Yscale_6)        =  0.912 
+    C(Yscale_5, Yscale_7)        =  0.908 
+    C(FFR_1, Yscale_6)           =  0.891 
+    C(Yscale_1, Yscale_7)        =  0.885 
+    C(Yscale_6, Yscale_7)        =  0.873 
+    C(FFR_1, Yscale_7)           =  0.860 
+    C(ECutS_1, Yscale_2)         = -0.845 
+    C(Yscale_2, Yscale_5)        =  0.838 
+    C(Yscale_1, Yscale_2)        =  0.817 
+    C(Yscale_2, Yscale_6)        =  0.804 
+    C(FFR_1, Yscale_2)           =  0.798 
+    C(Yscale_2, Yscale_7)        =  0.781 
+    C(ECutS_1, Yscale_8)         = -0.767 
+    C(Yscale_5, Yscale_8)        =  0.755 
+    C(Yscale_1, Yscale_8)        =  0.737 
+    C(Yscale_6, Yscale_8)        =  0.727 
+    C(FFR_1, Yscale_8)           =  0.709 
+    C(Yscale_7, Yscale_8)        =  0.707 
+    C(ECutS_1, Yscale_3)         = -0.692 
+    C(Yscale_3, Yscale_5)        =  0.684 
+    C(Yscale_1, Yscale_3)        =  0.667 
+    C(Yscale_3, Yscale_6)        =  0.657 
+    C(Yscale_2, Yscale_8)        =  0.650 
+    C(FFR_1, Yscale_3)           =  0.647 
+    C(Yscale_3, Yscale_7)        =  0.639 
+    C(Yscale_2, Yscale_3)        =  0.588 
+    C(Yscale_3, Yscale_8)        =  0.533 
+    C(ECutS_1, Yscale_4)         = -0.481 
+    C(Yscale_4, Yscale_5)        =  0.474 
+    C(Yscale_1, Yscale_4)        =  0.462 
+    C(Yscale_4, Yscale_6)        =  0.456 
+    C(FFR_1, Yscale_4)           =  0.445 
+    C(Yscale_4, Yscale_7)        =  0.444 
+    C(Yscale_2, Yscale_4)        =  0.408 
+    C(Yscale_4, Yscale_8)        =  0.370 
+    C(ECutM_1, ECutS_1)          =  0.341 
+    C(Yscale_3, Yscale_4)        =  0.334 
+    C(ECutM_1, Yscale_7)         = -0.261 
+    C(ECutM_1, Yscale_6)         = -0.245 
+    C(ECutM_1, Yscale_8)         = -0.235 
+    C(ECutM_1, Yscale_2)         = -0.220 
+    C(ECutM_1, Yscale_5)         = -0.203 
+    C(Yscale_1, ECutM_1)         = -0.200 
+    C(ECutM_1, Yscale_3)         = -0.197 
+    C(ECutM_1, Yscale_4)         = -0.148 
+NAN found i= 9
+NAN found i= 9
+NAN found i= 9
+NAN found i= 9
+--- 4.129236221313477 seconds ---

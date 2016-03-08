@@ -333,9 +333,11 @@ def TOF(Time, NDataSet, Params, AveragingType, ThetaAngles, ProbCurveType, Debug
     TCutW    = Params['TCutW_%i'     %NDataSet].value
     TimeCorr = Params['TimeCorr_%i'  %NDataSet].value
     #Temperature = Params['Temperature_%i' %NDataSet].value
-    Time   = Time - TimeCorr * 1E-6                            # Correct the time
-    CutOff = 0.5 * (1. - np.tanh((Time - TCutC*1E-6) / (TCutW*1E-6)))      # CutOff function
-            #used to model the experimental loss of low energy ions
+    
+    # subtract the ion flight time and eliminate singularity that would occur at Time = 0    
+    Time = Time - TimeCorr * 1E-6  
+    Time = np.where(Time != 0, Time, np.repeat(0.01E-6, len(Time)))
+
     Signal0 = AngularAveraging( AveragingType, Time, NDataSet, Params, ThetaAngles)       
     Signal = Signal0 * CutOff * MaxTOF + Baseline
     
@@ -356,7 +358,8 @@ def Debug1(Time=2E-5):
     TimeCorr    = Params['TimeCorr_1'   ].value
     Temperature = Params['Temperature_1'].value
     
-    Time2    = Time - TimeCorr *1E-6
+    Time2 = Time - TimeCorr *1E-6
+    Time2 = np.where(Time2 != 0, Time2, np.repeat(0.01E-6, len(Time)))
     
     Signal = TOF(Time,1,Params,'None',0,'Calibration')
     CutOff = 0.5 * (1. - np.tanh((Time2 - TCutC*1E-6) / (TCutW*1E-6)))
@@ -451,7 +454,9 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
     TimeCorr = Params['TimeCorr_%i'  %NDataSet].value
     Temperature = Params['Temperature_%i' %NDataSet].value
 
-    Time   = Time - TimeCorr * 1E-6                            # Correct the time
+    # subtract the ion flight time and eliminate singularity that would occur at Time = 0    
+    Time = Time - TimeCorr * 1E-6  
+    Time = np.where(Time != 0, Time, np.repeat(0.01E-6, len(Time)))                            # Correct the time
     CutOff = 0.5 * (1. - np.tanh((Time - TCutC*1E-6) / (TCutW*1E-6)))    # CutOff function used to model the experimental loss of low energy ions
     
 
@@ -469,7 +474,6 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
         # No angular averaging
         Velocity = FFRDist / Time
         Ekin = (0.5 * MassAmu * Velocity**2.) * eVConst
-        Enorm = Ekin
         VelocityDistribution = Velocity**4. * np.exp( -Ekin / (kb * Temperature) ) 
 
     ProbFromTOF = (Signal - Baseline ) / ( MaxTOF * VelocityDistribution * CutOff )
