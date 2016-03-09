@@ -359,11 +359,7 @@ state_string = 'v' + str(states[0][0]) + 'j' +str(states[0][1])
 result_file_name = 'Fit' + newFitNumber + '_' + data.molecules[0] + \
                    '_' + state_string + '_' + ProbCurveType + '.fit_out'
 
-#==============================================================================
-# # for testing 
-# result_file_name = cmdFileName + '_' + state_string + '_' + ProbCurveType + '.fit_out'
-#==============================================================================
-
+# begin comment out for profiling
 with open(pathToFits + result_file_name, 'w') as result_file:
     result_file.write('#\n')
     result_file.write('# Fit {} Results\n'.format(newFitNumber))
@@ -537,11 +533,11 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         result_file.write('#' + 68*'-' + '\n')
         result_file.write('# End Plot ' + str(n_dataset) +'\n')
             
-        
-result_file.close()
+# end comment out for profiling        
+
 print("--- %s seconds ---" % (time.time() - start_time))
 
-PlotFit(pathToFits + result_file_name)
+# PlotFit(pathToFits + result_file_name)
 #==============================================================================
 # # Begin comment out for testing
 #
