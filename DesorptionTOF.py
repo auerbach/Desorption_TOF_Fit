@@ -25,55 +25,35 @@ from PlotFit import PlotFit
 from Cutoff import cutoff_function
 from compute_tof import TOF
 import TOF_fit_global
+from Parameters2 import Parameters2
 # from Parameters2 import Parameter2, Parameters2
 
 #import global_variables_old as glbl_old
 from Data import Data
 
-def GenerateThetaAngles(AveragingType, GridType,        \
-                        NPointsSource, NPointsDetector, \
-                        ZSource,    RSource,            \
-                        ZAperture, RAperture,           \
-                        ZDetector,  LengthDetector):
 
-    if AveragingType == 'PointDetector':
-        ThetaAngles = np.arange(0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep)
-    elif AveragingType == 'None':
-        ThetaAngles = [0.] 
-    elif AveragingType == 'LineDetector':
-        import GeneratePoints
-        GridOfPointsSource  = GeneratePoints.PointsOnTheSource(         \
-            GridType = GridType, ZSource = ZSource , RSource = RSource, \
-            NPoints = NPointsSource)
-        
-        GridOfPointsDetector = GeneratePoints.PointsOnTheDetectionLine( \
-            ZDetector = ZDetector ,         \
-            NPoints = NPointsDetector,      \
-            Length = LengthDetector )
-               
-        ThetaAngles = GeneratePoints.ThetaPossibleTrajectories(         \
-            GridSource   = GridOfPointsSource,                          \
-            GridDetector = GridOfPointsDetector,                        \
-            ZAperture = ZAperture,                                      \
-            RAperture = RAperture)
-        
-            
-        for i in range( len( ThetaAngles )):
-            ThetaAngles[i] = np.degrees( ThetaAngles[i] )
-        print("Considering ", len(ThetaAngles ),\
-            " values of Theta in the angular averaging, minimum: %8.3f"\
-            %min( ThetaAngles), " deg , maximum: %8.3f" %max( ThetaAngles) ," deg.")
-    return ThetaAngles
 
 
 # -------------------------------------------------------------------------------------------------
 #   FitData -- function to perform the fit
 # -------------------------------------------------------------------------------------------------
-def FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType, mass_molecules):
+def FitData( DataSets, Params, AveragingType, ProbCurveType, mass_molecules):
+
+    # Generate Theta angles employed for angular averaging
+    ThetaAngles = GenerateThetaAngles(glbl,
+                AveragingType=glbl.AveragingType,
+                GridType=glbl.GridType,
+                NPointsSource=glbl.NPointsSource,
+                NPointsDetector=glbl.NPointsDetector,
+                ZSource = glbl.ZSource,
+                RSource = glbl.RSource,
+                ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
+                ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
+                # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \
+
     # Fit the data
     # Give to the datasets a form that "minimize" likes
     X, Y = [], []
-    
 
       
     for DataSet in DataSets:
@@ -217,12 +197,11 @@ import time
 start_time = time.time()
 
 #------------------------------------------------------------------------------
-# Create Data, and Global Variables objects
+# Create TOF_fit_global, Data, and Parameters, objects
 #------------------------------------------------------------------------------
-# create a Data object to read and store the data
 glbl = TOF_fit_global.TOF_fit_global()
 data = Data(glbl)
-
+parms = Parameters2()
 
 # define default path to control files and fit output
 pathToFits = 'Fits\\'
@@ -290,7 +269,8 @@ cmdFile = pathToFits + 'Fit' + str(newFitNumber) + '.tof_in'
 #==============================================================================
 # # Parse the command file
 #==============================================================================
-initial_params, functions, signalFiles, backgroundFiles, errors = parse_cmd_file(cmdFile, glbl)
+errors = parse_cmd_file(cmdFile, glbl, parms)
+
 
 if len(errors) > 0:
     print('Errors\n', errors)
@@ -299,22 +279,21 @@ if len(errors) > 0:
 #==============================================================================
 # # use Francesco's names until have time to change
 #==============================================================================
-DataFiles = signalFiles
-BackgroundFiles = backgroundFiles
+DataFiles = glbl.signalFiles
+BackgroundFiles = glbl.backgroundFiles
 
 # initalize lists
 states = []         # list if tuples (v, j)
 temperatures = []
 DataSets = []
 PlotDataSets = []
-# Params = initial_params
 
 # Read data from input
 fit_ranges = []
 for i in range( len( DataFiles)):
     Tmin = glbl.Tmins[i]
     Tmax = glbl.Tmaxs[i]
-    ProbCurveType = functions[i]
+    ProbCurveType = glbl.Functions[i]
     DataFile = DataFiles[i]
     AveragingType = glbl.AveragingTypes[i]
     cutoff_type = glbl.cutoff_types[i]
@@ -340,22 +319,11 @@ for i in range( len( DataFiles)):
     DataSets.append([Time[Nmin:Nmax], Signal[Nmin:Nmax]])
     PlotDataSets.append([Time, Signal])
     
-# Generate Theta angles employed for angular averaging
-ThetaAngles = GenerateThetaAngles(
-                AveragingType=AveragingType, 
-                GridType=glbl.GridType,
-                NPointsSource=glbl.NPointsSource,
-                NPointsDetector=glbl.NPointsDetector,
-                ZSource = glbl.ZSource,
-                RSource = glbl.RSource,
-                ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
-                ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
-                # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \  
 
 #--------------------------------------------------------------------------------------------------
 # Fit the data to model 
 #--------------------------------------------------------------------------------------------------
-fitResult = FitData( DataSets, initial_params, AveragingType, ThetaAngles, 
+fitResult = FitData( DataSets, parms, AveragingType,
                     ProbCurveType, data.mass_molecules)
 print(fit_report(fitResult))
 
@@ -477,7 +445,7 @@ with open(pathToFits + result_file_name, 'w') as result_file:
             try:
                 result_file.write('# Label    : {:6s}{:>7.3f}'.format(p, final_params[p_].value))
                 
-                if initial_params[p +'_1'].glbl and i >0:
+                if parms[p +'_1'].glbl and i >0:
                     result_file.write(' (global)\n')
                 if not final_params[p_].vary:
                     result_file.write(' (fixed)\n')
@@ -585,7 +553,7 @@ PlotFit(pathToFits + result_file_name)
 #     next_row = ws.max_row + 2
 #             
 # if(next_row):
-#     for n in range(len(signalFiles)):
+#     for n in range(len(glbl.signalFiles)):
 #         ws.cell(row=next_row, column = 1).value = fit_name + '_' + str(n+1)
 #         ws.cell(row=next_row, column = 2).value = data.molecules[n]  # molecule
 #         ws.cell(row=next_row, column = 3).value = data.states[n][0]
@@ -615,7 +583,7 @@ PlotFit(pathToFits + result_file_name)
 
     # if not calibration run
 #==============================================================================
-#     if not functions[i].lower().startswith('cal'):
+#     if not glbl.Functions[i].lower().startswith('cal'):
 #         WriteProbOutput(Time, Signal, State, Label, NDataSet, fitResult.params, 
 #                         AveragingType, ThetaAngles, ProbCurveType)                                                   
 #==============================================================================

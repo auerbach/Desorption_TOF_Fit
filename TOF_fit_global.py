@@ -82,17 +82,20 @@ class TOF_fit_global(object):
                                                 #   values of 'Cartesian' or'Radial'
 
         #------------------------------------------------------------------------------------------
-        # Fit variables
+        # Fit Control Variables
         #------------------------------------------------------------------------------------------
-
-        self.Tmin           = None; self.Tmins          = []
-        self.Tmax           = None; self.Tmaxs          = []
-        self.Function       = None; self.Functions      = []
-        self.AveragingType  = None; self.AveragingTypes = []
-        self.cutoff_type    = None; self.cutoff_types   = []
+        self.AveragingType  = None; self.AveragingTypes  = []
+        self.backgroundFile = None; self.backgroundFiles = []
+        self.cutoff_type    = None; self.cutoff_types    = []
+        self.Function       = None; self.Functions       = []
+        self.signalFile     = None; self.signalFiles     = []
+        self.Tmin           = None; self.Tmins           = []
+        self.Tmax           = None; self.Tmaxs           = []
+        self.Function       = None; self.Functions       = []
+        self.cutoff_type    = None; self.cutoff_types    = []
 
         #------------------------------------------------------------------------------------------
-        # Data Format
+        # Data Header Format
         #------------------------------------------------------------------------------------------
         self.DataFormatLine   =  2;   self.DataFormatLines  = []
         self.OriginalFileLine =  3;   self.OriginalFileLines= []

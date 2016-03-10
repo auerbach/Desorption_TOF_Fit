@@ -8,8 +8,6 @@ Cutoff function to account for loss of very low energy ions
 import numpy as np
 import scipy as sp
 from Parameters2 import Parameters2
-#import global_variables_old as glbl
-#from Data import Data
 
 def cutoff_function(params, data, glbl, NDataSet, Time, cutoff_type, debug = False):
     if cutoff_type.lower() == 'tanh':

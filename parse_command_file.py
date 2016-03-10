@@ -10,8 +10,6 @@ __email__  = 'daniel@djauerbach.com'
 
 from glob import glob
 from Parameters2 import Parameters2
-# import ast
-import global_variables_old as glbl_old
 import TOF_fit_global
 
 
@@ -26,7 +24,7 @@ constList =['ThetaStep', 'ZDiffWall', 'RDiffWall',
             'NPointsDetector', 'NPointsSource', 'GridType',
             'comment_xlsx']
             
-listList = ['DataColLine', 'DataRowLine', 'MoleculeLine', 'TemperatureLine', 
+listList = ['DataColLine', 'DataRowLine', 'MoleculeLine', 'TemperatureLine',
             'VibStateLine', 'RotStateLine',
             'Tmin', 'Tmax', 'Function', 'AveragingType', 'cutoff_type']
 
@@ -35,7 +33,7 @@ listList = ['DataColLine', 'DataRowLine', 'MoleculeLine', 'TemperatureLine',
 #==============================================================================
 # initialize
 #==============================================================================
-def initialize(glbl):
+def initialize():
     
     # variables in module global scope
 
@@ -43,39 +41,6 @@ def initialize(glbl):
 
     errors = []
     globalParms=[]
-    parms = Parameters2()
-
-    glbl_old.backgroundFile = None
-    glbl_old.backgroundFiles = []
-    glbl_old.Function = None
-    glbl_old.Functions =  []
-    glbl_old.signalFile = None
-    glbl_old.signalFiles = []
-    glbl_old.Tmax = None
-    glbl_old.Tmin = None
-    glbl_old.DataLines = []
-    glbl_old.MassLines = []
-    glbl_old.TemperatureLines = []
-    glbl_old.VibStateLines = []
-    glbl_old.RotStateLines = []
-    glbl_old.Tmaxs = []
-    glbl_old.Tmins = []
-
-    glbl.backgroundFile = None
-    glbl.backgroundFiles = []
-    glbl.Function = None
-    glbl.Functions =  []
-    glbl.signalFile = None
-    glbl.signalFiles = []
-    glbl.Tmax = None
-    glbl.Tmin = None
-    glbl.DataLines = []
-    glbl.MassLines = []
-    glbl.TemperatureLines = []
-    glbl.VibStateLines = []
-    glbl.RotStateLines = []
-    glbl.Tmaxs = []
-    glbl.Tmins = []
 
 #==============================================================================
 # open file for reading; abort if file not found
@@ -219,7 +184,7 @@ def addGlobalConst(tokens, line, lineNumber, glbl):
         print(' *** items =', tokens)
         errors.append(error)    
         return
-    exec('glbl_old.' + tokens[0] + '=' + tokens[1])
+
     exec('glbl.' + tokens[0] + '=' + tokens[1])
 
 
@@ -243,17 +208,15 @@ def addListItem(tokens, line, lineNumber, glbl):
 
     # item is a string, need to add quotes to exec, e.g. ERF become 'ERF'
     if is_number(tokens[1]):
-        exec('glbl_old.' + tokens[0] + '=' + tokens[1])
         exec('glbl.' + tokens[0] + '=' + tokens[1])
     else:
-        exec('glbl_old.' + tokens[0] + '=' + "tokens[1]")
         exec('glbl.' + tokens[0] + '=' + "tokens[1]")
         
 #==============================================================================
 #     # append the item to list
-#         cmd = 'glbl_old.' + tokens[0] + 's.append(glbl_old.' + tokens[0] +')'
+#         cmd = 'glbl.' + tokens[0] + 's.append(glbl.' + tokens[0] +')'
 #         exec(cmd)
-#         # exec('glbl_old.' + tokens[0] + 's.append(glbl_old.' + tokens[0])
+#         # exec('glbl.' + tokens[0] + 's.append(glbl.' + tokens[0])
 #         pass
 #==============================================================================
 
@@ -289,10 +252,8 @@ def processEndSection(runNumber, lineNumber, glbl):
         
         # if item was not supplied, use value from previous run if available
         for item in listList:
-            # if not eval('glbl_old.' + item):
             if not eval('glbl.' + item):
                 try:
-                    exec('glbl_old.' + item + ' = glbl_old.' + item + 's[' + str(runNumber -2) + ']')
                     exec('glbl.' + item + ' = glbl.' + item + 's[' + str(runNumber -2) + ']')
                 except:
                     pass
@@ -302,9 +263,7 @@ def processEndSection(runNumber, lineNumber, glbl):
         
     # add item to items list and check if required items have been supplied        
     for item in listList:
-        exec('glbl_old.' + item + 's.append(glbl_old.' + item + ')')
         exec('glbl.' + item + 's.append(glbl.' + item + ')')
-        # if not eval('glbl_old.' + item) and not item in optionalList:
         if not eval('glbl.' + item) and not item in optionalList:
             print('\n *** Error: No ', item, ' for')
             print(' *** data section ending at line ', lineNumber)
@@ -346,22 +305,10 @@ def processEndSection(runNumber, lineNumber, glbl):
                 
         
     # save filenames and reset to None for entry to next section
-    glbl_old.signalFiles.append(glbl_old.signalFile)
-    glbl_old.backgroundFiles.append(glbl_old.backgroundFile)
-    glbl_old.signalFile = None
-    glbl_old.backgroundFile = None
-    
-    glbl_old.Function = None
-    glbl_old.AveragingType = None
-    glbl_old.cutoff_type = None
-    glbl_old.Tmin = None
-    glbl_old.Tmax = None
-
     glbl.signalFiles.append(glbl.signalFile)
     glbl.backgroundFiles.append(glbl.backgroundFile)
     glbl.signalFile = None
     glbl.backgroundFile = None
-
     glbl.Function = None
     glbl.AveragingType = None
     glbl.cutoff_type = None
@@ -374,11 +321,12 @@ def processEndSection(runNumber, lineNumber, glbl):
 #==============================================================================
 # parse command file
 #==============================================================================
-def parse_cmd_file(filename, glbl):
-    
+def parse_cmd_file(filename, glbl, parms_in):
+
     global errors,  globalParms, parms
-    
-    initialize(glbl)
+
+    parms = parms_in
+    initialize()
     runNumber = 1
         
     # open and read command file
@@ -432,8 +380,7 @@ def parse_cmd_file(filename, glbl):
                 errors.append(' nonunique match for file patern' + tokens[1] + 
                                 ' on line ' + str(lineNumber))
                 return
-            
-            glbl_old.signalFile = file
+
             glbl.signalFile = file
         
         # check if line specifies a background file name
@@ -449,10 +396,10 @@ def parse_cmd_file(filename, glbl):
                 print('***** filelist =', filelist)
                 errors.append(' nonunique match for file patern' + tokens[1] + 
                                 ' on line ' + str(lineNumber))
-            glbl_old.backgroundFile = file
+
             glbl.backgroundFile = file
             # use the following line to file name with quotes
-            # exec('glbl_old.backgroundFile =' + tokens[1])
+            # exec('glbl.backgroundFile =' + tokens[1])
             continue
     
         # check if line indicates end of dataset section
@@ -464,9 +411,8 @@ def parse_cmd_file(filename, glbl):
             print('\n *** unknown command on line', i+1)
             print(' *** command =', tokens[0])
             errors.append('unknown command on line ' + str(i+1) + ' command = ' + tokens[0])
-    
-    # return parms, glbl_old.Functions, glbl_old.signalFiles, glbl_old.backgroundFiles, errors
-    return parms, glbl.Functions, glbl.signalFiles, glbl.backgroundFiles, errors
+
+    return errors
 
 
 #--------------------------------------------------------------------------------------------------
@@ -474,8 +420,8 @@ def parse_cmd_file(filename, glbl):
 #--------------------------------------------------------------------------------------------------
 def print_list_items():
     for item in listList:
-        print('{:16s} = {}'.format(item + 's', eval('glbl_old.' + item + 's')))
-        # print('{:16s} = {}'.format(item + 's', eval('glbl.' + item + 's')))
+        # print('{:16s} = {}'.format(item + 's', eval('glbl_old.' + item + 's')))
+        print('{:16s} = {}'.format(item + 's', eval('glbl.' + item + 's')))
         
         
         
@@ -489,6 +435,7 @@ if __name__ == '__main__':
     global errors,  globalParms, parms
 
     glbl = TOF_fit_global.TOF_fit_global()
+    parms = Parameters2()
 
     print()
     print(' Test ParseCmdFile')
@@ -511,7 +458,7 @@ if __name__ == '__main__':
 
     # parse_result = parseCmdFile(filename)
     
-    parms, functions, signalFiles, backgroundFiles, errors = parse_cmd_file(filename, glbl)
+    parms, functions, signalFiles, backgroundFiles, errors = parse_cmd_file(filename, glbl, parms)
     
     print()
     print('=========================')    
@@ -519,24 +466,18 @@ if __name__ == '__main__':
     print('=========================')
     print()
     print('functions:                ', functions)
-    print('glbl_old.Functions:       ', glbl_old.Functions)
     print('glbl.Functions:           ', glbl.Functions)
 
-    print('signalFiles:              ', signalFiles)
-    print('glbl_old.signalFiles:     ', glbl_old.signalFiles)
-    print('glbl.signalFiles:         ', glbl.signalFiles)
+    print('glbl.signalFiles:         ')
+    for file in glbl.signalFiles:
+        print('  ', file)
 
-    print('backgroundFiles:          ', backgroundFiles)
-    print('glbl_old.backgroundFiles: ', glbl_old.backgroundFiles)
-    print('glbl.backgroundFiles:     ', glbl.backgroundFiles)
+    print('glbl.backgroundFiles:     ')
+    for file in glbl.backgroundFiles:
+        print('  ', file)
 
-    print('glbl_old.Tmins:           ', glbl_old.Tmins)
     print('glbl.Tmins:               ', glbl.Tmins)
-
-    print('glbl_old.Tmaxs:           ', glbl_old.Tmaxs)
-    print('glbl.Tmaxs:               ', glbl_old.Tmaxs)
-
-    print('glbl_old.comment_xlsx     ', glbl_old.comment_xlsx)
+    print('glbl.Tmaxs:               ', glbl.Tmaxs)
     print('glbl.comment_xlsx         ', glbl.comment_xlsx)
     print()
     
