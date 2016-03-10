@@ -18,8 +18,8 @@ Created on Wed Mar  2 10:29:48 2016
 """
 
 from Parameters2 import Parameters2
-from read_data import Data
-import GlobalVariables as glbl
+from Data import Data
+import global_variables_old as glbl
 
 
 def e_kin(parms, data, time, n_dataset):

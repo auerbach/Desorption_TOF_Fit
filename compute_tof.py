@@ -5,14 +5,14 @@ Functions to compute the time of flight signal vs time
 
 import numpy as np
 from scipy import special
-import GlobalVariables as glbl
+# import global_variables_old as glbl_old
 from Cutoff import cutoff_function
 
 
 # -------------------------------------------------------------------------------------------------
 #   TOF - compute the signal vs time
 # -------------------------------------------------------------------------------------------------
-def TOF(Time, NDataSet, Params, data, AveragingType, ThetaAngles, ProbCurveType, 
+def TOF(Time, NDataSet, Params, data, glbl, AveragingType, ThetaAngles, ProbCurveType,
         cutoff_type, mass_molecules):
     # Time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
     #Dist  = Params['FFRDist_%i'   %NDataSet].value
@@ -28,8 +28,8 @@ def TOF(Time, NDataSet, Params, data, AveragingType, ThetaAngles, ProbCurveType,
     Time = Time - TimeCorr * 1E-6  
     Time = np.where(Time != 0, Time, np.repeat(0.01E-6, len(Time)))    
     
-    CutOff = cutoff_function(Params, data, NDataSet, Time, cutoff_type)            
-    Signal0 = AngularAveraging(Time, NDataSet, Params, data, AveragingType, ThetaAngles, ProbCurveType)       
+    CutOff = cutoff_function(Params, data, glbl, NDataSet, Time, cutoff_type)
+    Signal0 = AngularAveraging(Time, NDataSet, Params, data, AveragingType, ThetaAngles, ProbCurveType, glbl)
     Signal  = Signal0 * CutOff * Yscale + Baseline
     
 #==============================================================================
@@ -47,7 +47,7 @@ def TOF(Time, NDataSet, Params, data, AveragingType, ThetaAngles, ProbCurveType,
 #   Angular Averaging
 # -------------------------------------------------------------------------------------------------
 def AngularAveraging(Time, NDataSet, Params, data, 
-                     AveragingType, ThetaAngles, ProbCurveType):
+                     AveragingType, ThetaAngles, ProbCurveType, glbl):
 
     FFRDist  = Params['FFR_%i'   %NDataSet].value * 1E-3
     Temperature = Params['Temp_%i' %NDataSet].value
@@ -63,9 +63,9 @@ def AngularAveraging(Time, NDataSet, Params, data,
             Velocity = FFRDist /(time_nonzero * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
             Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
             Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
-            Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * \
-                                np.cos( np.radians(Theta) )**2. *                         \
-                                Prob(Enorm, NDataSet, Params, ProbCurveType)) *           \
+            Signal = Signal + (Velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) * \
+                               np.cos( np.radians(Theta) ) ** 2. * \
+                               Prob(Enorm, NDataSet, Params, ProbCurveType)) *           \
                                 np.sin( np.radians(Theta) ) * glbl.ThetaStep
 
     elif AveragingType == "None":
@@ -74,7 +74,7 @@ def AngularAveraging(Time, NDataSet, Params, data,
         Velocity = FFRDist / time_nonzero
         Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
         Enorm = Ekin
-        Signal = (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * 
+        Signal = (Velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) *
                   Prob(Enorm, NDataSet, Params, ProbCurveType))
 
     elif AveragingType == "LineDetector":
@@ -84,7 +84,7 @@ def AngularAveraging(Time, NDataSet, Params, data,
                         Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
                         Enorm = Ekin * np.cos( np.radians(Theta) )**2 # Reaction probability depends on normal energy
                         # Here no sin weight, since each Theta value has a weight of one
-                        Signal = Signal + (Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature) ) * np.cos( np.radians(Theta) )**2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * glbl.ThetaStep
+                        Signal = Signal + (Velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) * np.cos(np.radians(Theta)) ** 2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * glbl.ThetaStep
 
     return Signal
 

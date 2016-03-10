@@ -1,0 +1,7 @@
+# Untracked files
+.idea/workspace.xml
+.spyderproject
+*.pyc
+*.pdf
+
+

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import GlobalVariables as gv
+import global_variables_old as gv
 
 def get_book_variable_module_name(module_name):
     module = globals().get(module_name, None)

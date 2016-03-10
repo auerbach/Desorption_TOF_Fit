@@ -8,10 +8,10 @@ Cutoff function to account for loss of very low energy ions
 import numpy as np
 import scipy as sp
 from Parameters2 import Parameters2
-import GlobalVariables as glbl
-from read_data import Data
+#import global_variables_old as glbl
+#from Data import Data
 
-def cutoff_function(params, data, NDataSet, Time, cutoff_type, debug = False):
+def cutoff_function(params, data, glbl, NDataSet, Time, cutoff_type, debug = False):
     if cutoff_type.lower() == 'tanh':
         TCutC    = params['TCutC_%i'     %NDataSet].value
         TCutW    = params['TCutW_%i'     %NDataSet].value
@@ -44,12 +44,21 @@ def cutoff_function(params, data, NDataSet, Time, cutoff_type, debug = False):
         
     return CutOff
 
+
+
+
+#------------------------------------------------------------------------------
+#  Main program for testing
+#------------------------------------------------------------------------------
 if __name__ == '__main__':
     
     import unicodedata
     import matplotlib.pyplot as plt
-    
-    data = Data()
+    import TOF_fit_global
+    import Data
+
+    glbl = TOF_fit_global.TOF_fit_global()
+    data = Data.Data(glbl)
     params = Parameters2()
     
     data.mass_molecules.append(glbl.massD2)
@@ -64,18 +73,18 @@ if __name__ == '__main__':
     cutoff_type = 'tanh'
     params.add('TCutC_1', 28)
     params.add('TCutW_1', 4)   
-    tanh_cut = cutoff_function(params, data, NDataSet, time, cutoff_type )
+    tanh_cut = cutoff_function(params, data, glbl, NDataSet, time, cutoff_type )
 
     cutoff_type = 'erf'
     params.add('TCutC_1', 28)
     params.add('TCutW_1', 4)   
-    erf_cut = cutoff_function(params, data, NDataSet, time, cutoff_type )       
+    erf_cut = cutoff_function(params, data, glbl, NDataSet, time, cutoff_type )
     
     cutoff_type = 'exp'
     params.add('ECutM_1', 20.5)
     params.add('ECutS_1', 0.12)
     params.add('FFR_1'  , 31.72861)
-    exp_cut = cutoff_function(params, data, NDataSet, time, cutoff_type )    
+    exp_cut = cutoff_function(params, data, glbl,NDataSet, time, cutoff_type )
         
     label=''
     parm_for_plot_label = ['TCutC', 'TCutW', 'ECutM', 'ECutS']

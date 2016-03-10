@@ -9,8 +9,8 @@ from lmfit import Parameter, Parameters
 class Parameter2 (Parameter):
     """
     derived from lmfit.Parmeter
-        adds boolen attribute glbl to specify if parameter is global or not
-        adds support for glbl in pretty_print()
+        adds boolen attribute glbl_old to specify if parameter is global or not
+        adds support for glbl_old in pretty_print()
     """
     
     def __init__(self, glbl = False, *args, **kwargs):
@@ -36,8 +36,8 @@ class Parameter2 (Parameter):
             sbound = "bounds=[%s:%s]" % (repr(self.min), repr(self.max))
         s.append(sval)
         
-        #if(self.glbl):
-        #sglbl = "self.glbl=%s" % (self.glbl)
+        #if(self.glbl_old):
+        #sglbl = "self.glbl_old=%s" % (self.glbl_old)
         s.append("global =%s" %(self.glbl))
         
         if sbound:
@@ -70,10 +70,10 @@ class Parameters2(Parameters):
         Example
         -------
         p = Parameters()
-        p.add(name, value=XX, glbl=True ...)
+        p.add(name, value=XX, glbl_old=True ...)
 
         is equivalent to:
-        p[name] = Parameter(name=name, value=XX, glbl=True....
+        p[name] = Parameter(name=name, value=XX, glbl_old=True....
         """
         if isinstance(name, Parameter2):
             self.__setitem__(name.name, name)

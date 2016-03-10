@@ -20,15 +20,15 @@ import subprocess
 import unicodedata
 # from glob import glob
 
-from ParseCmdFile import parseCmdFile
+from parse_command_file import parse_cmd_file
 from PlotFit import PlotFit
 from Cutoff import cutoff_function
 from compute_tof import TOF
-
+import TOF_fit_global
 # from Parameters2 import Parameter2, Parameters2
 
-import GlobalVariables as glbl
-from read_data import Data
+#import global_variables_old as glbl_old
+from Data import Data
 
 def GenerateThetaAngles(AveragingType, GridType,        \
                         NPointsSource, NPointsDetector, \
@@ -37,7 +37,7 @@ def GenerateThetaAngles(AveragingType, GridType,        \
                         ZDetector,  LengthDetector):
 
     if AveragingType == 'PointDetector':
-        ThetaAngles = np.arange( 0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep )
+        ThetaAngles = np.arange(0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep)
     elif AveragingType == 'None':
         ThetaAngles = [0.] 
     elif AveragingType == 'LineDetector':
@@ -98,7 +98,7 @@ def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType,
     for i in range( len( DataSets )):
         NDataSet = i + 1
         Resid = Resid + list(DataSets[i][1] \
-                - TOF(DataSets[i][0], NDataSet, Params, data, AveragingType, ThetaAngles, 
+                - TOF(DataSets[i][0], NDataSet, Params, data, glbl, AveragingType, ThetaAngles,
                       ProbCurveType, cutoff_type, mass_molecules))
 
     return np.array( Resid )
@@ -147,21 +147,21 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
         for Theta in ThetaAngles:
             # v = x / t = ( L / cos(theta) ) / t
             Velocity = FFRDist /(Time * np.cos(np.radians(Theta))) 
-            Ekin = (0.5 * glbl.massAmu * Velocity**2.) * glbl.eVConst
+            Ekin = (0.5 * glbl.massAmu * Velocity ** 2.) * glbl.eVConst
             # Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
             VelocityDistribution = VelocityDistribution                   \
                                    + Velocity**4.                         \
-                                   * np.exp( -Ekin / (glbl.kb * Temperature) ) \
+                                   * np.exp(-Ekin / (glbl.kb * Temperature)) \
                                    * np.cos( np.radians(Theta) )**2.      \
-                                   * np.sin( np.radians(Theta) )           \
-                                   * glbl.ThetaStep
+                                   * np.sin( np.radians(Theta) ) \
+                                     * glbl.ThetaStep
 
     elif AveragingType == "None":
         # No angular averaging
         Velocity = FFRDist / Time
-        Ekin = (0.5 * glbl.massAmu * Velocity**2.) * glbl.eVConst
+        Ekin = (0.5 * glbl.massAmu * Velocity ** 2.) * glbl.eVConst
         # Enorm = Ekin
-        VelocityDistribution = Velocity**4. * np.exp( -Ekin / (glbl.kb * Temperature))
+        VelocityDistribution = Velocity**4. * np.exp(-Ekin / (glbl.kb * Temperature))
         
         # kludge to fix divide by zero runtime error        
         for ii in range(len(VelocityDistribution)):
@@ -170,7 +170,7 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
         
 
     ProbFromTOF = (Signal - Baseline ) / (MaxTOF * VelocityDistribution * CutOff)
-    Energy = 0.5 * glbl.massAmu * ( FFRDist / Time )**2. * glbl.eVConst
+    Energy = 0.5 * glbl.massAmu * (FFRDist / Time) ** 2. * glbl.eVConst
     
 
     return Energy, ProbFromTOF
@@ -216,10 +216,13 @@ def ProbFromTOFInversion(Time, Signal, NDataSet, Params, AveragingType, ThetaAng
 import time
 start_time = time.time()
 
-
-
+#------------------------------------------------------------------------------
+# Create Data, and Global Variables objects
+#------------------------------------------------------------------------------
 # create a Data object to read and store the data
-data = Data()
+glbl = TOF_fit_global.TOF_fit_global()
+data = Data(glbl)
+
 
 # define default path to control files and fit output
 pathToFits = 'Fits\\'
@@ -229,6 +232,7 @@ pathToFits = 'Fits\\'
 # uncomment for testing:
 #------------------------------------------------------------------------------
 newFitNumber = '034'
+newFitNumber = '017'
 
 #==============================================================================
 # #------------------------------------------------------------------------------
@@ -286,7 +290,7 @@ cmdFile = pathToFits + 'Fit' + str(newFitNumber) + '.tof_in'
 #==============================================================================
 # # Parse the command file
 #==============================================================================
-initial_params, functions, signalFiles, backgroundFiles, errors = parseCmdFile(cmdFile)
+initial_params, functions, signalFiles, backgroundFiles, errors = parse_cmd_file(cmdFile, glbl)
 
 if len(errors) > 0:
     print('Errors\n', errors)
@@ -340,9 +344,9 @@ for i in range( len( DataFiles)):
 ThetaAngles = GenerateThetaAngles(
                 AveragingType=AveragingType, 
                 GridType=glbl.GridType,
-                NPointsSource=glbl.NPointsSource, 
-                NPointsDetector=glbl.NPointsDetector, 
-                ZSource = glbl.ZSource, 
+                NPointsSource=glbl.NPointsSource,
+                NPointsDetector=glbl.NPointsDetector,
+                ZSource = glbl.ZSource,
                 RSource = glbl.RSource,
                 ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
                 ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
@@ -388,14 +392,14 @@ with open(pathToFits + result_file_name, 'w') as result_file:
     result_file.write('#' + 60*'-' + '\n')
     result_file.write('# Angular Averaging Parameters\n')
     result_file.write('#' + 60*'-' + '\n')
-    result_file.write('# NPointsSource   : ' + str(glbl.NPointsSource)   + '\n')
+    result_file.write('# NPointsSource   : ' + str(glbl.NPointsSource) + '\n')
     result_file.write('# NPointsDetector : ' + str(glbl.NPointsDetector) + '\n')
-    result_file.write('# ZSource         : ' + str(glbl.ZSource)         + '\n')
-    result_file.write('# RSource         : ' + str(glbl.RSource )        + '\n')
-    result_file.write('# ZAperture       : ' + str(glbl.ZAperture)       + '\n')
-    result_file.write('# RAperture       : ' + str(glbl.RAperture)       + '\n')    
-    result_file.write('# ZFinal          : ' + str(glbl.ZFinal)          + '\n')
-    result_file.write('# RFinal          : ' + str(glbl.RFinal)          + '\n')
+    result_file.write('# ZSource         : ' + str(glbl.ZSource) + '\n')
+    result_file.write('# RSource         : ' + str(glbl.RSource) + '\n')
+    result_file.write('# ZAperture       : ' + str(glbl.ZAperture) + '\n')
+    result_file.write('# RAperture       : ' + str(glbl.RAperture) + '\n')
+    result_file.write('# ZFinal          : ' + str(glbl.ZFinal) + '\n')
+    result_file.write('# RFinal          : ' + str(glbl.RFinal) + '\n')
     # result_file.write('# it mse\n')
     
     for i in range(0, len(ThetaAngles), 10):
@@ -494,7 +498,7 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         #-----------------------------------------------------------------------------------------
         Time     =  PlotDataSets[i][0][i_start:] 
         Signal   =  PlotDataSets[i][1][i_start:]
-        Fit      =  TOF(Time, n_dataset, fitResult.params, data, AveragingType, ThetaAngles, 
+        Fit      =  TOF(Time, n_dataset, fitResult.params, data, glbl, AveragingType, ThetaAngles,
                         ProbCurveType, cutoff_type, data.mass_molecules)
         
                 
@@ -502,7 +506,7 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         ion_tof  = fitResult.params['IonTOF_%i'   %n_dataset].value * mass_factor 
         Time2 = Time - ion_tof * 1E-6  
         Time2 = np.where(Time2 != 0, Time2, np.repeat(0.01E-6, len(Time)))
-        Cutoff   =  cutoff_function(fitResult.params, data, n_dataset, Time2, cutoff_type )
+        Cutoff   =  cutoff_function(fitResult.params, data, glbl, n_dataset, Time2, cutoff_type )
                                     
         Time = Time * 1E6    # convert to microseconds for plotting
         
@@ -537,7 +541,7 @@ with open(pathToFits + result_file_name, 'w') as result_file:
 
 print("--- %s seconds ---" % (time.time() - start_time))
 
-# PlotFit(pathToFits + result_file_name)
+PlotFit(pathToFits + result_file_name)
 #==============================================================================
 # # Begin comment out for testing
 #

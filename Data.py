@@ -7,7 +7,7 @@ Read data module for desorption tof fit
 
 import os
 import numpy as np
-import GlobalVariables as glbl
+# import global_variables_old as glbl_old
 
 def is_number(s):
         try:
@@ -19,10 +19,11 @@ def is_number(s):
             return False
 
 class Data(object):
-    def __init__(self):
+    def __init__(self, glbl):
         self.run_number         = 0
         
         #initialize lists
+        self.glbl               = glbl
         self.background_dates   = []
         self.background_names   = []
         self.datasets           = []
@@ -69,7 +70,7 @@ class Data(object):
             with open(background_file_name, 'r') as background_file:
                 back_lines = background_file.readlines()
                 
-        data_format = sig_lines[glbl.DataFormatLine -1].split()[3]
+        data_format = sig_lines[self.glbl.DataFormatLine - 1].split()[3]
         
         if data_format != '2.1':
             print('File ', signal_file_name, ' is not in the right format')
@@ -78,19 +79,19 @@ class Data(object):
         
         self.signal_names.append(signal_file_name)
         self.background_names.append(background_file_name)
-        self.original_signal_names.append(sig_lines[glbl.OriginalFileLine - 1].split()[3])
-        self.molecules.append(sig_lines[glbl.MoleculeLine - 1].split()[3])
-        self.temperatures.append(float(sig_lines[glbl.TemperatureLine - 1].split()[3]))
-        self.states.append( (int(sig_lines[glbl.VibStateLine - 1].split()[3]),
-                             int(sig_lines[glbl.RotStateLine - 1].split()[3])))
+        self.original_signal_names.append(sig_lines[self.glbl.OriginalFileLine - 1].split()[3])
+        self.molecules.append(sig_lines[self.glbl.MoleculeLine - 1].split()[3])
+        self.temperatures.append(float(sig_lines[self.glbl.TemperatureLine - 1].split()[3]))
+        self.states.append((int(sig_lines[self.glbl.VibStateLine - 1].split()[3]),
+                             int(sig_lines[self.glbl.RotStateLine - 1].split()[3])))
                             
-        sig_data_col  = int(sig_lines[glbl.DataColLine - 1].split()[3])
-        sig_data_row  = int(sig_lines[glbl.DataRowLine - 1].split()[3])
+        sig_data_col  = int(sig_lines[self.glbl.DataColLine - 1].split()[3])
+        sig_data_row  = int(sig_lines[self.glbl.DataRowLine - 1].split()[3])
         
         sig_row_end   = len( sig_lines ) #assuming data last until end of file
-        back_data_col = int(sig_lines[glbl.DataColLine - 1].split()[3])
+        back_data_col = int(sig_lines[self.glbl.DataColLine - 1].split()[3])
         if background_file_name:
-            back_data_row = int(sig_lines[glbl.DataRowLine - 1].split()[3])
+            back_data_row = int(sig_lines[self.glbl.DataRowLine - 1].split()[3])
             back_row_end  = len(back_lines)
         
         
@@ -104,11 +105,11 @@ class Data(object):
         # get the mass of the molecule
         molecule = self.molecules[self.run_number - 1]
         if molecule  == 'H2':
-            self.mass_molecules.append(glbl.massH2)
+            self.mass_molecules.append(self.glbl.massH2)
         elif molecule == 'HD':
-            self.mass_molecules.append(glbl.massHD)
+            self.mass_molecules.append(self.glbl.massHD)
         elif molecule == 'D2':
-            self.mass_molecules.append(glbl.massD2)
+            self.mass_molecules.append(self.glbl.massD2)
         else:
             print('Error:  Unknown Molecule ', self.molecules[-1])
             raise SystemExit
@@ -187,7 +188,11 @@ class Data(object):
 # test class if executed as main
 #==============================================================================
 if __name__ == '__main__':
-    data = Data()
+
+    import TOF_fit_global
+    glbl= TOF_fit_global.TOF_fit_global()
+
+    data = Data(glbl)
     data.read_data('Data\\2016.02.10\\Au(111)_H2_v1J3.datv2')
     attributes = vars(data)
     for item in attributes:
