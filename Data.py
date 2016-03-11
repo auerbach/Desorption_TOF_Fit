@@ -7,16 +7,7 @@ Read data module for desorption tof fit
 
 import os
 import numpy as np
-# import global_variables_old as glbl_old
 
-def is_number(s):
-        try:
-            float(s)
-            return True
-        except ValueError:
-            return False
-        except:
-            return False
 
 class Data(object):
     def __init__(self, glbl):
@@ -38,7 +29,14 @@ class Data(object):
         self.temperatures       = []
         
         
-    
+    def is_number(self, a_string):
+        try:
+            float(a_string)
+            return True
+        except ValueError:
+            return False
+        except:
+            return False
 
     #------------------------------------------------------------------------------
     # read_data  function to read the data and subtract background
@@ -148,7 +146,7 @@ class Data(object):
             if time[n] < 3E-6:      # ion flight time for H2 is 3.2E-6.  
                                     # should changes this to be the ion flight time
                 continue
-            if is_number(t_min):
+            if self.is_number(t_min):
                 if float(t_min) * 1.E-6 >= time[n] and \
                    float(t_min) * 1.E-6 < time[n] + delta_time:
                     n_min = n
@@ -160,7 +158,7 @@ class Data(object):
                     break
         
         for n in range( len(time) -(n_delt + 1), 100, -1 ):
-            if is_number(t_max) :
+            if self.is_number(t_max) :
                 if float(t_max) * 1.E-6 >= time[n] and \
                    float(t_max) * 1.E-6 <  time[n] + delta_time:
                     n_max = n

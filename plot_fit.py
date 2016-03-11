@@ -3,7 +3,7 @@
 
 """ Plot the data and result of fit """
 
-def PlotFit(filename):
+def plot_fit(filename):
 
 
     """ 
@@ -181,4 +181,4 @@ if __name__ == '__main__':
     #plot_file_name = 'fits\\Fit022_d2_v1j2_ERF.fit_out'
     # plot_file_name = 'fits\\Fit023_d2_v1j2_ERF.fit_out'
     
-    PlotFit(plot_file_name)
+    plot_fit(plot_file_name)
