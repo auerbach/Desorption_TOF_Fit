@@ -458,16 +458,15 @@ if __name__ == '__main__':
 
     # parse_result = parseCmdFile(filename)
     
-    parms, functions, signalFiles, backgroundFiles, errors = parse_cmd_file(filename, glbl, parms)
+    errors = parse_cmd_file(filename, glbl, parms)
     
     print()
     print('=========================')    
     print('       Final State       ')
     print('=========================')
     print()
-    print('functions:                ', functions)
     print('glbl.Functions:           ', glbl.Functions)
-
+    
     print('glbl.signalFiles:         ')
     for file in glbl.signalFiles:
         print('  ', file)

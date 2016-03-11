@@ -4,6 +4,8 @@ Functions to compute the time of flight signal vs time
 """
 
 import numpy as np
+from scipy import special
+from Cutoff import cutoff_function
 
 # -------------------------------------------------------------------------------------------------
 #   TOF - compute the signal vs time

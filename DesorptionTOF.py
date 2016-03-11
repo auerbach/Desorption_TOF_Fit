@@ -31,6 +31,41 @@ from Parameters2 import Parameters2
 #import global_variables_old as glbl_old
 from Data import Data
 
+def GenerateThetaAngles(AveragingType, GridType,        \
+                        NPointsSource, NPointsDetector, \
+                        ZSource,    RSource,            \
+                        ZAperture, RAperture,           \
+                        ZDetector,  LengthDetector):
+
+    if AveragingType == 'PointDetector':
+        ThetaAngles = np.arange( 0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep )
+    elif AveragingType == 'None':
+        ThetaAngles = [0.]
+    elif AveragingType == 'LineDetector':
+        import GeneratePoints
+        GridOfPointsSource  = GeneratePoints.PointsOnTheSource(         \
+            GridType = GridType, ZSource = ZSource , RSource = RSource, \
+            NPoints = NPointsSource)
+
+        GridOfPointsDetector = GeneratePoints.PointsOnTheDetectionLine( \
+            ZDetector = ZDetector ,         \
+            NPoints = NPointsDetector,      \
+            Length = LengthDetector )
+
+        ThetaAngles = GeneratePoints.ThetaPossibleTrajectories(         \
+            GridSource   = GridOfPointsSource,                          \
+            GridDetector = GridOfPointsDetector,                        \
+            ZAperture = ZAperture,                                      \
+            RAperture = RAperture)
+
+
+        for i in range( len( ThetaAngles )):
+            ThetaAngles[i] = np.degrees( ThetaAngles[i] )
+        print("Considering ", len(ThetaAngles ),\
+            " values of Theta in the angular averaging, minimum: %8.3f"\
+            %min( ThetaAngles), " deg , maximum: %8.3f" %max( ThetaAngles) ," deg.")
+    return ThetaAngles
+
 
 
 
@@ -38,19 +73,6 @@ from Data import Data
 #   FitData -- function to perform the fit
 # -------------------------------------------------------------------------------------------------
 def FitData( DataSets, Params, AveragingType, ProbCurveType, mass_molecules):
-
-    # Generate Theta angles employed for angular averaging
-    ThetaAngles = GenerateThetaAngles(glbl,
-                AveragingType=glbl.AveragingType,
-                GridType=glbl.GridType,
-                NPointsSource=glbl.NPointsSource,
-                NPointsDetector=glbl.NPointsDetector,
-                ZSource = glbl.ZSource,
-                RSource = glbl.RSource,
-                ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
-                ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
-                # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \
-
     # Fit the data
     # Give to the datasets a form that "minimize" likes
     X, Y = [], []
@@ -319,6 +341,18 @@ for i in range( len( DataFiles)):
     DataSets.append([Time[Nmin:Nmax], Signal[Nmin:Nmax]])
     PlotDataSets.append([Time, Signal])
     
+# Generate Theta angles employed for angular averaging
+ThetaAngles = GenerateThetaAngles(
+                AveragingType=AveragingType,
+                GridType=glbl.GridType,
+                NPointsSource=glbl.NPointsSource,
+                NPointsDetector=glbl.NPointsDetector,
+                ZSource = glbl.ZSource,
+                RSource = glbl.RSource,
+                ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
+                ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
+                # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \
+
 
 #--------------------------------------------------------------------------------------------------
 # Fit the data to model 
