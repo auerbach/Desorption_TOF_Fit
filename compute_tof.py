@@ -41,6 +41,43 @@ def TOF(Time, NDataSet, Params, data, glbl, AveragingType, ThetaAngles, ProbCurv
     return Signal
     
 
+def GenerateThetaAngles(AveragingType, GridType,        \
+                        NPointsSource, NPointsDetector, \
+                        ZSource,    RSource,            \
+                        ZAperture, RAperture,           \
+                        ZDetector,  LengthDetector):
+
+    if AveragingType == 'PointDetector':
+        ThetaAngles = np.arange( 0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep )
+    elif AveragingType == 'None':
+        ThetaAngles = [0.]
+    elif AveragingType == 'LineDetector':
+        import GeneratePoints
+        GridOfPointsSource  = GeneratePoints.PointsOnTheSource(         \
+            GridType = GridType, ZSource = ZSource , RSource = RSource, \
+            NPoints = NPointsSource)
+
+        GridOfPointsDetector = GeneratePoints.PointsOnTheDetectionLine( \
+            ZDetector = ZDetector ,         \
+            NPoints = NPointsDetector,      \
+            Length = LengthDetector )
+
+        ThetaAngles = GeneratePoints.ThetaPossibleTrajectories(         \
+            GridSource   = GridOfPointsSource,                          \
+            GridDetector = GridOfPointsDetector,                        \
+            ZAperture = ZAperture,                                      \
+            RAperture = RAperture)
+
+
+        for i in range( len( ThetaAngles )):
+            ThetaAngles[i] = np.degrees( ThetaAngles[i] )
+        print("Considering ", len(ThetaAngles ),\
+            " values of Theta in the angular averaging, minimum: %8.3f"\
+            %min( ThetaAngles), " deg , maximum: %8.3f" %max( ThetaAngles) ," deg.")
+    return ThetaAngles
+
+    
+
 # -------------------------------------------------------------------------------------------------
 #   Angular Averaging
 # -------------------------------------------------------------------------------------------------

@@ -112,3 +112,4 @@ class TOF_fit_global(object):
         #------------------------------------------------------------------------------------------
         self.comment_xlsx = None
         self.file_label   = None
+        self.ThetaAngles  = []

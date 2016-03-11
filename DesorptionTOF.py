@@ -23,7 +23,8 @@ import unicodedata
 from parse_command_file import parse_cmd_file
 from PlotFit import PlotFit
 from Cutoff import cutoff_function
-from compute_tof import TOF
+
+from compute_tof import TOF, GenerateThetaAngles
 import TOF_fit_global
 from Parameters2 import Parameters2
 # from Parameters2 import Parameter2, Parameters2
@@ -31,41 +32,43 @@ from Parameters2 import Parameters2
 #import global_variables_old as glbl_old
 from Data import Data
 
-def GenerateThetaAngles(AveragingType, GridType,        \
-                        NPointsSource, NPointsDetector, \
-                        ZSource,    RSource,            \
-                        ZAperture, RAperture,           \
-                        ZDetector,  LengthDetector):
-
-    if AveragingType == 'PointDetector':
-        ThetaAngles = np.arange( 0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep )
-    elif AveragingType == 'None':
-        ThetaAngles = [0.]
-    elif AveragingType == 'LineDetector':
-        import GeneratePoints
-        GridOfPointsSource  = GeneratePoints.PointsOnTheSource(         \
-            GridType = GridType, ZSource = ZSource , RSource = RSource, \
-            NPoints = NPointsSource)
-
-        GridOfPointsDetector = GeneratePoints.PointsOnTheDetectionLine( \
-            ZDetector = ZDetector ,         \
-            NPoints = NPointsDetector,      \
-            Length = LengthDetector )
-
-        ThetaAngles = GeneratePoints.ThetaPossibleTrajectories(         \
-            GridSource   = GridOfPointsSource,                          \
-            GridDetector = GridOfPointsDetector,                        \
-            ZAperture = ZAperture,                                      \
-            RAperture = RAperture)
-
-
-        for i in range( len( ThetaAngles )):
-            ThetaAngles[i] = np.degrees( ThetaAngles[i] )
-        print("Considering ", len(ThetaAngles ),\
-            " values of Theta in the angular averaging, minimum: %8.3f"\
-            %min( ThetaAngles), " deg , maximum: %8.3f" %max( ThetaAngles) ," deg.")
-    return ThetaAngles
-
+#==============================================================================
+# def GenerateThetaAngles(AveragingType, GridType,        \
+#                         NPointsSource, NPointsDetector, \
+#                         ZSource,    RSource,            \
+#                         ZAperture, RAperture,           \
+#                         ZDetector,  LengthDetector):
+# 
+#     if AveragingType == 'PointDetector':
+#         ThetaAngles = np.arange( 0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep )
+#     elif AveragingType == 'None':
+#         ThetaAngles = [0.]
+#     elif AveragingType == 'LineDetector':
+#         import GeneratePoints
+#         GridOfPointsSource  = GeneratePoints.PointsOnTheSource(         \
+#             GridType = GridType, ZSource = ZSource , RSource = RSource, \
+#             NPoints = NPointsSource)
+# 
+#         GridOfPointsDetector = GeneratePoints.PointsOnTheDetectionLine( \
+#             ZDetector = ZDetector ,         \
+#             NPoints = NPointsDetector,      \
+#             Length = LengthDetector )
+# 
+#         ThetaAngles = GeneratePoints.ThetaPossibleTrajectories(         \
+#             GridSource   = GridOfPointsSource,                          \
+#             GridDetector = GridOfPointsDetector,                        \
+#             ZAperture = ZAperture,                                      \
+#             RAperture = RAperture)
+# 
+# 
+#         for i in range( len( ThetaAngles )):
+#             ThetaAngles[i] = np.degrees( ThetaAngles[i] )
+#         print("Considering ", len(ThetaAngles ),\
+#             " values of Theta in the angular averaging, minimum: %8.3f"\
+#             %min( ThetaAngles), " deg , maximum: %8.3f" %max( ThetaAngles) ," deg.")
+#     return ThetaAngles
+# 
+#==============================================================================
 
 
 
@@ -73,6 +76,19 @@ def GenerateThetaAngles(AveragingType, GridType,        \
 #   FitData -- function to perform the fit
 # -------------------------------------------------------------------------------------------------
 def FitData( DataSets, Params, AveragingType, ProbCurveType, mass_molecules):
+    
+    # Generate Theta angles employed for angular averaging
+    glbl.ThetaAngles = GenerateThetaAngles(
+                AveragingType=AveragingType,
+                GridType=glbl.GridType,
+                NPointsSource=glbl.NPointsSource,
+                NPointsDetector=glbl.NPointsDetector,
+                ZSource = glbl.ZSource,
+                RSource = glbl.RSource,
+                ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
+                ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
+                # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \
+
     # Fit the data
     # Give to the datasets a form that "minimize" likes
     X, Y = [], []
@@ -84,7 +100,7 @@ def FitData( DataSets, Params, AveragingType, ProbCurveType, mass_molecules):
         
     # Perform NLLSQ fit
     result = minimize( Residual, Params, 
-                      args=(X, Y, DataSets, AveragingType, ThetaAngles, 
+                      args=(X, Y, DataSets, AveragingType, glbl.ThetaAngles, 
                             ProbCurveType, mass_molecules) )
     
     return result
@@ -341,18 +357,20 @@ for i in range( len( DataFiles)):
     DataSets.append([Time[Nmin:Nmax], Signal[Nmin:Nmax]])
     PlotDataSets.append([Time, Signal])
     
-# Generate Theta angles employed for angular averaging
-ThetaAngles = GenerateThetaAngles(
-                AveragingType=AveragingType,
-                GridType=glbl.GridType,
-                NPointsSource=glbl.NPointsSource,
-                NPointsDetector=glbl.NPointsDetector,
-                ZSource = glbl.ZSource,
-                RSource = glbl.RSource,
-                ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
-                ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
-                # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \
-
+#==============================================================================
+# # Generate Theta angles employed for angular averaging
+# ThetaAngles = GenerateThetaAngles(
+#                 AveragingType=AveragingType,
+#                 GridType=glbl.GridType,
+#                 NPointsSource=glbl.NPointsSource,
+#                 NPointsDetector=glbl.NPointsDetector,
+#                 ZSource = glbl.ZSource,
+#                 RSource = glbl.RSource,
+#                 ZAperture = glbl.ZAperture, RAperture = glbl.RAperture,
+#                 ZDetector = glbl.ZLaser, LengthDetector = glbl.LLaser)
+#                 # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \
+# 
+#==============================================================================
 
 #--------------------------------------------------------------------------------------------------
 # Fit the data to model 
@@ -404,8 +422,8 @@ with open(pathToFits + result_file_name, 'w') as result_file:
     result_file.write('# RFinal          : ' + str(glbl.RFinal) + '\n')
     # result_file.write('# it mse\n')
     
-    for i in range(0, len(ThetaAngles), 10):
-        result_file.write('# ThetaAngles : ' + str(ThetaAngles[i : i+10]) + '\n')
+    for i in range(0, len(glbl.ThetaAngles), 10):
+        result_file.write('# ThetaAngles : ' + str(glbl.ThetaAngles[i : i+10]) + '\n')
     result_file.write('#' + 60*'-' + '\n')    
     result_file.write('# End Angular Averaging Parameter\n')
     result_file.write('#' + 60*'-' + '\n')
@@ -500,7 +518,7 @@ with open(pathToFits + result_file_name, 'w') as result_file:
         #-----------------------------------------------------------------------------------------
         Time     =  PlotDataSets[i][0][i_start:] 
         Signal   =  PlotDataSets[i][1][i_start:]
-        Fit      =  TOF(Time, n_dataset, fitResult.params, data, glbl, AveragingType, ThetaAngles,
+        Fit      =  TOF(Time, n_dataset, fitResult.params, data, glbl, AveragingType, glbl.ThetaAngles,
                         ProbCurveType, cutoff_type, data.mass_molecules)
         
                 
