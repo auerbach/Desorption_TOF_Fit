@@ -314,7 +314,7 @@ def FitData( DataSets, Params, AveragingType, ThetaAngles, ProbCurveType, LabelD
 
 
 def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType):
-    # Residual function needed by minimize
+    # residual function needed by minimize
     Resid = []
 
     for i in range( len( DataSets )):

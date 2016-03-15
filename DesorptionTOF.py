@@ -33,7 +33,7 @@ import write_output
 # -------------------------------------------------------------------------------------------------
 #   do_fit -- function to perform the fit
 # -------------------------------------------------------------------------------------------------
-def fit_data(DataSets, Params, AveragingType, ProbCurveType, mass_molecules):
+def do_fit(DataSets, Params, AveragingType, ProbCurveType, mass_molecules):
     
     # Generate Theta angles employed for angular averaging
     glbl.ThetaAngles = GenerateThetaAngles(
@@ -48,18 +48,17 @@ def fit_data(DataSets, Params, AveragingType, ProbCurveType, mass_molecules):
                 # ZDetector = ZFinal, LengthDetector = 2.*RFinal         \
 
     # Fit the data
-    # Give to the datasets a form that "minimize" likes
-    X, Y = [], []
-
-      
+    # Put data in the form needed by minimize
+    X = []
+    Y = []
     for DataSet in DataSets:
         X = X + list( DataSet[0] )
         Y = Y + list( DataSet[1] )
         
-    # Perform NLLSQ fit
-    result = minimize( Residual, Params, 
-                      args=(X, Y, DataSets, AveragingType, glbl.ThetaAngles, 
-                            ProbCurveType, mass_molecules) )
+    # Perform non linear least sqaures fit
+    result = minimize(residual, Params,
+                      args=(X, Y, DataSets, AveragingType, glbl.ThetaAngles,
+                            ProbCurveType, mass_molecules))
 
     #-------------------------------------------------------------------------------------------------------------------
     # The minimizer result object has a Parameters object.  We want to have a Parameters2 object so that information
@@ -75,10 +74,10 @@ def fit_data(DataSets, Params, AveragingType, ProbCurveType, mass_molecules):
 
     
 # -------------------------------------------------------------------------------------------------
-#   Residual -- residual function used in fit
+#   residual function used in fit
 # -------------------------------------------------------------------------------------------------
-def Residual( Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType, mass_molecules):
-    # Residual function needed by minimize
+def residual(Params, X, Y, DataSets, AveragingType, ThetaAngles, ProbCurveType, mass_molecules):
+    # residual function needed by minimize
     Resid = []
 
     for i in range( len( DataSets )):
@@ -306,7 +305,7 @@ for i in range( len( DataFiles)):
 #--------------------------------------------------------------------------------------------------
 # Fit the data to model 
 #--------------------------------------------------------------------------------------------------
-fitResult = fit_data(DataSets, parms, AveragingType, ProbCurveType, data.mass_molecules)
+fitResult = do_fit(DataSets, parms, AveragingType, ProbCurveType, data.mass_molecules)
 print(fit_report(fitResult))
 
 result_filename = write_output.write_fit_out(glbl, data, pathToFits, cmdFile, newFitNumber, fitResult, PlotDataSets)

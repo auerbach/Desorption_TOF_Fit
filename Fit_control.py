@@ -15,23 +15,50 @@ import TOF_fit_global
 class Fit_control(object):
     def __init__(self):
         # names of parameters constants and lists
-        self.parmList = ['A', 'E0', 'W',
-                    'TCutC', 'TCutW', 'ECutM', 'ECutS',
-                    'Temp', 'FFR', 'IonTOF', 'Yscale', 'Baseline']
+        self.parms_list = ['A',
+                           'E0',
+                           'W',
+                           'TCutC', 'TCutW',
+                           'ECutM', 'ECutS',
+                           'Temp',
+                           'FFR',
+                           'IonTOF',
+                           'Yscale',
+                           'Baseline']
 
-        self.constList =['ThetaStep', 'ZDiffWall', 'RDiffWall',
-                    'ZRef', 'ZAperture', 'RAperture',
-                    'ZSource', 'RSource', 'ZLaser', 'LLaser', 'ZFinal', 'RFinal',
-                    'NPointsDetector', 'NPointsSource', 'GridType',
-                    'comment_xlsx']
+        self.vars_list = ['comment_xlsx',
+                          'GridType',
+                          'LLaser',
+                          'NPointsDetector',
+                          'NPointsSource',
+                          'RAperture',
+                          'RFinal',
+                          'RSource',
+                          'RDiffWall',
+                          'ThetaStep',
+                          'ZAperture',
+                          'ZDiffWall',
+                          'ZFinal',
+                          'ZLaser',
+                          'ZRef',
+                          'ZSource'
+                          ]
 
-        self.listList = ['DataColLine', 'DataRowLine', 'MoleculeLine', 'TemperatureLine',
-                    'VibStateLine', 'RotStateLine',
-                    'Tmin', 'Tmax', 'Function', 'AveragingType', 'cutoff_type']
+        self.lists_list = ['AveragingType',
+                           'cutoff_type',
+                           'DataColLine', 'DataRowLine',
+                           'Function',
+                           'MoleculeLine',
+                           'RotStateLine',
+                           'TemperatureLine',
+                           'Tmin', 'Tmax',
+                           'VibStateLine',
+                           ]
 
         self.errors = []
-        self.globalParms=[]
+        self.global_parms=[]
         self.parms = None
+
 
     #==============================================================================
     # open file for reading; abort if file not found
@@ -81,14 +108,14 @@ class Fit_control(object):
     # check if cmd is an add Parameter item
     #==============================================================================
     def isParameter(self, tokens):
-        return any(tokens[0] in s for s in self.parmList)
+        return any(tokens[0] in s for s in self.parms_list)
 
 
     #==============================================================================
     # check if cmd is an add Global Variable item
     #==============================================================================
     def isGlobalConst(self, tokens):
-        matching = [tokens[0] == s for s in self.constList]
+        matching = [tokens[0] == s for s in self.vars_list]
         return any(matching)
 
 
@@ -96,9 +123,10 @@ class Fit_control(object):
     # check if cmd is a List item
     #==============================================================================
     def isListItem(self, tokens):
-        matching = [tokens[0].upper() == s.upper() for s in self.listList]
+        matching = [tokens[0].upper() == s.upper() for s in self.lists_list]
         #print('isListItem: tokens=',tokens, 'any=', any(matching)) #, 'matching=', matching)
         return any(matching)
+
 
     #==============================================================================
     # check if token is a number
@@ -110,12 +138,13 @@ class Fit_control(object):
         except:
             return False
 
+
     #==============================================================================
-    # add Parameter to the Parameters class instance
+    # add Parameter
     #==============================================================================
     def addParameter(self, runNumber, tokens, line, lineNumber):
 
-        # global errors,  globalParms, parms
+        # global errors,  global_parms, parms
 
         # check if number of tokesn is correct
         #   there should be name, and 2, 3 or 4 parameters
@@ -140,7 +169,7 @@ class Fit_control(object):
                 vary1 = True
         if tokens[2] == '2':
             glbl1 = True
-            self.globalParms.append(tokens[0])
+            self.global_parms.append(tokens[0])
 
         # set bounds
         try:
@@ -163,7 +192,7 @@ class Fit_control(object):
 
 
     #==============================================================================
-    # add const
+    # add global constant
     #==============================================================================
     def addGlobalConst(self, tokens, line, lineNumber, glbl):
         if len(tokens) != 2:
@@ -184,7 +213,7 @@ class Fit_control(object):
     #==============================================================================
     def addListItem(self, tokens, line, lineNumber, glbl):
 
-        # global errors,  globalParms, parms
+        # global errors,  global_parms, parms
 
         if len(tokens) != 2:
             error = 'wrong number of arguments items on line ' + str(lineNumber)
@@ -216,9 +245,9 @@ class Fit_control(object):
     #==============================================================================
     def addGlobalParameters(self, runNumber):
 
-        # global errors,  globalParms, parms
+        # global errors,  global_parms, parms
 
-        for parmName in self.globalParms:
+        for parmName in self.global_parms:
             oldparm = self.parms[parmName + '_1']
             self.parms.add(parmName + '_' + str(runNumber),
                       value = oldparm.value,
@@ -232,7 +261,7 @@ class Fit_control(object):
     # process end of section
     #==============================================================================
     def processEndSection(self, runNumber, lineNumber, glbl):
-        # global errors,  globalParms, parms
+        # global errors,  global_parms, parms
 
         optionalList = ['Tmin', 'Tmax']
 
@@ -242,18 +271,15 @@ class Fit_control(object):
             self.addGlobalParameters(runNumber)
 
             # if item was not supplied, use value from previous run if available
-            for item in self.listList:
+            for item in self.lists_list:
                 if not eval('glbl.' + item):
                     try:
                         exec('glbl.' + item + ' = glbl.' + item + 's[' + str(runNumber -2) + ']')
                     except:
                         pass
 
-
-
-
         # add item to items list and check if required items have been supplied
-        for item in self.listList:
+        for item in self.lists_list:
             exec('glbl.' + item + 's.append(glbl.' + item + ')')
             if not eval('glbl.' + item) and not item in optionalList:
                 print('\n *** Error: No ', item, ' for')
@@ -289,11 +315,11 @@ class Fit_control(object):
                       min = oldparm.min,
                       max = oldparm.max,
                       expr = oldparm.expr)
+
                 else:
                     print('\n *** Error: No parameter', p, ' for')
                     print(' *** data section ending at line ', lineNumber)
                     self.errors.append('no parameter' + p + ' for section ending at line ' +str(lineNumber))
-
 
         # save filenames and reset to None for entry to next section
         glbl.signalFiles.append(glbl.signalFile)
@@ -314,7 +340,7 @@ class Fit_control(object):
     #==============================================================================
     def parse_cmd_file(self, filename, glbl, parms):
 
-        # global errors,  globalParms, parms
+        # global errors,  global_parms, parms
 
         self.parms = parms
         # initialize()
@@ -350,7 +376,7 @@ class Fit_control(object):
                 pass
 
             # check if line specifies a signal file name
-            # note this could be consolidatae with listList items
+            # note this could be consolidatae with lists_list items
             elif tokens[0].upper() == 'SIGNAL':
                 #use following code to input signal file name without quotes
                 filelist = []
@@ -375,7 +401,7 @@ class Fit_control(object):
                 glbl.signalFile = file
 
             # check if line specifies a background file name
-            # note this could be consolidatae with listList items
+            # note this could be consolidatae with lists_list items
             elif tokens[0].upper() == 'BACKGROUND':
                 # use following code to input background file name without quotes
                 filelist = []
@@ -410,7 +436,7 @@ class Fit_control(object):
     # print list items
     #--------------------------------------------------------------------------------------------------
     def print_list_items(self):
-        for item in self.listList:
+        for item in self.lists_list:
             # print('{:16s} = {}'.format(item + 's', eval('glbl_old.' + item + 's')))
             print('{:16s} = {}'.format(item + 's', eval('glbl.' + item + 's')))
 
@@ -423,7 +449,7 @@ class Fit_control(object):
 if __name__ == '__main__':         
     
     
-    # global errors,  globalParms, parms
+    # global errors,  global_parms, parms
 
     glbl = TOF_fit_global.TOF_fit_global()
     parms = Parameters2()

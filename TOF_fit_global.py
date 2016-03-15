@@ -91,8 +91,6 @@ class TOF_fit_global(object):
         self.signalFile     = None; self.signalFiles     = []
         self.Tmin           = None; self.Tmins           = []
         self.Tmax           = None; self.Tmaxs           = []
-        self.Function       = None; self.Functions       = []
-        self.cutoff_type    = None; self.cutoff_types    = []
 
         #------------------------------------------------------------------------------------------
         # Data Header Format
@@ -108,7 +106,7 @@ class TOF_fit_global(object):
         self.DataRowLine      = 10;   self.DataRowLines     = []
 
         #------------------------------------------------------------------------------------------
-        #   Miscelaneous Constants and Variables
+        #   Miscellaneous Variables
         #------------------------------------------------------------------------------------------
         self.comment_xlsx = None
         self.file_label   = None
