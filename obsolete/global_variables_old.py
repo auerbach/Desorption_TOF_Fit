@@ -16,7 +16,7 @@ massD2      = 2 * massD
 #==============================================================================
 # FFRDist           = 29.0E-3        # Distance travelled by the molecule in the fieldfree region as an ion (m)
 # FFRDistTolerance  = 0.5            # Percentage by which the field free region lenght can vary
-# TimeCorr          = 4.6            # Time correction (us)
+# TimeCorr          = 4.6            # time correction (us)
 # TimeCorrTolerance = 0.8            # (see two lines above )
 #
 # TCutC             = 28.6           # CutOff function 1st parameter (us) 
@@ -25,8 +25,8 @@ massD2      = 2 * massD
 # 
 # TemperatureTolerance = 1.         
 # 
-# Tmin = ''
-# Tmax = ''
+# t_min = ''
+# t_max = ''
 # 
 #==============================================================================
 

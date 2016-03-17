@@ -92,7 +92,7 @@ if __name__ == '__main__':
     
     ax = plt.subplot(111)
     ax.set_xlabel('TOF [' + unicodedata.lookup('micro sign') + 's]', fontsize=16)
-    ax.set_ylabel('Cutoff Function', fontsize=16)
+    ax.set_ylabel('Cutoff function', fontsize=16)
     
     ax.annotate(label, xy = [35, 0.7], xycoords = 'data', 
                 va = 'top', family='monospace', fontsize=12)    

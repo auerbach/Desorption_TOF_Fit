@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Functions to compute the time of flight signal vs time
+functions to compute the time of flight signal vs time
 """
 
 import numpy as np
@@ -12,7 +12,7 @@ from cutoff import cutoff_function
 # -------------------------------------------------------------------------------------------------
 def TOF(Time, NDataSet, Params, data, glbl, AveragingType, ThetaAngles, ProbCurveType,
         cutoff_type, mass_molecules):
-    # Time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
+    # time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
     #Dist  = Params['FFRDist_%i'   %NDataSet].value
     mass_factor = np.sqrt(mass_molecules[NDataSet -1] / glbl.massH2)
     Yscale   = Params['Yscale_%i'    %NDataSet].value
@@ -22,7 +22,7 @@ def TOF(Time, NDataSet, Params, data, glbl, AveragingType, ThetaAngles, ProbCurv
     TimeCorr = Params['IonTOF_%i'    %NDataSet].value * mass_factor
     #Temperature = Params['Temp_%i' %NDataSet].value
     
-    # subtract the ion flight time and eliminate singularity that would occur at Time = 0    
+    # subtract the ion flight time and eliminate singularity that would occur at time = 0
     Time = Time - TimeCorr * 1E-6  
     Time = np.where(Time != 0, Time, np.repeat(0.01E-6, len(Time)))    
     
@@ -32,8 +32,8 @@ def TOF(Time, NDataSet, Params, data, glbl, AveragingType, ThetaAngles, ProbCurv
     
 #==============================================================================
 #     for i, sig in enumerate(Signal):
-#         if np.isnan(sig) and Time[i] == 0.0:
-#             print('NAN found i, ix, Time=', i, ix, Time[i])
+#         if np.isnan(sig) and time[i] == 0.0:
+#             print('NAN found i, ix, time=', i, ix, time[i])
 #             
 #             Signal[i] = 0.
 #==============================================================================
@@ -146,19 +146,19 @@ def Prob(En, NDataSet, Params, ProbCurveType):
     
 #==============================================================================
 # 
-#     elif ProbCurveType == "GMP":
+#     elif fit_function == "GMP":
 #         return ( A * np.exp(-np.exp(-(En - B)/C)) )
 #     
 # 
-#     elif ProbCurveType == "LGS":
+#     elif fit_function == "LGS":
 #         return (A / np.power((1. + ni * np.exp(-(En - B)/C)), (1./ni)) )
 #     
 # 
-#     elif ProbCurveType == "FPC":
+#     elif fit_function == "FPC":
 #         return A *(np.exp(-np.exp(-(En - B)/C)) / (1. +  np.exp(-(En - BI)/CI)) )
 #     
 # 
-#     elif ProbCurveType == "TPC":
+#     elif fit_function == "TPC":
 #         return A *(np.exp(-np.exp(-(En - B)/C)) / (1. +  np.exp(-(En - B)/C)) )
 #==============================================================================
 

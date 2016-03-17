@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 """
-Function to computer kinetic energy (eV)
+function to computer kinetic energy (eV)
 
     e_kin(parms, data, time, n_dataset)  
 

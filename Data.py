@@ -14,19 +14,20 @@ class Data(object):
         self.run_number         = 0
         
         #initialize lists
-        self.glbl               = glbl
-        self.background_dates   = []
-        self.background_names   = []
-        self.datasets           = []
-        self.fit_ranges         = []
-        self.mass_molecules     = []
-        self.molecules          = []
-        self.original_signal_names  = []
-        self.original_background_names = []        
-        self.signal_dates       = []
-        self.signal_names       = []        
-        self.states             = []
-        self.temperatures       = []
+        self.glbl                       = glbl
+        self.background_dates           = []
+        self.background_names           = []
+        self.baselines                  = []
+        self.datasets                   = []
+        self.fit_index_ranges           = []
+        self.mass_molecules             = []
+        self.molecules                  = []
+        self.original_signal_names      = []
+        self.original_background_names  = []
+        self.signal_dates               = []
+        self.signal_names               = []
+        self.states                     = []
+        self.temperatures               = []
         
         
     def is_number(self, a_string):
@@ -41,8 +42,9 @@ class Data(object):
     #------------------------------------------------------------------------------
     # read_data  function to read the data and subtract background
     #------------------------------------------------------------------------------
-    def read_data(self, signal_file_name, background_file_name = '', t_min ='', t_max ='', Threshold = 0.05):
-        # Function to read Datafiles
+    def read_data(self, signal_filename, background_filename ='', fit_range = None,
+                  baseline_range = None,  Threshold = 0.05):
+        # function to read Datafiles
         # Input: DataFile = name of the file to be read ;
         # BackgroundFile  = name of the file with background; 
         # t_min, t_max = minimum (maximum) value of time (in us) to consider ;
@@ -52,31 +54,31 @@ class Data(object):
         self.run_number += 1
         
         # Check existence of the file
-        if not os.path.isfile(signal_file_name):
-            print(signal_file_name + " : signal file does not exist! Quitting...")
+        if not os.path.isfile(signal_filename):
+            print(signal_filename + " : signal file does not exist! Quitting...")
             raise SystemExit
         
         # Open and read the signal file    
-        with open(signal_file_name, 'r') as signal_file:
+        with open(signal_filename, 'r') as signal_file:
             sig_lines = signal_file.readlines()
         
-        if background_file_name :
-            if not os.path.isfile(background_file_name):
-                print(background_file_name + " : Background file does not exist! Quitting...")
+        if background_filename :
+            if not os.path.isfile(background_filename):
+                print(background_filename + " : Background file does not exist! Quitting...")
                 raise SystemExit
     
-            with open(background_file_name, 'r') as background_file:
+            with open(background_filename, 'r') as background_file:
                 back_lines = background_file.readlines()
                 
         data_format = sig_lines[self.glbl.DataFormatLine - 1].split()[3]
         
         if data_format != '2.1':
-            print('File ', signal_file_name, ' is not in the right format')
+            print('File ', signal_filename, ' is not in the right format')
             print('Format = ', data_format)
             raise SystemExit
         
-        self.signal_names.append(signal_file_name)
-        self.background_names.append(background_file_name)
+        self.signal_names.append(signal_filename)
+        self.background_names.append(background_filename)
         self.original_signal_names.append(sig_lines[self.glbl.OriginalFileLine - 1].split()[3])
         self.molecules.append(sig_lines[self.glbl.MoleculeLine - 1].split()[3])
         self.temperatures.append(float(sig_lines[self.glbl.TemperatureLine - 1].split()[3]))
@@ -88,16 +90,16 @@ class Data(object):
         
         sig_row_end   = len( sig_lines ) #assuming data last until end of file
         back_data_col = int(sig_lines[self.glbl.DataColLine - 1].split()[3])
-        if background_file_name:
+        if background_filename:
             back_data_row = int(sig_lines[self.glbl.DataRowLine - 1].split()[3])
             back_row_end  = len(back_lines)
         
         
-        if background_file_name:        
+        if background_filename:
             if (sig_data_row - sig_row_end) != (back_data_row -back_row_end):
                 print('Length of signal and background data are not equal')
-                print('  Signal file:    ', signal_file_name)
-                print('  Background file:', background_file_name)
+                print('  Signal file:    ', signal_filename)
+                print('  Background file:', background_filename)
                 raise SystemExit
                 
         # get the mass of the molecule
@@ -120,7 +122,7 @@ class Data(object):
             S = float( sig_lines[n_sig].split()[sig_data_col - 1] ) #
             time.append( T )
 
-            if not background_file_name :
+            if not background_filename :
                 signal.append(S)
             else:
                 n_back = n_sig + back_data_row - sig_data_row
@@ -130,33 +132,48 @@ class Data(object):
         delta_time = time[1] - time[0]
         self.datasets.append([np.array(time),np.array(signal)])
     
-        #==============================================================================================
-        # Select good data: 
-        #   if max or min times are provided use them, otherwise find times where
-        #     data is = max of data * Threshold
+        #==========================================================================================
+        # Select data to fit:
+        #   if fit_range is given, use it
+        #   otherwise find times where data is = max of data * Threshold
+        #
         # Since the data is noisy, for point n average from n-n_delt to n+n_delt
-        #==============================================================================================
+        #==========================================================================================
+        t_min = None
+        t_max = None
+        try:         
+            if self.is_number(fit_range[0]):        
+                t_min = fit_range[0]
+            if self.is_number(fit_range[1]):
+                t_max = fit_range[1]
+        except:
+            pass
+        
         n_delt = 30
         signal_max = np.array(signal[100:len(signal)]).max()
             
         # find n_min = index of first point to use in fitting
         # scan through the data and look for point where data exceeds a threshold
-        
         for n in range(n_delt+1, len( time )-(n_delt+1)):
-            if time[n] < 3E-6:      # ion flight time for H2 is 3.2E-6.  
-                                    # should changes this to be the ion flight time
+
+            # ignore data imes less than ion flight time to avoid noise.
+            if time[n] < 3.2E-6:      # ion flight time for H2 is 3.2E-6.
                 continue
+
+            # if t_min is specified, find the index of the corresponding point in time array
             if self.is_number(t_min):
                 if float(t_min) * 1.E-6 >= time[n] and \
                    float(t_min) * 1.E-6 < time[n] + delta_time:
                     n_min = n
                     break
+
+            # otherwise find the index where data exceeds threshold
             else:
-                # find time where signal[n] reaches threshold and subtract 1 microseconds
                 if np.array(signal[n-n_delt:n + n_delt]).mean() >= signal_max * Threshold:
                     n_min = int(n - 1 / (delta_time * 1E6))
                     break
-        
+
+        # repeat for long flight time side of cureve
         for n in range( len(time) -(n_delt + 1), 100, -1 ):
             if self.is_number(t_max) :
                 if float(t_max) * 1.E-6 >= time[n] and \
@@ -164,22 +181,54 @@ class Data(object):
                     n_max = n
                     break
             else:
-                # find time where signal[n] falls to threshold and add 1.5 microseconds
                 if np.array(signal[n-n_delt:n + n_delt]).mean()  >= signal_max * Threshold:
                     n_max = int(n + 1.5 / (delta_time * 1E6))
                     break
         
         # save the range of signal to use in fitting
-        self.fit_ranges.append((n_min, n_max))
+        self.fit_index_ranges.append((n_min, n_max))
+
+        # =========================================================================================
+        # if baseline range is supplied - compute the average baseline
+        # =========================================================================================
+        baseline = None        
+        
+        if(baseline_range):
+            if len(baseline_range) % 2 == 0:
+                n_segments = len(baseline_range) / 2
+
+            else:
+                print('***** error baseline_range = ', baseline_range)
+                print('***** number of segments must be even')
+                raise SystemExit('number of baseline_range elements is odd')
+
+            avg_segments = np.array(baseline_range).reshape(n_segments, 2)
+            
+            first = True        
+            for rrr in avg_segments:
+                rrr = rrr * 1E-6
+                condition = np.logical_and(time >= rrr[0], time <=rrr[1])
+                if first:
+                    conditions = condition
+                    first = False
+                else: 
+                    conditions = np.logical_or(condition, conditions,)
+            
+            baseline = np.array(signal)[conditions].mean()
+        
+        self.baselines.append(baseline)
+
             
         print()
-        print('Range of points to use in fitting')                
-        print('n_min      =',n_min, '     t_min=',time[n_min])
-        print('n_max      =',n_max, '     t_max=',time[n_max])
-        print('signal_max =',max( signal[50:len(signal)] ))
+        print('Read data:')
+        print('  Range of points to use in fitting')
+        print('  n_min      =',n_min, '     t_min=',time[n_min])
+        print('  n_max      =',n_max, '     t_max=',time[n_max])
+        print('  signal_max =',max( signal[50:len(signal)] ))
+        print('  baseline   =', baseline)
         print()
     
-        #return State, Temperature, n_min, n_max, Time, Data
+        #return State, Temperature, n_min, n_max, time, Data
 
 
 #==============================================================================
@@ -191,7 +240,14 @@ if __name__ == '__main__':
     glbl= TOF_fit_global.TOF_fit_global()
 
     data = Data(glbl)
-    data.read_data('Data\\2016.02.10\\Au(111)_H2_v1J3.datv2')
+    
+    sigfn = 'Data\\2016.02.10\\Au(111)_H2_v1J3.datv2'
+    backfn = ''
+    fit_range = (7.0, 41.)
+    baseline_range = (3., 6., 45., 55.)
+    
+    data.read_data(sigfn, backfn, fit_range, baseline_range)
+    
     attributes = vars(data)
     for item in attributes:
         if item != 'datasets':

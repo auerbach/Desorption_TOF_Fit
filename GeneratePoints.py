@@ -205,5 +205,5 @@ if (__name__ == "__main__"):
     for n in Histogram:
         sum = sum + n[1]
         print (n[0], n[1],' #', sum)
-    #print ('X=',np.arange( min( ThetaAngles ), max( ThetaAngles ) , 1))
-    #print (ThetaAngles)
+    #print ('X=',np.arange( min( angles_list ), max( angles_list ) , 1))
+    #print (angles_list)

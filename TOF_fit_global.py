@@ -82,32 +82,36 @@ class TOF_fit_global(object):
                                                 #   values of 'Cartesian' or'Radial'
 
         #------------------------------------------------------------------------------------------
-        # Fit Control Variables
+        # Fit Control Variables and Tuples
         #------------------------------------------------------------------------------------------
-        self.AveragingType  = None; self.AveragingTypes  = []
-        self.backgroundFile = None; self.backgroundFiles = []
-        self.cutoff_type    = None; self.cutoff_types    = []
-        self.Function       = None; self.Functions       = []
-        self.signalFile     = None; self.signalFiles     = []
-        self.Tmin           = None; self.Tmins           = []
-        self.Tmax           = None; self.Tmaxs           = []
+        self.averaging_type         = None; self.averaging_types       = []
+        self.background_filename    = None; self.background_filenames  = []
+        self.baseline_range         = None; self.baseline_ranges       = []
+        self.cutoff_type            = None; self.cutoff_types          = []
+        self.fit_range              = None; self.fit_ranges            = []
+        self.fit_index_range        = None; self.fit__index_ranges     = []
+        self.function               = None; self.functions             = []
+        self.signal_filename        = None; self.signal_filenames      = []
+        # self.t_min                  = None; self.t_mins                = []
+        # self.t_max                  = None; self.t_maxs                = []
+
 
         #------------------------------------------------------------------------------------------
         # Data Header Format
         #------------------------------------------------------------------------------------------
-        self.DataFormatLine   =  2;   self.DataFormatLines  = []
-        self.OriginalFileLine =  3;   self.OriginalFileLines= []
-        self.FileDateLine     =  4;   self.FileDataLines    = []
-        self.MoleculeLine     =  5;   self.MoleculeLines    = []
-        self.TemperatureLine  =  6;   self.TemperatureLines = []
-        self.VibStateLine     =  7;   self.VibStateLines    = []
-        self.RotStateLine     =  8;   self.RotStateLines    = []
-        self.DataColLine      =  9;   self.DataColLines     = []
-        self.DataRowLine      = 10;   self.DataRowLines     = []
+        self.DataFormatLine   =  2; self.DataFormatLines   = []
+        self.OriginalFileLine =  3; self.OriginalFileLines = []
+        self.FileDateLine     =  4; self.FileDataLines     = []
+        self.MoleculeLine     =  5; self.MoleculeLines     = []
+        self.TemperatureLine  =  6; self.TemperatureLines  = []
+        self.VibStateLine     =  7; self.VibStateLines     = []
+        self.RotStateLine     =  8; self.RotStateLines     = []
+        self.DataColLine      =  9; self.DataColLines      = []
+        self.DataRowLine      = 10; self.DataRowLines      = []
 
         #------------------------------------------------------------------------------------------
         #   Miscellaneous Variables
         #------------------------------------------------------------------------------------------
         self.comment_xlsx = None
         self.file_label   = None
-        self.ThetaAngles  = []
+        self.angles_list  = []

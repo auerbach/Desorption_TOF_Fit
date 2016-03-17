@@ -44,20 +44,40 @@ class Fit_control(object):
                           'ZSource'
                           ]
 
-        self.lists_list = ['AveragingType',
+        self.lists_list = ['averaging_type',
                            'cutoff_type',
                            'DataColLine', 'DataRowLine',
-                           'Function',
+                           'function',
                            'MoleculeLine',
                            'RotStateLine',
                            'TemperatureLine',
-                           'Tmin', 'Tmax',
+                           #'t_min', 't_max',
                            'VibStateLine',
                            ]
+
+        self.tuples_list = ['fit_range',
+                            'baseline_range']
 
         self.errors = []
         self.global_parms=[]
         self.parms = None
+
+
+    #==========================================================================
+    # print list items
+    #==========================================================================
+    def print_list_items(self):
+        for item in self.lists_list:
+            # print('{:16s} = {}'.format(item + 's', eval('glbl_old.' + item + 's')))
+            print('{:16s} = {}'.format(item + 's', eval('glbl.' + item + 's')))
+
+
+    #==========================================================================
+    # print tuple items
+    #==========================================================================
+    def print_tuple_items(self):
+        for item in self.tuples_list:
+            print('{:16s} = {}'.format(item + 's', eval('glbl.' + item + 's')))
 
 
     #==============================================================================
@@ -73,9 +93,6 @@ class Fit_control(object):
             print(' *** Ending program')
             print(' *** \n')
             raise SystemExit
-
-        except:
-            quit
 
 
     #==============================================================================
@@ -105,16 +122,16 @@ class Fit_control(object):
 
 
     #==============================================================================
-    # check if cmd is an add Parameter item
+    # check if cmd is a Parameter item
     #==============================================================================
     def isParameter(self, tokens):
         return any(tokens[0] in s for s in self.parms_list)
 
 
     #==============================================================================
-    # check if cmd is an add Global Variable item
+    # check if cmd is an Global Variable item
     #==============================================================================
-    def isGlobalConst(self, tokens):
+    def isVar(self, tokens):
         matching = [tokens[0] == s for s in self.vars_list]
         return any(matching)
 
@@ -124,14 +141,20 @@ class Fit_control(object):
     #==============================================================================
     def isListItem(self, tokens):
         matching = [tokens[0].upper() == s.upper() for s in self.lists_list]
-        #print('isListItem: tokens=',tokens, 'any=', any(matching)) #, 'matching=', matching)
+        return any(matching)
+
+    #==============================================================================
+    # check if cmd is a Tuple item
+    #==============================================================================
+    def isTupleItem(self, tokens):
+        matching = [tokens[0].upper() == s.upper() for s in self.tuples_list]
         return any(matching)
 
 
     #==============================================================================
     # check if token is a number
     #==============================================================================
-    def is_number(self, s):
+    def isNumber(self, s):
         try:
             float(s)
             return True
@@ -192,9 +215,9 @@ class Fit_control(object):
 
 
     #==============================================================================
-    # add global constant
+    # add variable
     #==============================================================================
-    def addGlobalConst(self, tokens, line, lineNumber, glbl):
+    def addVar(self, tokens, line, lineNumber, glbl):
         if len(tokens) != 2:
             error = 'wrong number of items for const on line ' + str(lineNumber)
             print('\n ***' + error, lineNumber)
@@ -227,18 +250,29 @@ class Fit_control(object):
 
 
         # item is a string, need to add quotes to exec, e.g. ERF become 'ERF'
-        if self.is_number(tokens[1]):
+        if self.isNumber(tokens[1]):
             exec('glbl.' + tokens[0] + '=' + tokens[1])
         else:
             exec('glbl.' + tokens[0] + '=' + "tokens[1]")
 
     #==============================================================================
-    #     # append the item to list
-    #         cmd = 'glbl.' + tokens[0] + 's.append(glbl.' + tokens[0] +')'
-    #         exec(cmd)
-    #         # exec('glbl.' + tokens[0] + 's.append(glbl.' + tokens[0])
-    #         pass
+    # add tuple item
     #==============================================================================
+    def addTupleItem(self, tokens, line, lineNumber, glbl):
+        # put tokens[1:] into single string
+        toks = tokens[1]
+        for tok in tokens[2:]:
+            if not tok:
+                tok =''
+            toks += ', ' + tok
+
+        # item is a string, need to add quotes to exec, e.g. ERF become 'ERF'
+        if self.isNumber(tokens[1]):
+            exec('glbl.' + tokens[0] + '=' + toks)
+        else:
+            exec('glbl.' + tokens[0] + '=' + "toks")
+
+        xxx = 'testing'
 
     #==============================================================================
     # add Parameter to the Parameters class instance
@@ -263,15 +297,21 @@ class Fit_control(object):
     def processEndSection(self, runNumber, lineNumber, glbl):
         # global errors,  global_parms, parms
 
-        optionalList = ['Tmin', 'Tmax']
+        optionalList = ['t_min', 't_max']
 
         # if this is not the first section, add global parameters
         #   and duplicate old list items if needed
         if runNumber > 1:
             self.addGlobalParameters(runNumber)
 
-            # if item was not supplied, use value from previous run if available
+            # if var or tuple item was not supplied, use value from previous run if available
             for item in self.lists_list:
+                if not eval('glbl.' + item):
+                    try:
+                        exec('glbl.' + item + ' = glbl.' + item + 's[' + str(runNumber -2) + ']')
+                    except:
+                        pass
+            for item in self.tuples_list:
                 if not eval('glbl.' + item):
                     try:
                         exec('glbl.' + item + ' = glbl.' + item + 's[' + str(runNumber -2) + ']')
@@ -286,7 +326,11 @@ class Fit_control(object):
                 print(' *** data section ending at line ', lineNumber)
                 self.errors.append('no ' + str(item) + ' for section ending at line ' +str(lineNumber))
 
-        # check if required parameters have been supplied
+        # add tuple to tuples list
+        for item in self.tuples_list:
+            exec('glbl.' + item + 's.append(glbl.' + item + ')')
+
+        # make a list of required parameters and then check if they have been supplied
         required_parms = ['Yscale', 'Baseline', 'IonTOF', 'FFR', 'Temp']
 
         if glbl.cutoff_type.lower() == 'exp':
@@ -297,11 +341,13 @@ class Fit_control(object):
             required_parms.append('TCutC')
             required_parms.append('TCutW')
 
-        if glbl.Function.lower() == 'erf':
+        if glbl.function.lower() == 'erf':
             required_parms.append('E0')
             required_parms.append('W')
 
 
+        # test if required parameters have been supplied
+        # if parameter is missing, use parameter from previous run number
         for p in required_parms:
             try:
                 self.parms[p + '_' + str(runNumber) ].value
@@ -322,11 +368,11 @@ class Fit_control(object):
                     self.errors.append('no parameter' + p + ' for section ending at line ' +str(lineNumber))
 
         # save filenames and reset to None for entry to next section
-        glbl.signalFiles.append(glbl.signalFile)
-        glbl.backgroundFiles.append(glbl.backgroundFile)
-        glbl.signalFile = None
-        glbl.backgroundFile = None
-        glbl.Function = None
+        glbl.signal_filenames.append(glbl.signal_filename)
+        glbl.background_filenames.append(glbl.background_filename)
+        glbl.signal = None
+        glbl.background = None
+        glbl.function = None
         glbl.AveragingType = None
         glbl.cutoff_type = None
         glbl.Tmin = None
@@ -367,57 +413,42 @@ class Fit_control(object):
             if self.isParameter(tokens):
                 self.addParameter(runNumber, tokens, line, lineNumber)
 
-            # check if line specifies a constant
-            elif self.isGlobalConst(tokens):
-                self.addGlobalConst(tokens, line, lineNumber, glbl)
+            # check if line specifies a variable
+            elif self.isVar(tokens):
+                self.addVar(tokens, line, lineNumber, glbl)
 
+            # check if line specifies an item to be added to a list of values
+            #   that vary with run number
             elif self.isListItem(tokens):
                 self.addListItem(tokens, line, lineNumber, glbl)
-                pass
 
-            # check if line specifies a signal file name
+            # check if line specifies a tuple to be added to a list (e.g. (t_min, t_max))
+            elif self.isTupleItem(tokens):
+                self.addTupleItem(tokens, line, lineNumber, glbl)
+
+            # check if line specifies a signal or background file name
             # note this could be consolidatae with lists_list items
-            elif tokens[0].upper() == 'SIGNAL':
-                #use following code to input signal file name without quotes
+            elif tokens[0].lower() == 'signal' or tokens[0].lower() == 'background':
+                #use following code to input file name without quotes
                 filelist = []
-                for file in glob(tokens[1]):
-                    filelist.append(file)
+                for filename in glob(tokens[1]):
+                    filelist.append(filename)
 
                 if len(filelist) == 0:
                     print('***** error no file found \n')
                     print('*****', tokens[1])
                     self.errors.append(' no match for file patern' + tokens[1] +
                                     ' on line ' + str(lineNumber))
-                    file = 'no match for pattern'
+                    filename = 'no match for pattern'
 
                 if len(filelist) > 1:
                     print('***** error nonunique match to file pattern \n')
                     print('*****', tokens[1])
                     print('***** filelist =', filelist)
-                    self.errors.append(' nonunique match for file patern' + tokens[1] +
+                    self.errors.append(' nonunique match for file pattern' + tokens[1] +
                                     ' on line ' + str(lineNumber))
                     return
-
-                glbl.signalFile = file
-
-            # check if line specifies a background file name
-            # note this could be consolidatae with lists_list items
-            elif tokens[0].upper() == 'BACKGROUND':
-                # use following code to input background file name without quotes
-                filelist = []
-                for file in glob(tokens[1]):
-                    filelist.append(file)
-                if len(filelist) > 1:
-                    print('***** error nonunique match to file pattern \n')
-                    print('*****', tokens[1])
-                    print('***** filelist =', filelist)
-                    self.errors.append(' nonunique match for file patern' + tokens[1] +
-                                    ' on line ' + str(lineNumber))
-
-                glbl.backgroundFile = file
-                # use the following line to file name with quotes
-                # exec('glbl.backgroundFile =' + tokens[1])
-                continue
+                exec ('glbl.' + tokens[0].lower() + '_filename =' + "filename")
 
             # check if line indicates end of dataset section
             elif tokens[0].upper().startswith('END'):
@@ -432,17 +463,6 @@ class Fit_control(object):
         return self.errors
 
 
-    #--------------------------------------------------------------------------------------------------
-    # print list items
-    #--------------------------------------------------------------------------------------------------
-    def print_list_items(self):
-        for item in self.lists_list:
-            # print('{:16s} = {}'.format(item + 's', eval('glbl_old.' + item + 's')))
-            print('{:16s} = {}'.format(item + 's', eval('glbl.' + item + 's')))
-
-
-
-    
 #==============================================================================
 # test parseCmdFile if executed as main
 #==============================================================================
@@ -462,45 +482,41 @@ if __name__ == '__main__':
     print('    Initial State    ')
     print('=====================')
     fit_control.print_list_items()
-    print()    
+    fit_control.print_tuple_items()
 
 #==============================================================================
 #     # parse the constants file    
 #     const_filename = 'testSetVariables.dat'   
-#     parms, functions, signalFiles, backgroundFiles, errors = parseCmdFile(const_filename)
+#     parms, functions, signal_filename, backgrounds, errors = parseCmdFile(const_filename)
 #==============================================================================
 
     filename = 'Fits\\fit031.tof_in'
+    filename = 'Fits\\fit017.tof_in'
 
-
-
-    # parse_result = parseCmdFile(filename)
-    
     errors = fit_control.parse_cmd_file(filename, glbl, parms)
     
     print()
     print('=========================')    
     print('       Final State       ')
     print('=========================')
-    print()
-    print('glbl.Functions:           ', glbl.Functions)
-    
-    print('glbl.signalFiles:         ')
-    for file in glbl.signalFiles:
+    print('signal_filenames:')
+    for file in glbl.signal_filenames:
         print('  ', file)
 
-    print('glbl.backgroundFiles:     ')
-    for file in glbl.backgroundFiles:
+    print()    
+    print('background_filenames:')
+    for file in glbl.background_filenames:
         print('  ', file)
 
-    print('glbl.Tmins:               ', glbl.Tmins)
-    print('glbl.Tmaxs:               ', glbl.Tmaxs)
-    print('glbl.comment_xlsx         ', glbl.comment_xlsx)
     print()
-    
+    print('t_mins:          ', glbl.t_mins)
+    print('t_maxs:          ', glbl.t_maxs)
+    print('comment_xlsx     ', glbl.comment_xlsx)
+    print()
     
     fit_control.print_list_items()
-    print()        
+    fit_control.print_tuple_items()
+    print()
     
     is_global_fit = any([parms[p].glbl for p in parms])
     print('{:16s} = {}'.format('Global Fit', is_global_fit))

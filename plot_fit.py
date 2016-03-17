@@ -60,7 +60,7 @@ def plot_fit(filename):
             if line.startswith('# Npoints'):
                 n_points = int(line.split(':')[1])
                 
-            if line.startswith('# Tmin'):
+            if line.startswith('# t_min'):
                t_min, t_max = tuple(line.split(':')[1].strip().split(','))
                t_min = float(t_min)
                t_max = float(t_max)

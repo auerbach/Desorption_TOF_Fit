@@ -1,32 +1,33 @@
-	comment_xlsx,	'6085_Kn  vary FFR; ECutM; ECutS'
+    comment_xlsx,   '6085_Kn  vary FFR; ECutM; ECutS'
 
-#   Fit function valid values: starts with cal, ERF, or LGS (case insensitive)
-    Function,       cal
-	
-#   AveragingType valid values: None, PointDetector, or LineDetector
-    AveragingType,  None
+#   Fit function valid values: names that start with CAL, ERF, or LGS (case insensitive)
+#       thus cal, calibration, CAL, etc. all work
+    function,       cal
+
+#   Averaging type valid values: None, PointDetector, or LineDetector
+    averaging_type, None
 
 #   cutoff_type valid values: tanh, exp    
     cutoff_type,    exp
-                                
-    Tmin,			7.0
-    Tmax,			43.0
-	
+
+    fit_range,      7.0, 40.0
+    # baseline_range,  4., 10., 40., 60.
+
 
 #   Fit Parameters
 #   Name,           Value,      Vary, Min,  Max
     Yscale,         0.25E-9,    1
-    IonTOF,         3.2,     	0					# this is the ion TOF for H2;
-    FFR,			31.72861,   1	
+    IonTOF,         3.2,        0               # this is the ion TOF for H2;
+    FFR,            31.72861,   1
     Baseline,       0.,         0
-    
+
     ECutM,          20,         1
     ECutS,          0.035,      1
-    
+
     Temp,           296,        0
 
 #   Data Files
-    Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6085*.datv2
-    Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6086*.datv2
+    signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6085*.datv2
+    background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6086*.datv2
 
 End Run

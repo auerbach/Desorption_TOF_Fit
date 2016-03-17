@@ -4,36 +4,37 @@
 #------------------------------------------------------------
 # Control file: Fits\Fit017.tof_in
 #------------------------------------------------------------
-# 	comment_xlsx,	'6085_Kn  vary FFR; ECutM; ECutS'
+#     comment_xlsx,   '6085_Kn  vary FFR; ECutM; ECutS'
 # 
-# #   Fit function valid values: starts with cal, ERF, or LGS (case insensitive)
-#     Function,       cal
-# 	
-# #   AveragingType valid values: None, PointDetector, or LineDetector
-#     AveragingType,  None
+# #   Fit function valid values: names that start with CAL, ERF, or LGS (case insensitive)
+# #       thus cal, calibration, CAL, etc. all work
+#     function,       cal
+# 
+# #   Averaging type valid values: None, PointDetector, or LineDetector
+#     averaging_type, None
 # 
 # #   cutoff_type valid values: tanh, exp    
 #     cutoff_type,    exp
-#                                 
-#     Tmin,			7.0
-#     Tmax,			43.0
-# 	
+# 
+#     fit_range,      7.0, 40.0
+#     # baseline_range,  4., 10., 40., 60.
+# 
 # 
 # #   Fit Parameters
 # #   Name,           Value,      Vary, Min,  Max
 #     Yscale,         0.25E-9,    1
-#     IonTOF,         3.2,     	0					# this is the ion TOF for H2;
-#     FFR,			31.72861,   1	
+#     IonTOF,         3.2,        0               # this is the ion TOF for H2;
+#     FFR,            31.72861,   1
 #     Baseline,       0.,         0
-#     
+# 
 #     ECutM,          20,         1
 #     ECutS,          0.035,      1
-#     
+# 
 #     Temp,           296,        0
 # 
 # #   Data Files
-#     Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6085*.datv2
-#     Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6086*.datv2
+#     signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6085*.datv2
+#     background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6086*.datv2
 # 
 # End Run
 
@@ -52,7 +53,7 @@
 # RAperture       : 1.5
 # ZFinal          : 34.0
 # RFinal          : 10.0
-# ThetaAngles : [0.0]
+# angles_list : [0.0]
 #------------------------------------------------------------
 # End Angular Averaging Parameter
 #------------------------------------------------------------
@@ -62,17 +63,17 @@
 #------------------------------------------------------------
 # [[Fit Statistics]]
 #     # function evals   = 45
-#     # data points      = 1800
+#     # data points      = 1650
 #     # variables        = 4
-#     chi-square         = 157477.318
-#     reduced chi-square = 87.682
+#     chi-square         = 157077.318
+#     reduced chi-square = 95.430
 # [[Variables]]
-#     Yscale_1:     3.9004e-10 +/- 2.86e-11 (7.33%) (init= 2.5e-10)
+#     Yscale_1:     3.9004e-10 +/- 2.98e-11 (7.65%) (init= 2.5e-10)
 #     IonTOF_1:     3.2 (fixed)
-#     FFR_1:        32.7428922 +/- 0.274243 (0.84%) (init= 31.72861)
+#     FFR_1:        32.7428922 +/- 0.286103 (0.87%) (init= 31.72861)
 #     Baseline_1:   0 (fixed)
-#     ECutM_1:      21.7751589 +/- 0.320762 (1.47%) (init= 20)
-#     ECutS_1:      0.02181506 +/- 0.002707 (12.41%) (init= 0.035)
+#     ECutM_1:      21.7751589 +/- 0.334633 (1.54%) (init= 20)
+#     ECutS_1:      0.02181506 +/- 0.002824 (12.95%) (init= 0.035)
 #     Temp_1:       296 (fixed)
 # [[Correlations]] (unreported correlations are <  0.100)
 #     C(Yscale_1, ECutS_1)         = -0.999 
@@ -97,18 +98,18 @@
 # Title    : Fit 017_1
 # Label    : 6085_Kn_D2_v0J2.dat
 # Label    : 
-# Label    : Function:  cal
+# Label    : function:  cal
 # Label    : No Angular Averaging
 # Label    : 
-# Label    : ECutM  21.775 (± 0.321)
+# Label    : ECutM  21.775 (± 0.335)
 # Label    : ECutS   0.022 (± 0.003)
-# Label    : FFR    32.743 (± 0.274)
+# Label    : FFR    32.743 (± 0.286)
 # Npoints    : 3649
-# Nmin, Nmax : 350,2150
-# Tmin, Tmax : 7.0,43.0
+# n_min, n_max : 350,2000
+# t_min, t_max : 7.0,40.0
 # Baseline   : 0.0
 #--------------------------------------------------------------------
-# Time            Signal                Fit                 Cutoff
+# time            Signal                Fit                 Cutoff
 #--------------------------------------------------------------------
 # Begin data
   2.02          7.00000e+00          1.87325e-54          1.00000e+00
