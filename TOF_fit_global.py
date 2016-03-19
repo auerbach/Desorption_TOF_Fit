@@ -89,7 +89,7 @@ class TOF_fit_global(object):
         self.baseline_range         = None; self.baseline_ranges       = []
         self.cutoff_type            = None; self.cutoff_types          = []
         self.fit_range              = None; self.fit_ranges            = []
-        self.fit_index_range        = None; self.fit__index_ranges     = []
+        # self.fit_index_range        = None; self.fit__index_ranges     = []
         self.function               = None; self.functions             = []
         self.signal_filename        = None; self.signal_filenames      = []
         # self.t_min                  = None; self.t_mins                = []

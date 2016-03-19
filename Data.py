@@ -205,9 +205,9 @@ class Data(object):
             avg_segments = np.array(baseline_range).reshape(n_segments, 2)
             
             first = True        
-            for rrr in avg_segments:
-                rrr = rrr * 1E-6
-                condition = np.logical_and(time >= rrr[0], time <=rrr[1])
+            for a_baseline_range in avg_segments:
+                a_baseline_range = a_baseline_range * 1E-6
+                condition = np.logical_and(time >= a_baseline_range[0], time <= a_baseline_range[1])
                 if first:
                     conditions = condition
                     first = False
@@ -252,21 +252,7 @@ if __name__ == '__main__':
     for item in attributes:
         if item != 'datasets':
             print('{:25} = {}'.format(item, attributes[item]))
-            
-    
-#==============================================================================
-#     datasets = data.datasets
-#     print('\ndatasets\n--------\n', datasets)
-#     print('\ndatasets[0]\n-----------\n', datasets[0])
-#     print('\ndatasets[0][0]\n-------------\n', datasets[0][0])
-#     print()
-#
-#     rows = len(datasets[0][0])
-#     print('rows=', rows)
-#     for i in range(0,1000,10):
-#         print('{:6.2f}    {:10.7f}'.format(datasets[0][0][i]*1E6, datasets[0][1][i]))
-#==============================================================================
-    
+
     time   = data.datasets[0][0]
     signal = data.datasets[0][1]
     
