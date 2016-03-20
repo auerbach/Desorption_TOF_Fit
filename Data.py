@@ -12,22 +12,24 @@ import numpy as np
 class Data(object):
     def __init__(self, glbl):
         self.run_number         = 0
+        self.data_col           = None
+        self.data_row           = None
         
         #initialize lists
         self.glbl                       = glbl
-        self.background_dates           = []
-        self.background_names           = []
-        self.baselines                  = []
-        self.datasets                   = []
-        self.fit_index_ranges           = []
-        self.mass_molecules             = []
-        self.molecules                  = []
-        self.original_signal_names      = []
-        self.original_background_names  = []
-        self.signal_dates               = []
-        self.signal_names               = []
-        self.states                     = []
-        self.temperatures               = []
+        self.background_dates           = []; self.background_date          = None
+        self.background_names           = []; self.background_name          = None
+        self.baselines                  = []; self.baseline                 = None
+        self.datasets                   = []; self.dataset                  = None
+        self.fit_index_ranges           = []; self.fit_index_range          = None
+        self.mass_molecules             = []; self.mass_molecule            = None
+        self.molecules                  = []; self.molecule                 = None
+        self.original_signal_names      = []; self.original_signal_name     = None
+        self.original_background_names  = []; self.original_background_name = None
+        self.signal_dates               = []; self.signal_date              = None
+        self.signal_names               = []; self.signal_name              = None
+        self.states                     = []; self.state                    = None
+        self.temperatures               = []; self.temperature              = None
         
         
     def is_number(self, a_string):
@@ -39,6 +41,8 @@ class Data(object):
         except:
             return False
 
+
+    
     #------------------------------------------------------------------------------
     # read_data  function to read the data and subtract background
     #------------------------------------------------------------------------------
@@ -69,33 +73,69 @@ class Data(object):
     
             with open(background_filename, 'r') as background_file:
                 back_lines = background_file.readlines()
-                
-        data_format = sig_lines[self.glbl.DataFormatLine - 1].split()[3]
-        
-        if data_format != '2.1':
-            print('File ', signal_filename, ' is not in the right format')
-            print('Format = ', data_format)
-            raise SystemExit
         
         self.signal_names.append(signal_filename)
-        self.background_names.append(background_filename)
-        self.original_signal_names.append(sig_lines[self.glbl.OriginalFileLine - 1].split()[3])
-        self.molecules.append(sig_lines[self.glbl.MoleculeLine - 1].split()[3])
-        self.temperatures.append(float(sig_lines[self.glbl.TemperatureLine - 1].split()[3]))
-        self.states.append((int(sig_lines[self.glbl.VibStateLine - 1].split()[3]),
-                             int(sig_lines[self.glbl.RotStateLine - 1].split()[3])))
+        self.background_names.append(background_filename)        
+        
+        key_info = ['data_format', 'molecule', 'temperature', 'v', 'J', 'data_col', 'data_row']
+        
+        # scan through the lines and look for lines with key_info
+        # use exec() to assign values to these variable
+        # note: exec works in a different names space --> 
+        #       -- > must use exec(self.variable + '=' + tok2) for result to be visible
+        for line in sig_lines:
+            # ignore blank lines or lines with only #
+            tok1 = line[1:].split(':')[0].strip()
+            if len(tok1) == 0: 
+                continue
+    
+            tok1 = tok1.split()[0].strip()
+            # if we reach 'Begin Data' stop looking further
+            if tok1 == 'Begin':
+                break
+            
+            # check if line contains a key_info item
+            for item in key_info:
+                if item == tok1 :
+                    # check that there are 2 tokens separte by ':'
+                    if len(line.split(':'))<2:
+                        continue
+                    tok2 = line.split(':')[1].strip()  #.split()[0].strip()
+                  
+                    if self.is_number(tok2):
+                        # assign the value if tok2 is a number
+                        exec('self.' + tok1 + '=' + tok2)
+                    else:
+                        # assign the value as a string if it is a not a number (like 'H2')
+                        exec('self.' + tok1 + '=' + "tok2")
+   
+        valid_data_formats = [2.1, 3.0]
+        if not self.data_format in valid_data_formats:
+            print('File ', signal_filename, ' is not in the right format')
+            print('Format = ', self.data_format)
+            raise SystemExit
+                    
+        
+        self.molecules.append(self.molecule)
+        self.temperatures.append(self.temperature)
+        self.state = (int(self.v), int(self.J))
+        self.states.append(self.state)
+        
+        if self.data_format == 2.1:    
+            self.original_signal_names.append(sig_lines[self.glbl.OriginalFileLine - 1].split()[3])
+#            
                             
-        sig_data_col  = int(sig_lines[self.glbl.DataColLine - 1].split()[3])
-        sig_data_row  = int(sig_lines[self.glbl.DataRowLine - 1].split()[3])
+        sig_data_col  = self.data_col
+        sig_data_row  = self.data_row
+        sig_row_end   = len( sig_lines ) # Note: assuming data last until end of file
         
-        sig_row_end   = len( sig_lines ) #assuming data last until end of file
-        back_data_col = int(sig_lines[self.glbl.DataColLine - 1].split()[3])
+        # Note -- we are assuming the background data starts on same line
+        #         as the signal data and that the cols are the same -- fix this        
+        back_data_col = sig_data_col
+        back_data_row = int(sig_lines[self.glbl.DataRowLine - 1].split()[3])
+        
         if background_filename:
-            back_data_row = int(sig_lines[self.glbl.DataRowLine - 1].split()[3])
             back_row_end  = len(back_lines)
-        
-        
-        if background_filename:
             if (sig_data_row - sig_row_end) != (back_data_row -back_row_end):
                 print('Length of signal and background data are not equal')
                 print('  Signal file:    ', signal_filename)
@@ -118,7 +158,7 @@ class Data(object):
         signal = []
            
         for n_sig in range(sig_data_row - 1, sig_row_end):
-            T = float( sig_lines[n_sig].split()[0] )*1E-6   # T is ins sec , Gottingen data                                                # is in microsec
+            T = float( sig_lines[n_sig].split()[0] )*1E-6   # T is in seconds , Goettingen data                                                # is in microsec
             S = float( sig_lines[n_sig].split()[sig_data_col - 1] ) #
             time.append( T )
 
@@ -195,7 +235,7 @@ class Data(object):
         
         if(baseline_range):
             if len(baseline_range) % 2 == 0:
-                n_segments = len(baseline_range) / 2
+                n_segments = int(len(baseline_range) / 2)
 
             else:
                 print('***** error baseline_range = ', baseline_range)
@@ -248,26 +288,26 @@ if __name__ == '__main__':
     
     data.read_data(sigfn, backfn, fit_range, baseline_range)
     
-    attributes = vars(data)
-    for item in attributes:
-        if item != 'datasets':
-            print('{:25} = {}'.format(item, attributes[item]))
-
-    time   = data.datasets[0][0]
-    signal = data.datasets[0][1]
-    
-    import matplotlib.pyplot as plt
-
-    fig = plt.figure()
-    
-    file_name = data.original_signal_names[0]
-    fig.suptitle(file_name, fontsize=14)
-    
-    ax = plt.subplot(111)
-    ax.set_xlabel('TOF [micro sec]', fontsize=14)
-    ax.set_ylabel('Signal', fontsize=14)
-    
-    plt.xlim(4, 20)
-    plt.plot(time * 1E6, signal, 'b.')
-    # plt.plot(t2 * 1E6, f1, linewidth = 2.5)
-    plt.show()
+#    attributes = vars(data)
+#    for item in attributes:
+#        if item != 'datasets':
+#            print('{:25} = {}'.format(item, attributes[item]))
+#
+#    time   = data.datasets[0][0]
+#    signal = data.datasets[0][1]
+#    
+#    import matplotlib.pyplot as plt
+#
+#    fig = plt.figure()
+#    
+#    file_name = data.original_signal_names[0]
+#    fig.suptitle(file_name, fontsize=14)
+#    
+#    ax = plt.subplot(111)
+#    ax.set_xlabel('TOF [micro sec]', fontsize=14)
+#    ax.set_ylabel('Signal', fontsize=14)
+#    
+#    plt.xlim(4, 20)
+#    plt.plot(time * 1E6, signal, 'b.')
+#    # plt.plot(t2 * 1E6, f1, linewidth = 2.5)
+#    plt.show()

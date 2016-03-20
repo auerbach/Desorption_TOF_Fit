@@ -204,7 +204,7 @@ newFitNumber = '017'
 #------------------------------------------------------------------------------
 # begin1 comment out for testing
 #------------------------------------------------------------------------------
-Get Last fit number from FitNumber.dat
+# Get Last fit number from FitNumber.dat
 fit_number_file = open(pathToFits + 'FitNumber.dat', 'r+')
 fitNumber = '{:03d}'.format(int(fit_number_file.readline()))
 oldFitNumber = fitNumber

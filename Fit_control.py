@@ -98,61 +98,115 @@ class Fit_control(object):
     #==============================================================================
     # break input line into tokens
     #=========================================================================
-    def getTokens(self, line):
-
-        # split the line on ','
-        tokens = line.split(',')
-        for j in range(len(tokens)):
-        # replace nule tokens (i.e. '') with None
-            tokens[j] = tokens[j].strip()
-            if tokens[j] == '': tokens[j] = None
-
+#==============================================================================
+#     def getTokens(self, line):
+# 
+#         # split the line on '=,'
+#         cmd = line.split('=')[0].strip()
+#         
+#         try:
+#             arg = line.split('=')[1].strip()
+#             tokens = arg.split(',')
+#         except:
+#             arg = None
+#             tokens = None
+#         
+#         if tokens:
+#             for j in range(len(tokens)):
+#                 tokens[j] = tokens[j].strip()
+#                 # replace nule tokens (i.e. '') with None
+#                 if tokens[j] == '': tokens[j] = None
+#                 # remove imbedded comments
+#                 try:
+#                     ii = tokens[j].index('#')
+#                     # if so, remove rest of token and strip white space
+#                     tokens[j] = tokens[j][0:ii].strip()
+#                     # ignore rest of tokens
+#                     for k in range(j + 1, len(tokens)):
+#                         tokens.pop(-1)
+#                     break
+#                 except:
+#                     pass
+# 
+#         return cmd, arg, tokens
+#==============================================================================
+    
+    def tokenize(self, line, sep):
+        toks = line.split(sep)
+        for j in range(len(toks)):
+            toks[j] = toks[j].strip()
+            
+            # replace nule tokens (i.e. '') with None
+            if toks[j] == '': toks[j] = None
+            
+            # remove imbedded comments
+            # try to get index of # symbol in toks[j]
+            # if found remove rest of token and strip white space
             try:
-                #test if token has an embedded '#'
-                ii = tokens[j].index('#')
-                # if so, remove rest of token and strip white space
-                tokens[j] = tokens[j][0:ii].strip()
+                ii = toks[j].index('#')     
+                toks[j] = toks[j][0:ii].strip()
                 # ignore rest of tokens
-                for k in range(j + 1, len(tokens)):
-                    tokens.pop(-1)
+                for k in range(j + 1, len(toks)):
+                    toks.pop(-1)
                 break
             except:
                 pass
-        return tokens
+        return toks
+
+        
+        
+    def getTokens(self, line):
+
+        # split the line on '=,'
+        toks = self.tokenize(line, '=')
+        cmd = toks[0]
+        
+        # if there is more than 1 token break apart further
+        # sometimes there will only be one as in 'End Section'
+        if len(toks)>1:
+            arg = toks[1]
+            # split the args on ',' to get tokens
+            tokens = self.tokenize(arg, ',')
+        else:
+            arg = None
+            tokens = None
+
+        return cmd, arg, tokens
 
 
     #==============================================================================
     # check if cmd is a Parameter item
     #==============================================================================
-    def isParameter(self, tokens):
-        return any(tokens[0] in s for s in self.parms_list)
+    # def isParameter(self, tokens):
+    #     return any(tokens[0] in s for s in self.parms_list)
+    def isParameter(self, cmd):
+        return any(cmd in s for s in self.parms_list)
 
 
     #==============================================================================
     # check if cmd is an Global Variable item
     #==============================================================================
-    def isVar(self, tokens):
-        matching = [tokens[0] == s for s in self.vars_list]
-        return any(matching)
+    def isVar(self, cmd):
+        return any([cmd == s for s in self.vars_list])
 
 
     #==============================================================================
     # check if cmd is a List item
     #==============================================================================
-    def isListItem(self, tokens):
-        matching = [tokens[0].upper() == s.upper() for s in self.lists_list]
+    def isListItem(self, cmd):
+        matching = [cmd.upper() == s.upper() for s in self.lists_list]
         return any(matching)
 
     #==============================================================================
     # check if cmd is a Tuple item
     #==============================================================================
-    def isTupleItem(self, tokens):
-        matching = [tokens[0].upper() == s.upper() for s in self.tuples_list]
+    def isTupleItem(self, cmd):
+        matching = [cmd.upper() == s.upper() for s in self.tuples_list]
         return any(matching)
 
 
     #==============================================================================
-    # check if token is a number
+    # check item is a number
     #==============================================================================
     def isNumber(self, s):
         try:
@@ -165,21 +219,31 @@ class Fit_control(object):
     #==============================================================================
     # add Parameter
     #==============================================================================
-    def addParameter(self, runNumber, tokens, line, lineNumber):
+    def addParameter(self, runNumber, cmd, arg, tokens, line, lineNumber):
 
         # global errors,  global_parms, parms
 
         # check if number of tokesn is correct
         #   there should be name, and 2, 3 or 4 parameters
         #   i.e. 3 to 5 tokens on the line
-        if len(tokens) < 3 or len(tokens) > 5:
-            print('\n *** wrong number of items on line ', lineNumber)
-            print(' *** items found =', len(tokens),
-                  '. Should be 3, 4, or 5')
+        # if len(tokens) < 3 or len(tokens) > 5:
+        #     print('\n *** wrong number of items on line ', lineNumber)
+        #     print(' *** items found =', len(tokens),
+        #           '. Should be 3, 4, or 5')
+        #     print(' *** line =', line)
+        #     print(' *** items =', tokens)
+        #     self.errors.append(('wrong number of items', 'line ' + str(lineNumber)))
+        #     return
+
+        if len(tokens) < 2 or len(tokens) > 4:
+            print('\n *** wrong number of values for Parameter Item on line ', lineNumber)
+            print(' *** number found =', len(tokens),
+                  '. Should be 2, 3, or 4')
             print(' *** line =', line)
             print(' *** items =', tokens)
             self.errors.append(('wrong number of items', 'line ' + str(lineNumber)))
             return
+
 
         # set defaults
         vary1 = False
@@ -187,25 +251,40 @@ class Fit_control(object):
         min1 = None
         max1 = None
 
+        # # set vary and global
+        # if tokens[2] != '0':
+        #         vary1 = True
+        # if tokens[2] == '2':
+        #     glbl1 = True
+        #     self.global_parms.append(tokens[0])
+
         # set vary and global
-        if tokens[2] != '0':
+        if tokens[1] != '0':
                 vary1 = True
-        if tokens[2] == '2':
+        if tokens[1] == '2':
             glbl1 = True
             self.global_parms.append(tokens[0])
 
         # set bounds
+        # try:
+        #     min1=float(tokens[3])
+        # except:
+        #     pass
+        # try:
+        #     max1 = float(tokens[4])
+        # except:
+        #     pass
         try:
-            min1=float(tokens[3])
+            min1=float(tokens[2])
         except:
             pass
         try:
-            max1 = float(tokens[4])
+            max1 = float(tokens[3])
         except:
             pass
 
-        self.parms.add(tokens[0] + '_' + str(runNumber),
-                  value = float(tokens[1]),
+        self.parms.add(cmd + '_' + str(runNumber),
+                  value = float(tokens[0]),
                   vary = vary1,
                   glbl = glbl1,
                   min = min1,
@@ -217,62 +296,65 @@ class Fit_control(object):
     #==============================================================================
     # add variable
     #==============================================================================
-    def addVar(self, tokens, line, lineNumber, glbl):
-        if len(tokens) != 2:
-            error = 'wrong number of items for const on line ' + str(lineNumber)
+    def addVar(self, cmd, arg, tokens, line, lineNumber, glbl):
+        if len(tokens) != 1:
+            error = 'wrong number of args for item on line ' + str(lineNumber)
             print('\n ***' + error, lineNumber)
             print(' *** items found =', len(tokens),
-                  '. Should be 2')
+                  '. Should be 1')
             print(' *** line =', line)
             print(' *** items =', tokens)
             self.errors.append(error)
             return
 
-        exec('glbl.' + tokens[0] + '=' + tokens[1])
+        exec('glbl.' + cmd + '=' + tokens[0])
 
 
     #==============================================================================
     # add list item
     #==============================================================================
-    def addListItem(self, tokens, line, lineNumber, glbl):
+    def addListItem(self, cmd, arg, tokens, line, lineNumber, glbl):
 
         # global errors,  global_parms, parms
 
-        if len(tokens) != 2:
+        if len(tokens) != 1:
             error = 'wrong number of arguments items on line ' + str(lineNumber)
             self.errors.append(error)
 
             print('\n ***' + error)
             print(' *** items found =', len(tokens),
-                  '. Should be 2')
+                  '. Should be 1')
             print(' *** line =', line)
             print(' *** items =', tokens)
 
 
         # item is a string, need to add quotes to exec, e.g. ERF become 'ERF'
-        if self.isNumber(tokens[1]):
-            exec('glbl.' + tokens[0] + '=' + tokens[1])
+        if self.isNumber(tokens[0]):
+            exec('glbl.' + cmd + '=' + tokens[0])
         else:
-            exec('glbl.' + tokens[0] + '=' + "tokens[1]")
+            exec('glbl.' + cmd + '=' + "tokens[0]")
 
     #==============================================================================
     # add tuple item
     #==============================================================================
-    def addTupleItem(self, tokens, line, lineNumber, glbl):
+    def addTupleItem(self, cmd, arg, tokens, line, lineNumber, glbl):
         # put tokens[1:] into single string
-        toks = tokens[1]
-        for tok in tokens[2:]:
-            if not tok:
-                tok =''
-            toks += ', ' + tok
+#        toks = tokens[0]
+#        for tok in tokens[1:]:
+#            if not tok:
+#                tok =''
+#            toks += ', ' + tok
+#
+#        # item is a string, need to add quotes to exec, e.g. ERF become 'ERF'
+#        if self.isNumber(tokens[0]):
+#            exec('glbl.' + cmd + '=' + toks)
+#        else:
+#            exec('glbl.' + cmd + '=' + str(toks.split(',')))
 
-        # item is a string, need to add quotes to exec, e.g. ERF become 'ERF'
-        if self.isNumber(tokens[1]):
-            exec('glbl.' + tokens[0] + '=' + toks)
-        else:
-            exec('glbl.' + tokens[0] + '=' + "toks")
-
-        xxx = 'testing'
+        try:
+            exec('glbl.' + cmd + ' = ' + arg)
+        except:
+            exec('glbl.' + cmd + ' = ' + str(arg.split(',')))
 
     #==============================================================================
     # add Parameter to the Parameters class instance
@@ -295,9 +377,16 @@ class Fit_control(object):
     # process end of section
     #==============================================================================
     def processEndSection(self, runNumber, lineNumber, glbl):
-        # global errors,  global_parms, parms
 
-        optionalList = ['t_min', 't_max']
+        optionalList = []
+        
+        # check if a signal file was specified
+        if not glbl.signal_filename:
+            print('\n *** Error: No signal filename for')
+            print(' *** data section ending at line ', lineNumber)
+            self.errors.append('no signal filename for section ending at line ' 
+                + str(lineNumber))
+            
 
         # if this is not the first section, add global parameters
         #   and duplicate old list items if needed
@@ -333,17 +422,19 @@ class Fit_control(object):
         # make a list of required parameters and then check if they have been supplied
         required_parms = ['Yscale', 'Baseline', 'IonTOF', 'FFR', 'Temp']
 
-        if glbl.cutoff_type.lower() == 'exp':
-            required_parms.append('ECutM')
-            required_parms.append('ECutS')
-
-        elif glbl.cutoff_type.lower() == 'tanh':
-            required_parms.append('TCutC')
-            required_parms.append('TCutW')
-
-        if glbl.function.lower() == 'erf':
-            required_parms.append('E0')
-            required_parms.append('W')
+        if glbl.cutoff_type:        
+            if glbl.cutoff_type.lower() == 'exp':
+                required_parms.append('ECutM')
+                required_parms.append('ECutS')
+    
+            elif glbl.cutoff_type.lower() == 'tanh':
+                required_parms.append('TCutC')
+                required_parms.append('TCutW')
+        
+        if glbl.function:
+            if glbl.function.lower() == 'erf':
+                required_parms.append('E0')
+                required_parms.append('W')
 
 
         # test if required parameters have been supplied
@@ -365,7 +456,7 @@ class Fit_control(object):
                 else:
                     print('\n *** Error: No parameter', p, ' for')
                     print(' *** data section ending at line ', lineNumber)
-                    self.errors.append('no parameter' + p + ' for section ending at line ' +str(lineNumber))
+                    self.errors.append('no parameter ' + p + ' for section ending at line ' +str(lineNumber))
 
         # save filenames and reset to None for entry to next section
         glbl.signal_filenames.append(glbl.signal_filename)
@@ -385,11 +476,7 @@ class Fit_control(object):
     # parse command file
     #==============================================================================
     def parse_cmd_file(self, filename, glbl, parms):
-
-        # global errors,  global_parms, parms
-
         self.parms = parms
-        # initialize()
         runNumber = 1
 
         # open and read command file
@@ -406,59 +493,59 @@ class Fit_control(object):
             if line.startswith('#') or len(line) == 0:
                 continue
 
-            # break line into tokens
-            tokens = self.getTokens(line)
+            # break line into command, args, and tokens of the args
+            cmd, arg, tokens = self.getTokens(line)
 
             # check if line specifies a parameter
-            if self.isParameter(tokens):
-                self.addParameter(runNumber, tokens, line, lineNumber)
+            if self.isParameter(cmd):
+                self.addParameter(runNumber, cmd, arg, tokens, line, lineNumber)
 
             # check if line specifies a variable
-            elif self.isVar(tokens):
-                self.addVar(tokens, line, lineNumber, glbl)
+            elif self.isVar(cmd):
+                self.addVar(cmd, arg, tokens, line, lineNumber, glbl)
 
             # check if line specifies an item to be added to a list of values
             #   that vary with run number
-            elif self.isListItem(tokens):
-                self.addListItem(tokens, line, lineNumber, glbl)
+            elif self.isListItem(cmd):
+                self.addListItem(cmd, arg, tokens, line, lineNumber, glbl)
 
             # check if line specifies a tuple to be added to a list (e.g. (t_min, t_max))
-            elif self.isTupleItem(tokens):
-                self.addTupleItem(tokens, line, lineNumber, glbl)
+            elif self.isTupleItem(cmd):
+                self.addTupleItem(cmd, arg, tokens, line, lineNumber, glbl)
 
             # check if line specifies a signal or background file name
             # note this could be consolidatae with lists_list items
-            elif tokens[0].lower() == 'signal' or tokens[0].lower() == 'background':
+            elif cmd.lower() == 'signal' or cmd.lower() == 'background':
                 #use following code to input file name without quotes
                 filelist = []
-                for filename in glob(tokens[1]):
+                for filename in glob(tokens[0]):
                     filelist.append(filename)
 
                 if len(filelist) == 0:
                     print('***** error no file found \n')
-                    print('*****', tokens[1])
-                    self.errors.append(' no match for file patern' + tokens[1] +
+                    print('*****', tokens[0])
+                    self.errors.append(' no match for file patern' + tokens[0] +
                                     ' on line ' + str(lineNumber))
                     filename = 'no match for pattern'
 
                 if len(filelist) > 1:
                     print('***** error nonunique match to file pattern \n')
-                    print('*****', tokens[1])
+                    print('*****', tokens[0])
                     print('***** filelist =', filelist)
-                    self.errors.append(' nonunique match for file pattern' + tokens[1] +
+                    self.errors.append(' nonunique match for file pattern' + tokens[0] +
                                     ' on line ' + str(lineNumber))
                     return
-                exec ('glbl.' + tokens[0].lower() + '_filename =' + "filename")
+                exec ('glbl.' + cmd.lower() + '_filename =' + "filename")
 
             # check if line indicates end of dataset section
-            elif tokens[0].upper().startswith('END'):
+            elif cmd.upper().startswith('END'):
                 self.processEndSection(runNumber, lineNumber, glbl)
                 runNumber += 1
 
             else:
                 print('\n *** unknown command on line', i+1)
-                print(' *** command =', tokens[0])
-                self.errors.append('unknown command on line ' + str(i+1) + ' command = ' + tokens[0])
+                print(' *** command =', cmd)
+                self.errors.append('unknown command on line ' + str(i+1) + ' command = ' + cmd)
 
         return self.errors
 
@@ -492,6 +579,7 @@ if __name__ == '__main__':
 
     filename = 'Fits\\fit031.tof_in'
     filename = 'Fits\\fit017.tof_in'
+    filename = 'Fits\\test1.tof_in'
 
     errors = fit_control.parse_cmd_file(filename, glbl, parms)
     
@@ -509,8 +597,7 @@ if __name__ == '__main__':
         print('  ', file)
 
     print()
-    print('t_mins:          ', glbl.t_mins)
-    print('t_maxs:          ', glbl.t_maxs)
+    print('fit_ranges:      ', glbl.fit_ranges)
     print('comment_xlsx     ', glbl.comment_xlsx)
     print()
     
