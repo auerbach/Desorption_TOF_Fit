@@ -46,13 +46,13 @@ class Data(object):
     #------------------------------------------------------------------------------
     # read_data  function to read the data and subtract background
     #------------------------------------------------------------------------------
-    def read_data(self, signal_filename, background_filename ='', fit_range = None,
-                  baseline_range = None,  Threshold = 0.05):
+    def read_data(self, n_dataset, signal_filename, background_filename ='', 
+                  fit_range = None, baseline_range = None,  threshold = 0.05):
         # function to read Datafiles
         # Input: DataFile = name of the file to be read ;
         # BackgroundFile  = name of the file with background; 
         # t_min, t_max = minimum (maximum) value of time (in us) to consider ;
-        # Threshold = ratio signal/maximum of signal for signal to be considered
+        # threshold = ratio signal/maximum of signal for signal to be considered
     
         # increment run_number every time we read a data file
         self.run_number += 1
@@ -121,9 +121,8 @@ class Data(object):
         self.state = (int(self.v), int(self.J))
         self.states.append(self.state)
         
-        if self.data_format == 2.1:    
-            self.original_signal_names.append(sig_lines[self.glbl.OriginalFileLine - 1].split()[3])
-#            
+        # if self.data_format == 2.1:
+        #     self.original_signal_names.append(sig_lines[self.glbl.original_file_line - 1].split()[3])
                             
         sig_data_col  = self.data_col
         sig_data_row  = self.data_row
@@ -132,7 +131,7 @@ class Data(object):
         # Note -- we are assuming the background data starts on same line
         #         as the signal data and that the cols are the same -- fix this        
         back_data_col = sig_data_col
-        back_data_row = int(sig_lines[self.glbl.DataRowLine - 1].split()[3])
+        back_data_row = self.data_row
         
         if background_filename:
             back_row_end  = len(back_lines)
@@ -175,7 +174,7 @@ class Data(object):
         #==========================================================================================
         # Select data to fit:
         #   if fit_range is given, use it
-        #   otherwise find times where data is = max of data * Threshold
+        #   otherwise find times where data is = max of data * threshold
         #
         # Since the data is noisy, for point n average from n-n_delt to n+n_delt
         #==========================================================================================
@@ -189,7 +188,7 @@ class Data(object):
         except:
             pass
         
-        n_delt = 30
+        n_delt = self.glbl.n_delts[n_dataset - 1]
         signal_max = np.array(signal[100:len(signal)]).max()
             
         # find n_min = index of first point to use in fitting
@@ -209,8 +208,11 @@ class Data(object):
 
             # otherwise find the index where data exceeds threshold
             else:
-                if np.array(signal[n-n_delt:n + n_delt]).mean() >= signal_max * Threshold:
-                    n_min = int(n - 1 / (delta_time * 1E6))
+                if np.array(signal[n-n_delt:n + n_delt]).mean() >= signal_max * threshold:
+                    # set n_min to 1 E-6 sec before cross threshold                    
+                    # n_min = int(n - 1 / (delta_time * 1E6))
+                    # set n_min to poit where signal crosses threshold
+                    n_min = n
                     break
 
         # repeat for long flight time side of cureve
@@ -221,8 +223,11 @@ class Data(object):
                     n_max = n
                     break
             else:
-                if np.array(signal[n-n_delt:n + n_delt]).mean()  >= signal_max * Threshold:
-                    n_max = int(n + 1.5 / (delta_time * 1E6))
+                if np.array(signal[n-n_delt:n + n_delt]).mean()  >= signal_max * threshold:
+                    # set n_max to 1.5E-6 sec after go below threshold                    
+                    # n_max = int(n + 1.5 / (delta_time * 1E6))
+                    # set n_max to the the point where signal goes below threshold
+                    n_max = n
                     break
         
         # save the range of signal to use in fitting
@@ -262,6 +267,7 @@ class Data(object):
         print()
         print('Read data:')
         print('  Range of points to use in fitting')
+        print('  threshold  =', threshold )
         print('  n_min      =',n_min, '     t_min=',time[n_min])
         print('  n_max      =',n_max, '     t_max=',time[n_max])
         print('  signal_max =',max( signal[50:len(signal)] ))

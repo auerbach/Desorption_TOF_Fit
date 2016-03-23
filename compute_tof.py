@@ -10,25 +10,27 @@ from cutoff import cutoff_function
 # -------------------------------------------------------------------------------------------------
 #   TOF - compute the signal vs time
 # -------------------------------------------------------------------------------------------------
-def TOF(Time, NDataSet, Params, data, glbl, AveragingType, ThetaAngles, ProbCurveType,
+def TOF(time, n_dataset, parms, data, glbl, averaging_type, angles, prob_curve_type,
         cutoff_type, mass_molecules):
-    # time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
-    #Dist  = Params['FFRDist_%i'   %NDataSet].value
-    mass_factor = np.sqrt(mass_molecules[NDataSet -1] / glbl.massH2)
-    Yscale   = Params['Yscale_%i'    %NDataSet].value
-    Baseline = Params['Baseline_%i'  %NDataSet].value
-    # TCutC    = Params['TCutC_%i'     %NDataSet].value
-    # TCutW    = Params['TCutW_%i'     %NDataSet].value
-    TimeCorr = Params['IonTOF_%i'    %NDataSet].value * mass_factor
+    # time of flight signal model. The function takes an array of uncorrected time in seconds and 
+    #   returns an array with the corresponing comptute signal
+
+    mass_factor = np.sqrt(mass_molecules[n_dataset - 1] / glbl.massH2)
+    y_scale   = parms['y_scale_%i' % n_dataset].value
+    baseline = parms['baseline_%i' % n_dataset].value
+    # tcutc    = Params['tcutc_%i'     %NDataSet].value
+    # tcutw    = Params['tcutw_%i'     %NDataSet].value
+    ion_tof = parms['ion_tof_%i' % n_dataset].value * mass_factor
     #Temperature = Params['Temp_%i' %NDataSet].value
     
     # subtract the ion flight time and eliminate singularity that would occur at time = 0
-    Time = Time - TimeCorr * 1E-6  
-    Time = np.where(Time != 0, Time, np.repeat(0.01E-6, len(Time)))    
+    time = time - ion_tof * 1E-6
+    time = np.where(time != 0, time, np.repeat(0.01E-6, len(time)))
     
-    CutOff = cutoff_function(Params, data, glbl, NDataSet, Time, cutoff_type)
-    Signal0 = AngularAveraging(Time, NDataSet, Params, data, AveragingType, ThetaAngles, ProbCurveType, glbl)
-    Signal  = Signal0 * CutOff * Yscale + Baseline
+    cutoff = cutoff_function(parms, data, glbl, n_dataset, time, cutoff_type)
+    signal0 = angular_averaging(time, n_dataset, parms, data, averaging_type, angles, 
+                                prob_curve_type, glbl)
+    Signal  = signal0 * cutoff * y_scale + baseline
     
 #==============================================================================
 #     for i, sig in enumerate(Signal):
@@ -41,85 +43,91 @@ def TOF(Time, NDataSet, Params, data, glbl, AveragingType, ThetaAngles, ProbCurv
     return Signal
     
 
-def GenerateThetaAngles(AveragingType, GridType,        \
-                        NPointsSource, NPointsDetector, \
-                        ZSource,    RSource,            \
-                        ZAperture, RAperture,           \
-                        ZDetector,  LengthDetector):
+def generate_angles(averaging_type, grid_type, \
+                    points_source, points_detector, \
+                    z_source, r_source, \
+                    z_aperture, r_aperture, \
+                    z_detector, length_detector, glbl):
 
-    if AveragingType == 'PointDetector':
-        ThetaAngles = np.arange( 0., glbl.AngRes + glbl.ThetaStep, glbl.ThetaStep )
-    elif AveragingType == 'None':
-        ThetaAngles = [0.]
-    elif AveragingType == 'LineDetector':
-        import GeneratePoints
-        GridOfPointsSource  = GeneratePoints.PointsOnTheSource(         \
-            GridType = GridType, ZSource = ZSource , RSource = RSource, \
-            NPoints = NPointsSource)
+    if averaging_type == 'point_detector':
+        angles = np.arange(0., glbl.ang_res + glbl.theta_step, glbl.theta_step)
+    elif averaging_type == 'none':
+        angles = [0.]
+    elif averaging_type == 'line_detector':
+        import generate_points
+        grid_of_points_source  = generate_points.points_on_the_source(         \
+            grid_type, points_source, r_source, z_source)
 
-        GridOfPointsDetector = GeneratePoints.PointsOnTheDetectionLine( \
-            ZDetector = ZDetector ,         \
-            NPoints = NPointsDetector,      \
-            Length = LengthDetector )
+        grid_of_points_detector = generate_points.points_on_the_detection_line(
+            n_points = points_detector, Length = length_detector, ZDetector = z_detector )
 
-        ThetaAngles = GeneratePoints.ThetaPossibleTrajectories(         \
-            GridSource   = GridOfPointsSource,                          \
-            GridDetector = GridOfPointsDetector,                        \
-            ZAperture = ZAperture,                                      \
-            RAperture = RAperture)
+        angles = generate_points.ThetaPossibleTrajectories(         \
+            grid_source = grid_of_points_source,                          \
+            grid_detector= grid_of_points_detector,                        \
+            ZAperture = z_aperture,                                      \
+            RAperture = r_aperture)
 
 
-        for i in range( len( ThetaAngles )):
-            ThetaAngles[i] = np.degrees( ThetaAngles[i] )
-        print("Considering ", len(ThetaAngles ),\
-            " values of Theta in the angular averaging, minimum: %8.3f"\
-            %min( ThetaAngles), " deg , maximum: %8.3f" %max( ThetaAngles) ," deg.")
-    return ThetaAngles
+        for i in range(len(angles)):
+            angles[i] = np.degrees(angles[i])
+        print("Considering ", len(angles),\
+            " values of Theta in the angular averaging, minimum: %8.3f" \
+              % min(angles), " deg , maximum: %8.3f" % max(angles), " deg.")
+    return angles
 
     
 
 # -------------------------------------------------------------------------------------------------
 #   Angular Averaging
 # -------------------------------------------------------------------------------------------------
-def AngularAveraging(Time, NDataSet, Params, data, 
-                     AveragingType, ThetaAngles, ProbCurveType, glbl):
+def angular_averaging(time, n_dataset, parms, data,
+                      averaging_type, angles, prob_curve_type, glbl):
 
-    FFRDist  = Params['FFR_%i'   %NDataSet].value * 1E-3
-    Temperature = Params['Temp_%i' %NDataSet].value
+    ffr_dist  = parms['ffr_%i' % n_dataset].value * 1E-3
+    Temperature = parms['temp_%i' % n_dataset].value
 
     Signal = 0.  # Initialize Signal to 0
     
-    mass = data.mass_molecules[NDataSet-1]
-    if AveragingType == "PointDetector":
-        # Averaging performed  taking into account different flight time for different angles, but assuming ionization occurring in one point
-        for Theta in ThetaAngles :
-        #for Theta in [0]:
-            time_nonzero = np.where(Time != 0, Time, np.repeat(0.01E-6, len(Time)))
-            Velocity = FFRDist /(time_nonzero * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-            Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
-            Enorm = Ekin * np.cos( np.radians(Theta) )**2. # Reaction probability depends on normal energy
-            Signal = Signal + (Velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) * \
-                               np.cos( np.radians(Theta) ) ** 2. * \
-                               Prob(Enorm, NDataSet, Params, ProbCurveType)) *           \
-                                np.sin( np.radians(Theta) ) * glbl.ThetaStep
+    mass = data.mass_molecules[n_dataset - 1]
+    if averaging_type == "point_detector":
+        # Averaging performed  taking into account different flight time for different angles, 
+        # but assuming ionization occurring in one point
+        for theta in angles :
+        #for theta in [0]:
+            time_nonzero = np.where(time != 0, time, np.repeat(0.01E-6, len(time)))
+            
+            # v = x / t = ( L / cos(theta) ) / t            
+            velocity = ffr_dist / (time_nonzero * np.cos(np.radians(theta))) 
+            
+            # ASSUMING the reaction probability depends on normal energy
+            Ekin = (0.5 * mass * velocity**2.) * glbl.eVConst
+            
+            Enorm = Ekin * np.cos( np.radians(theta) )**2. 
+            Signal = Signal + (velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) * \
+                               np.cos( np.radians(theta) ) ** 2. * \
+                               Prob(Enorm, n_dataset, parms, prob_curve_type)) * \
+                              np.sin( np.radians(theta) ) * glbl.theta_step
 
-    elif AveragingType == "None":
+    elif averaging_type == "none":
         # No angular averaging performed
-        time_nonzero = np.where(Time != 0, Time, np.repeat(0.01E-6, len(Time)))
-        Velocity = FFRDist / time_nonzero
-        Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
+        time_nonzero = np.where(time != 0, time, np.repeat(0.01E-6, len(time)))
+        velocity = ffr_dist / time_nonzero
+        Ekin = (0.5 * mass * velocity**2.) * glbl.eVConst
         Enorm = Ekin
-        Signal = (Velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) *
-                  Prob(Enorm, NDataSet, Params, ProbCurveType))
+        Signal = (velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) *
+                  Prob(Enorm, n_dataset, parms, prob_curve_type))
 
-    elif AveragingType == "LineDetector":
+    elif averaging_type == "line_dDetector":
         # Averaging along line, accounting for different flight time for different angles
-        for Theta in ThetaAngles :
-                        Velocity = FFRDist/(Time * np.cos( np.radians(Theta) ) ) # v = x / t = ( L / cos(theta) ) / t
-                        Ekin = (0.5 * mass * Velocity**2.) * glbl.eVConst
-                        Enorm = Ekin * np.cos( np.radians(Theta) )**2 # Reaction probability depends on normal energy
-                        # Here no sin weight, since each Theta value has a weight of one
-                        Signal = Signal + (Velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) * np.cos(np.radians(Theta)) ** 2. * Prob(Enorm, NDataSet, Params, ProbCurveType)) * glbl.ThetaStep
+        for theta in angles :
+            # v = x / t = ( L / cos(theta) ) / t                        
+            velocity = ffr_dist / (time * np.cos(np.radians(theta))) 
+            Ekin = (0.5 * mass * velocity**2.) * glbl.eVConst
+            Enorm = Ekin * np.cos( np.radians(theta) )**2 # Reaction probability depends on normal energy
+            # Here no sin weight, since each theta value has a weight of one
+            Signal = Signal + (velocity ** 4. * np.exp(-Ekin / 
+            (glbl.kb * Temperature)) * np.cos(np.radians(theta)) ** 2. * 
+            Prob(Enorm, n_dataset, parms, prob_curve_type)) * glbl.theta_step
 
     return Signal
 
@@ -139,9 +147,9 @@ def Prob(En, NDataSet, Params, ProbCurveType):
 #     # ni = Params['ni_%i' %NDataSet].value
 #==============================================================================
 
-    if ProbCurveType == "ERF":
-        E0 = Params['E0_%i' %NDataSet].value
-        W  = Params['W_%i' %NDataSet].value
+    if ProbCurveType == "erf":
+        E0 = Params['e0_%i' %NDataSet].value
+        W  = Params['w_%i' %NDataSet].value
         return 1/2. * (1. + special.erf((En - E0)/ W ))
     
 #==============================================================================

@@ -15,44 +15,40 @@ import TOF_fit_global
 class Fit_control(object):
     def __init__(self):
         # names of parameters constants and lists
-        self.parms_list = ['A',
-                           'E0',
-                           'W',
-                           'TCutC', 'TCutW',
-                           'ECutM', 'ECutS',
-                           'Temp',
-                           'FFR',
-                           'IonTOF',
-                           'Yscale',
-                           'Baseline']
+        self.parms_list = [
+                           'e0',
+                           'w',
+                           'tcutc', 'tcutw',
+                           'ecutm', 'ecuts',
+                           'temp',
+                           'ffr',
+                           'ion_tof',
+                           'y_scale',
+                           'baseline']
 
         self.vars_list = ['comment_xlsx',
-                          'GridType',
-                          'LLaser',
-                          'NPointsDetector',
-                          'NPointsSource',
-                          'RAperture',
-                          'RFinal',
-                          'RSource',
-                          'RDiffWall',
-                          'ThetaStep',
-                          'ZAperture',
-                          'ZDiffWall',
-                          'ZFinal',
-                          'ZLaser',
-                          'ZRef',
-                          'ZSource'
+                          'grid_type',
+                          'l_laser',
+                          'points_detector',
+                          'points_source',
+                          'r_aperture',
+                          'r_final',
+                          'r_source',
+                          'r_diff_wall',
+                          'theta_step',
+                          'z_aperture',
+                          'z_diff_wall',
+                          'z_final',
+                          'z_laser',
+                          'z_refef',
+                          'z_source'
                           ]
 
         self.lists_list = ['averaging_type',
                            'cutoff_type',
-                           'DataColLine', 'DataRowLine',
                            'function',
-                           'MoleculeLine',
-                           'RotStateLine',
-                           'TemperatureLine',
-                           #'t_min', 't_max',
-                           'VibStateLine',
+                           'n_delt',
+                           'threshold'
                            ]
 
         self.tuples_list = ['fit_range',
@@ -131,13 +127,14 @@ class Fit_control(object):
 #         return cmd, arg, tokens
 #==============================================================================
     
-    def tokenize(self, line, sep):
-        toks = line.split(sep)
+    def tokenize(self, line, sep, count):
+        toks = line.split(sep, count)
         for j in range(len(toks)):
             toks[j] = toks[j].strip()
             
             # replace nule tokens (i.e. '') with None
-            if toks[j] == '': toks[j] = None
+            if toks[j] == '': 
+                toks[j] = None
             
             # remove imbedded comments
             # try to get index of # symbol in toks[j]
@@ -158,15 +155,15 @@ class Fit_control(object):
     def getTokens(self, line):
 
         # split the line on '=,'
-        toks = self.tokenize(line, '=')
-        cmd = toks[0]
+        toks = self.tokenize(line, '=', 1)
+        cmd = toks[0].lower()
         
         # if there is more than 1 token break apart further
         # sometimes there will only be one as in 'End Section'
         if len(toks)>1:
-            arg = toks[1]
+            arg = toks[1].lower()
             # split the args on ',' to get tokens
-            tokens = self.tokenize(arg, ',')
+            tokens = self.tokenize(arg, ',', -1)
         else:
             arg = None
             tokens = None
@@ -194,14 +191,14 @@ class Fit_control(object):
     # check if cmd is a List item
     #==============================================================================
     def isListItem(self, cmd):
-        matching = [cmd.upper() == s.upper() for s in self.lists_list]
+        matching = [cmd == s for s in self.lists_list]
         return any(matching)
 
     #==============================================================================
     # check if cmd is a Tuple item
     #==============================================================================
     def isTupleItem(self, cmd):
-        matching = [cmd.upper() == s.upper() for s in self.tuples_list]
+        matching = [cmd == s for s in self.tuples_list]
         return any(matching)
 
 
@@ -263,7 +260,7 @@ class Fit_control(object):
                 vary1 = True
         if tokens[1] == '2':
             glbl1 = True
-            self.global_parms.append(tokens[0])
+            self.global_parms.append(cmd)
 
         # set bounds
         # try:
@@ -378,7 +375,7 @@ class Fit_control(object):
     #==============================================================================
     def processEndSection(self, runNumber, lineNumber, glbl):
 
-        optionalList = []
+        optionalList = ['n_delt']
         
         # check if a signal file was specified
         if not glbl.signal_filename:
@@ -420,21 +417,21 @@ class Fit_control(object):
             exec('glbl.' + item + 's.append(glbl.' + item + ')')
 
         # make a list of required parameters and then check if they have been supplied
-        required_parms = ['Yscale', 'Baseline', 'IonTOF', 'FFR', 'Temp']
+        required_parms = ['y_scale', 'baseline', 'ion_tof', 'ffr', 'temp']
 
         if glbl.cutoff_type:        
-            if glbl.cutoff_type.lower() == 'exp':
-                required_parms.append('ECutM')
-                required_parms.append('ECutS')
+            if glbl.cutoff_type == 'exp':
+                required_parms.append('ecutm')
+                required_parms.append('ecuts')
     
-            elif glbl.cutoff_type.lower() == 'tanh':
-                required_parms.append('TCutC')
-                required_parms.append('TCutW')
+            elif glbl.cutoff_type == 'tanh':
+                required_parms.append('tcutc')
+                required_parms.append('tcutw')
         
         if glbl.function:
-            if glbl.function.lower() == 'erf':
-                required_parms.append('E0')
-                required_parms.append('W')
+            if glbl.function == 'erf':
+                required_parms.append('e0')
+                required_parms.append('w')
 
 
         # test if required parameters have been supplied
@@ -448,10 +445,10 @@ class Fit_control(object):
                     oldparm = self.parms[p + '_' + str(runNumber - 1)]
                     self.parms.add(p + '_' + str(runNumber),
                       value = oldparm.value,
-                      vary = oldparm.vary,
-                      min = oldparm.min,
-                      max = oldparm.max,
-                      expr = oldparm.expr)
+                      vary  = oldparm.vary,
+                      min   = oldparm.min,
+                      max   = oldparm.max,
+                      expr  = oldparm.expr)
 
                 else:
                     print('\n *** Error: No parameter', p, ' for')
@@ -464,7 +461,7 @@ class Fit_control(object):
         glbl.signal = None
         glbl.background = None
         glbl.function = None
-        glbl.AveragingType = None
+        glbl.averaging_type = None
         glbl.cutoff_type = None
         glbl.Tmin = None
         glbl.Tmax = None
@@ -515,7 +512,7 @@ class Fit_control(object):
 
             # check if line specifies a signal or background file name
             # note this could be consolidatae with lists_list items
-            elif cmd.lower() == 'signal' or cmd.lower() == 'background':
+            elif cmd == 'signal' or cmd == 'background':
                 #use following code to input file name without quotes
                 filelist = []
                 for filename in glob(tokens[0]):
@@ -535,7 +532,7 @@ class Fit_control(object):
                     self.errors.append(' nonunique match for file pattern' + tokens[0] +
                                     ' on line ' + str(lineNumber))
                     return
-                exec ('glbl.' + cmd.lower() + '_filename =' + "filename")
+                exec ('glbl.' + cmd + '_filename =' + "filename")
 
             # check if line indicates end of dataset section
             elif cmd.upper().startswith('END'):
@@ -577,9 +574,7 @@ if __name__ == '__main__':
 #     parms, functions, signal_filename, backgrounds, errors = parseCmdFile(const_filename)
 #==============================================================================
 
-    filename = 'Fits\\fit031.tof_in'
-    filename = 'Fits\\fit017.tof_in'
-    filename = 'Fits\\test1.tof_in'
+    filename = 'Fits\\fit0011.fit_in'
 
     errors = fit_control.parse_cmd_file(filename, glbl, parms)
     

@@ -20,58 +20,58 @@
 import numpy as np
 
 # Generate points on the Source (radius of the Source in mm)
-def PointsOnTheSource( GridType, NPoints, RSource, ZSource):
+def points_on_the_source(grid_type, n_points, r_source, z_source):
     Grid = []
-    if NPoints == 1:
-        Grid.append( [0., 0., ZSource ] )
+    if n_points == 1:
+        Grid.append( [0., 0., z_source ] )
         return Grid
     
-    if GridType == 'Radial':
+    if grid_type == 'Radial':
         # Center of the circle has weight 0, so we add it to the grid of points
-        Grid.append( [0., 0., ZSource ] ) 
+        Grid.append( [0., 0., z_source ] ) 
         #-------------------------------------------------
         # this doesn't make sense check with Francesco
         #-------------------------------------------------
         
-        dR = RSource / float( NPoints )
+        dR = r_source / float( n_points )
         Rmin = dR 
-        # We start to add points from dR to ZSource
-        for r in np.linspace( Rmin, RSource, num = NPoints, endpoint=True):
+        # We start to add points from dR to z_source
+        for r in np.linspace( Rmin, r_source, num = n_points, endpoint=True):
             dThetaAngle = dR / r
             for ThetaAngle in np.arange( 0, 2*np.pi, dThetaAngle):
                 XPoint = r * np.cos( ThetaAngle )
                 YPoint = r * np.sin( ThetaAngle )
-                Grid.append( [XPoint, YPoint, ZSource] )
+                Grid.append( [XPoint, YPoint, z_source] )
                 
-    if GridType == 'Cartesian':
-        if ( NPoints ) % ( 2 ) == 0.:
-            NLPoints = NPoints + 1 # Always include the center
+    if grid_type == 'Cartesian':
+        if ( n_points ) % ( 2 ) == 0.:
+            NLPoints = n_points + 1 # Always include the center
         else:
-            NLPoints = NPoints
+            NLPoints = n_points
 
-        for XPoint in np.linspace( -RSource, RSource, num = NLPoints, endpoint=True):
-            for YPoint in np.linspace( -RSource, RSource, num = NLPoints, endpoint=True):
-                if (XPoint**2. + YPoint**2.) <= RSource **2. :
-                    Grid.append( [XPoint, YPoint, ZSource] )
-                    #print XPoint, ZSource
+        for XPoint in np.linspace( -r_source, r_source, num = NLPoints, endpoint=True):
+            for YPoint in np.linspace( -r_source, r_source, num = NLPoints, endpoint=True):
+                if (XPoint**2. + YPoint**2.) <= r_source **2. :
+                    Grid.append( [XPoint, YPoint, z_source] )
+                    #print XPoint, z_source
     return Grid
 
 # Generate points on the detection line (length of the detection line in mm)
-def PointsOnTheDetectionLine( NPoints, Length, ZDetector):
+def points_on_the_detection_line(n_points, Length, ZDetector):
     Grid = [ ]
     for XPoint in np.linspace( start=-Length /2.,\
                                stop= Length /2.,\
-                               num = NPoints,\
+                               num = n_points,\
                                endpoint=True):
         Grid.append( [XPoint, 0., ZDetector] )
     return Grid
 
-def ThetaPossibleTrajectories( GridSource, GridDetector, ZAperture, RAperture):
+def ThetaPossibleTrajectories(grid_source, grid_detector, ZAperture, RAperture):
     
     ThetaAngles = []
     # Generate all possibles trajectories
-    for CoordinatesSource in GridSource:
-        for CoordinatesDetector in GridDetector:
+    for CoordinatesSource in grid_source:
+        for CoordinatesDetector in grid_detector:
             # Equation of the line of the form:
             # ( x - q0 ) / m0 = ( y - q1 ) / m1 = ( z - q2 ) / m2
         
@@ -128,8 +128,8 @@ if (__name__ == "__main__"):
     ZAperture  = ZRef - 3.5        # Position of aperture in Ta Sheiled   
     RAperture   = 1.5               # Radius of aperture in Ta shield
 
-    ZSource     = ZAperture - 4.   # Position of Source
-    RSource     = 0.1               # Radius of the source (Source or knudsen)
+    z_source     = ZAperture - 4.   # Position of Source
+    r_source     = 0.1               # Radius of the source (Source or knudsen)
         
     # Detection volume is determined by length of REMPI laser.
     # the actual length is very long, so we should set this parameter to be 
@@ -171,15 +171,15 @@ if (__name__ == "__main__"):
         ThetaAngles = np.arange( 0., AngRes + ThetaStep, ThetaStep ) 
         
     elif AveragingType == 'Line Detector':
-        GridOfPointsSource  = PointsOnTheSource( GridType = GridType,\
-            ZSource = ZSource ,\
-            RSource = RSource,\
-            NPoints = NPointsSource)
+        GridOfPointsSource  = points_on_the_source(grid_type= GridType, \
+                                                   z_source = z_source, \
+                                                   r_source = r_source, \
+                                                   NPoints = NPointsSource)
         print('\nSource Grid')
         for idx, val in enumerate(GridOfPointsSource):
             print(idx, val)            
             
-        GridOfPointsDetector = PointsOnTheDetectionLine(\
+        GridOfPointsDetector = points_on_the_detection_line(\
             NPoints = NPointsDetector,\
             Length  = LLaser,\
             ZDetector = ZLaser)   

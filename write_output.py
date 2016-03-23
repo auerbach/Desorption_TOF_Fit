@@ -50,14 +50,14 @@ def write_fit_out(glbl, data, path, control_filename, fit_number, fit_result, Pl
         result_file.write('#' + 60 * '-' + '\n')
         result_file.write('# Angular Averaging Parameters\n')
         result_file.write('#' + 60 * '-' + '\n')
-        result_file.write('# NPointsSource   : ' + str(glbl.NPointsSource) + '\n')
-        result_file.write('# NPointsDetector : ' + str(glbl.NPointsDetector) + '\n')
-        result_file.write('# ZSource         : ' + str(glbl.ZSource) + '\n')
-        result_file.write('# RSource         : ' + str(glbl.RSource) + '\n')
-        result_file.write('# ZAperture       : ' + str(glbl.ZAperture) + '\n')
-        result_file.write('# RAperture       : ' + str(glbl.RAperture) + '\n')
-        result_file.write('# ZFinal          : ' + str(glbl.ZFinal) + '\n')
-        result_file.write('# RFinal          : ' + str(glbl.RFinal) + '\n')
+        result_file.write('# points_source    : ' + str(glbl.points_source) + '\n')
+        result_file.write('# points_detector  : ' + str(glbl.points_detector) + '\n')
+        result_file.write('# z_source         : ' + str(glbl.z_source) + '\n')
+        result_file.write('# r_source         : ' + str(glbl.r_source) + '\n')
+        result_file.write('# z_aperture       : ' + str(glbl.z_aperture) + '\n')
+        result_file.write('# r_aperture       : ' + str(glbl.r_aperture) + '\n')
+        result_file.write('# z_final          : ' + str(glbl.z_final) + '\n')
+        result_file.write('# r_final          : ' + str(glbl.r_final) + '\n')
         # result_file.write('# it mse\n')
 
         for i in range(0, len(glbl.angles_list), 10):
@@ -114,20 +114,20 @@ def write_fit_out(glbl, data, path, control_filename, fit_number, fit_result, Pl
             # --------------------------------------------------------------------------
             # write the plot title
             # --------------------------------------------------------------------------
-            result_file.write('# Title    : Fit {:03d}_{}'.format(int(fit_number), n_dataset) + '\n')
+            result_file.write('# Title    : Fit {:04d}_{}'.format(int(fit_number), n_dataset) + '\n')
 
             # --------------------------------------------------------------------------
             # write the plot label
             # --------------------------------------------------------------------------
-            result_file.write('# Label    : ' + data.original_signal_names[i] + '\n')
+            # result_file.write('# Label    : ' + data.original_signal_names[i] + '\n')
             result_file.write('# Label    : \n')
             # result_file.write('# Label    : ' + '----------------------\n')
 
-            if averaging_type == 'None':
+            if averaging_type == 'none':
                 avg_type_label = 'No Angular Averaging'
-            elif averaging_type == 'PointDetector':
+            elif averaging_type == 'point_detector':
                 avg_type_label = 'Point Detector'
-            elif averaging_type == 'LineDetector':
+            elif averaging_type == 'line_detector':
                 avg_type_label = 'Line Detector'
 
             # result_file.write('# Label    : Averaging: ' + avg_type + '\n')
@@ -136,7 +136,7 @@ def write_fit_out(glbl, data, path, control_filename, fit_number, fit_result, Pl
             result_file.write('# Label    : \n')
             final_params = fit_result.params
 
-            parm_for_plot_label = ['E0', 'W', 'TCutC', 'TCutW', 'ECutM', 'ECutS', 'FFR']
+            parm_for_plot_label = ['e0', 'w', 'tcutc', 'tcutw', 'ecutm', 'ecuts', 'ffr']
             # if glbl.functions[i].lower().startswith('cal'):
             #     parm_for_plot_label.append('FFR')
             for p in parm_for_plot_label:
@@ -169,7 +169,7 @@ def write_fit_out(glbl, data, path, control_filename, fit_number, fit_result, Pl
                                   ProbCurveType, cutoff_type, data.mass_molecules)
 
             mass_factor = np.sqrt(data.mass_molecules[i] / glbl.massH2)
-            ion_tof = fit_result.params['IonTOF_%i' % n_dataset].value * mass_factor
+            ion_tof = fit_result.params['ion_tof_%i' % n_dataset].value * mass_factor
 
             # Compute cutoff for plotting.
             #   Create a new time array which is corrected for ion time of flight
@@ -189,7 +189,7 @@ def write_fit_out(glbl, data, path, control_filename, fit_number, fit_result, Pl
             result_file.write('# n_min, n_max : ' + str(Nmin) + ',' + str(Nmax) + '\n')
             result_file.write('# t_min, t_max : ' + str(Tmin * 1E6) + ',' + str(Tmax * 1E6) + '\n')
             result_file.write('# Baseline   : ' +
-                              str(fit_result.params['Baseline_' + str(n_dataset)].value) + '\n')
+                              str(fit_result.params['baseline_' + str(n_dataset)].value) + '\n')
 
             result_file.write('#' + 68 * '-' + '\n')
 
@@ -264,15 +264,15 @@ def write_results_excel_file(glbl, data, path, fit_number, fit_result):
             ws.cell(row=next_row, column=5).value = glbl.functions[n]
             ws.cell(row=next_row, column=6).value = glbl.averaging_types[n]
             if glbl.functions[0].lower() == 'erf':
-                ws.cell(row=next_row, column=7).value = fit_result.params['E0_' + str(n + 1)].value
-                ws.cell(row=next_row, column=8).value = fit_result.params['E0_' + str(n + 1)].stderr
-                ws.cell(row=next_row, column=9).value = fit_result.params['W_' + str(n + 1)].value
-                ws.cell(row=next_row, column=10).value = fit_result.params['W_' + str(n + 1)].stderr
+                ws.cell(row=next_row, column=7).value = fit_result.params['e0_' + str(n + 1)].value
+                ws.cell(row=next_row, column=8).value = fit_result.params['e0_' + str(n + 1)].stderr
+                ws.cell(row=next_row, column=9).value = fit_result.params['w_' + str(n + 1)].value
+                ws.cell(row=next_row, column=10).value = fit_result.params['w_' + str(n + 1)].stderr
             ws.cell(row=next_row, column=11).value = glbl.Tmins[0]
             ws.cell(row=next_row, column=12).value = glbl.Tmaxs[0]
-            ws.cell(row=next_row, column=13).value = fit_result.params['FFR_' + str(n + 1)].value
-            ws.cell(row=next_row, column=14).value = fit_result.params['ECutM_' + str(n + 1)].value
-            ws.cell(row=next_row, column=15).value = fit_result.params['ECutS_' + str(n + 1)].value
+            ws.cell(row=next_row, column=13).value = fit_result.params['ffr_' + str(n + 1)].value
+            ws.cell(row=next_row, column=14).value = fit_result.params['ecutm_' + str(n + 1)].value
+            ws.cell(row=next_row, column=15).value = fit_result.params['ecuts_' + str(n + 1)].value
             if n == 0:
                 ws.cell(row=next_row, column=16).value = glbl.comment_xlsx
             next_row += 1
