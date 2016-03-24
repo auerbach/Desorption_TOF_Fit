@@ -12,7 +12,7 @@ import scipy as sp
 import unicodedata
 import openpyxl as pyxl
 import compute_tof
-from Cutoff import cutoff_function
+from cutoff import cutoff_function
 
 
 def write_fit_out(glbl, data, path, control_filename, fit_number, fit_result, PlotDataSets):

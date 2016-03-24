@@ -12,6 +12,8 @@ Fit data from post permeation desorption TOF
 #==============================================================================
 
 from lmfit import minimize, fit_report
+# Parameters2 is a class derived from Parameters with support for a parm.glbl attribute
+#   used to handle global parameters
 from Parameters2 import Parameters2
 import numpy as np
 from scipy import special
@@ -22,7 +24,7 @@ from glob import glob
 
 from Fit_control import Fit_control
 from plot_fit import plot_fit
-from Cutoff import cutoff_function
+from cutoff import cutoff_function
 from compute_tof import TOF, generate_angles
 import TOF_fit_global
 from Parameters2 import Parameters2
