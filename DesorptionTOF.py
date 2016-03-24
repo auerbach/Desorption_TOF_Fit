@@ -236,7 +236,7 @@ if old_fit_number != new_fit_number:
     new_file = path_to_fits + 'Fit' + new_fit_number + '.fit_in'
     shutil.copy2(old_file, new_file)
 
-subprocess.call(['npp.bat', new_file])
+subprocess.call(['D:\\Program Files (x86)\\Notepad++\\notepad++.exe', new_file])
 
 #------------------------------------------------------------------------------
 # end of comment out for testing

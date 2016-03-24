@@ -1,0 +1,21 @@
+    function        = erf
+    fit_range       = 4.5, 12.0    
+    averaging_type  = none
+    cutoff_type     = tanh
+    
+    temp        = 1063.,    0
+    ion_tof     = 3.2,      0
+    ffr         = 31.842,   0
+    y_scale     = 0.25E-9,  1
+    baseline    = 0.,       1
+    E0          = 1.0,      1,    0,    5.0
+    W           = 0.4,      1,    .1,   0.6      
+    TCutC       = 28.6,     0
+    TCutW       = 4.3,      0
+
+# comment
+#   Data Files
+#   Type        Filename
+    Signal =    Data\2016.02.10\Au(111)_H2_v0J7.datv2
+
+End Run

@@ -1,0 +1,37 @@
+	comment_xlsx =	'previous 4 with global FFR length'
+	
+#   Fit function valid values: Calibration or CAL, ERF, LGS (case insensitive)
+    Function =      CAL
+
+    Averaging_Type = None
+    cutoff_type =   exp
+    fit_range   =   7, 43
+                                
+#   Fit Parameters
+#   Name,           Value,      Vary, Min,  Max
+    Y_scale =       0.25E-9,    1,
+    Ion_TOF =       3.2,        0
+    FFR     =       31.72861,   2
+    Baseline=       0.,         0
+    
+    ECutM   =       20,         1
+    ECutS   =       0.035,      1
+    
+    Temp    =       296,        0
+
+#   Data Files
+    Signal     = D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6085*.datv2
+    Background =    D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6086*.datv2
+End Run
+
+    Signal     = D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6101*.datv2
+    Background = D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6102*.datv2
+End Run
+
+    Signal     = D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6123*.datv2
+    Background = D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6124*.datv2
+End Run
+
+    Signal     = D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6151*.datv2
+    Background = D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6152*.datv2
+End Run

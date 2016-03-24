@@ -1,0 +1,26 @@
+#   Fit function valid values: Calibration, ERF, LGS
+    function=       ERF
+    averaging_type=  none    # valid values None, PointDetector, or LineDetector
+    cutoff_type=    Tanh
+
+    fit_range=      (7.0,12)
+    
+
+#   Fit Parameters
+#   Name,           Value,      Vary, Min,  Max
+    y_scale=        0.25E-10,   1    
+    baseline=       0.,         0
+    E0=             0.5,        1
+    W=              0.4,        1
+
+    TcutC=          28.6,       0
+    TcutW=          4.3,        0
+    
+    ion_tof=        3.2,        0
+    ffr=            31.72861,   0
+    temp=           1061.5,     0
+
+#   Data Files
+    signal=         Data\2016.02.10\Au(111)_D2_v0J2.datv2
+
+End Run

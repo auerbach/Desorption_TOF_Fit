@@ -1,0 +1,25 @@
+# 	Comment for excel file
+	comment_xlsx = '6151_Kn  vary FFR; ECutM; ECutS'
+
+    Function      = cal
+    Averaging_Type = None
+    cutoff_type   = exp
+    fit_range     = 7, 43
+                       
+#   Fit Parameters
+#   Name,           Value,      Vary, Min,  Max
+    Y_scale     =   0.25E-9,    1,
+    Ion_TOF     =   4.5248,     0
+    FFR         =   31.72861,   1
+    Baseline    =   0.,         0
+    
+    ECutM       =   20,         1
+    ECutS       =   0.035,      1
+    
+    Temp        =   298,        0
+
+#   Data Files
+    Signal      =   D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6151*.datv2
+    Background  =   D:\Users\dja\Desktop\Permeation\All-DJA\2016.02.26\Dataset\Knudsen\6152*.datv2
+
+End Run

@@ -3,5 +3,4 @@
 .spyderproject
 *.pyc
 *.pdf
-
-
+obsolete/*

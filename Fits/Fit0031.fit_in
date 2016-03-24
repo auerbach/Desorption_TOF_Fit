@@ -1,0 +1,71 @@
+	comment_xlsx,	'Knudsen D2 Global:FFR ECutM ECutS Fixed:IonTOF=4.52 T=299-836K t_fit = (7:43)'
+	
+#   Fit function valid values: Calibration or CAL, ERF, LGS (case insensitive)
+    Function,       CAL
+	
+#   AveragingType valid values: None, PointDetector, or LineDetector
+    AveragingType,  None
+
+#   cutoff_type valid values: tanh, exp    
+    cutoff_type,    exp
+                                
+    Tmin,			7.0
+    Tmax,			43.0
+	
+
+#   Fit Parameters
+#   Name,           Value,    	Vary, 	Min, 	Max
+    Yscale,         0.25E-9,    1
+	IonTOF,         4.5248,     0
+    FFR,			29.24,      2	
+    Baseline,       0.,         0
+    
+    ECutM,          7.17795,	2,		5,		30
+    ECutS,          0.02,       2,		0.01,	0.05
+
+#   Data Files and Temperatures
+	
+	# D2 299K
+	Temp,           299,        0
+	Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6691*.datv2
+    Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6692*.datv2
+	End Run
+	
+	# D2 491 K
+	Temp,           491,        0
+	Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6705*.datv2
+    Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6706*.datv2
+	End Run
+	
+	# D2 648K
+	Temp,           648,        0
+	Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6697*.datv2
+    Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6698*.datv2
+	End Run
+	
+	# D2 836K
+	Temp,           836,        0
+	Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6699*.datv2
+    Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6700*.datv2
+	End Run
+	
+	# H2 298K
+	#Temp,			648,		0
+	#Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6693*.datv2
+	#Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6694*.datv2
+	#End Run
+ 
+	#Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6695*.datv2
+    #Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6696*.datv2
+	#End Run
+   
+	
+
+	#Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6701*.datv2
+    #Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6702*.datv2
+	#End Run
+	
+	#Signal,         D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6703*.datv2
+    #Background,     D:\Users\dja\Desktop\Permeation\All-DJA\2016.03.02\6704*.datv2
+	#End Run
+	
