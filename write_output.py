@@ -12,7 +12,7 @@ import scipy as sp
 import unicodedata
 import openpyxl as pyxl
 import compute_tof
-import cutoff
+from Cutoff import cutoff_function
 
 
 def write_fit_out(glbl, data, path, control_filename, fit_number, fit_result, PlotDataSets):
@@ -177,7 +177,7 @@ def write_fit_out(glbl, data, path, control_filename, fit_number, fit_result, Pl
             #   energy if t=0
             Time2 = Time - ion_tof * 1E-6
             Time2 = np.where(Time2 != 0, Time2, np.repeat(0.01E-6, len(Time)))
-            Cutoff = cutoff.cutoff_function(fit_result.params, data, glbl,
+            Cutoff = cutoff_function(fit_result.params, data, glbl,
                                             n_dataset, Time2, cutoff_type)
             # Convert time to microseconds for plotting
             Time = Time * 1E6  # convert to microseconds for plotting

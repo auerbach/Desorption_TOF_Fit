@@ -22,7 +22,7 @@ from glob import glob
 
 from Fit_control import Fit_control
 from plot_fit import plot_fit
-from cutoff import cutoff_function
+from Cutoff import cutoff_function
 from compute_tof import TOF, generate_angles
 import TOF_fit_global
 from Parameters2 import Parameters2
