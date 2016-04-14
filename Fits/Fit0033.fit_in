@@ -1,26 +1,26 @@
 	comment_xlsx,	'Knudsen H2 Global:FFR ECutM ECutS Fixed:IonTOF=4.52 T=299-836K t_fit=(7:30)'
 	
 #   Fit function valid values: Calibration or CAL, ERF, LGS (case insensitive)
-    Function,       CAL
+    Function =       CAL
 	
 #   AveragingType valid values: None, PointDetector, or LineDetector
-    AveragingType,  None
+    AveragingType =  None
 
 #   cutoff_type valid values: tanh, exp    
-    cutoff_type,    exp
+    cutoff_type =    exp
 
 #   Fit Parameters
 #   Name,           Value,    	Vary, 	Min, 	Max
-    Yscale,         0.25E-9,    1
-	IonTOF,         3.2,     	0
-    FFR,			30,      	2	
-    Baseline,       0.,         0
+    y_scale =        0.25E-9,    1
+	ion_tof =        3.2,     	0
+    FFR     =		30,      	2	
+    Baseline =       0.,         0
     
-    ECutM,          7.17795,	2,		1,		30
-    ECutS,          0.02,       2,		0.01,	0.10
+    ECutM =         7.17795,	2,		1,		30
+    ECutS =         0.02,       2,		0.01,	0.10
 	
-	Tmin,			7.0
-    Tmax,			30.0
+	Tmin = 			7.0
+    Tmax = 		30.0
 
 #   Data Files and Temperatures
 	

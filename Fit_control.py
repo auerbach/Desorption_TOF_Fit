@@ -574,7 +574,7 @@ if __name__ == '__main__':
 #     parms, functions, signal_filename, backgrounds, errors = parseCmdFile(const_filename)
 #==============================================================================
 
-    filename = 'Fits\\fit0011.fit_in'
+    filename = 'Fits\\fit0031.fit_in'
 
     errors = fit_control.parse_cmd_file(filename, glbl, parms)
     
