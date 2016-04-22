@@ -186,8 +186,12 @@ data = Data.Data(glbl)
 parms = Parameters2()
 fit_control = Fit_control()
 
-# define default path to control files and fit output17
-path_to_fits = 'Fits\\'
+# set path to control files and fit output files by reading from the file
+# path_to_fits.txt
+with open("path_to_fits.txt") as file: 
+    lines = file.readlines()
+    path_to_fits = lines[0]
+
 # pathToFits = 'd:\\users\\dja\\desktop\\permeation\\All-DJA\\Fits'
 
 #------------------------------------------------------------------------------
@@ -238,7 +242,7 @@ if old_fit_number != new_fit_number:
     new_file = path_to_fits + 'Fit' + new_fit_number + '.fit_in'
     shutil.copy2(old_file, new_file)
 
-subprocess.call(['D:\\Program Files (x86)\\Notepad++\\notepad++.exe', new_file])
+subprocess.call(['c:\\Program Files (x86)\\Notepad++\\notepad++.exe', new_file])
 
 #------------------------------------------------------------------------------
 # end of comment out for testing
