@@ -188,9 +188,11 @@ fit_control = Fit_control()
 
 # set path to control files and fit output files by reading from the file
 # path_to_fits.txt
-with open("path_to_fits.txt") as file: 
+with open("path_to_fits_and_editor.txt") as file: 
     lines = file.readlines()
-    path_to_fits = lines[0]
+    path_to_fits = lines[0].split(':',1)[1].strip()
+    editor_cmd   = lines[1].split(':',1)[1].strip()
+    pass
 
 # pathToFits = 'd:\\users\\dja\\desktop\\permeation\\All-DJA\\Fits'
 
@@ -204,7 +206,9 @@ with open("path_to_fits.txt") as file:
 # begin1 comment out for testing
 #------------------------------------------------------------------------------
 # Get Last fit number from FitNumber.dat
-fit_number_file = open(path_to_fits + 'FitNumber.dat', 'r+')
+fn = path_to_fits + 'FitNumber.dat'
+print('fn =', fn)
+fit_number_file = open(fn)
 fit_number = '{:04d}'.format(int(fit_number_file.readline()))
 old_fit_number = fit_number
 new_fit_number = fit_number
@@ -242,7 +246,8 @@ if old_fit_number != new_fit_number:
     new_file = path_to_fits + 'Fit' + new_fit_number + '.fit_in'
     shutil.copy2(old_file, new_file)
 
-subprocess.call(['c:\\Program Files (x86)\\Notepad++\\notepad++.exe', new_file])
+eee = editor_cmd + ' ' + new_file
+subprocess.call([editor_cmd, new_file])
 
 #------------------------------------------------------------------------------
 # end of comment out for testing

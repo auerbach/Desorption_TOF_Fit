@@ -4,3 +4,7 @@
 *.pyc
 *.pdf
 obsolete/*
+'./fits'
+'./Example Fits'
+'./data'
+'./Example Data'
