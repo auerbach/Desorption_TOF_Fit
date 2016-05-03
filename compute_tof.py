@@ -7,14 +7,19 @@ import numpy as np
 from scipy import special
 from cutoff import cutoff_function
 
+
 # -------------------------------------------------------------------------------------------------
 #   TOF - compute the signal vs time
 # -------------------------------------------------------------------------------------------------
-def TOF(time, n_dataset, parms, data, glbl, averaging_type, angles, prob_curve_type,
-        cutoff_type, mass_molecules):
+def TOF(time, n_dataset, parms, data, glbl):
     # time of flight signal model. The function takes an array of uncorrected time in seconds and 
     #   returns an array with the corresponing comptute signal
-
+    
+    # averaging_type = glbl.averaging_types[n_dataset-1]    
+    # prob_curve_type = glbl.functions[n_dataset-1]
+    angles = glbl.angles_list
+    cutoff_type = glbl.cutoff_types[n_dataset-1]
+    mass_molecules = data.mass_molecules
     mass_factor = np.sqrt(mass_molecules[n_dataset - 1] / glbl.massH2)
     y_scale   = parms['y_scale_%i' % n_dataset].value
     baseline = parms['baseline_%i' % n_dataset].value
@@ -28,27 +33,34 @@ def TOF(time, n_dataset, parms, data, glbl, averaging_type, angles, prob_curve_t
     time = np.where(time != 0, time, np.repeat(0.01E-6, len(time)))
     
     cutoff = cutoff_function(parms, data, glbl, n_dataset, time, cutoff_type)
-    signal0 = angular_averaging(time, n_dataset, parms, data, averaging_type, angles, 
-                                prob_curve_type, glbl)
-    Signal  = signal0 * cutoff * y_scale + baseline
+    signal0 = angular_averaging(time, n_dataset, angles, parms, glbl, data)
+    signal  = signal0 * cutoff * y_scale + baseline
     
-#==============================================================================
-#     for i, sig in enumerate(Signal):
-#         if np.isnan(sig) and time[i] == 0.0:
-#             print('NAN found i, ix, time=', i, ix, time[i])
-#             
-#             Signal[i] = 0.
-#==============================================================================
-        
-    return Signal
+    return signal
     
 
-def generate_angles(averaging_type, grid_type, \
-                    points_source, points_detector, \
-                    z_source, r_source, \
-                    z_aperture, r_aperture, \
-                    z_detector, length_detector, glbl):
-
+# -------------------------------------------------------------------------------------------------
+#   generate_angle -- generate the angles used for angular averaging.
+# -------------------------------------------------------------------------------------------------
+#==============================================================================
+# def generate_angles(averaging_type, grid_type, \
+#                     points_source, points_detector, \
+#                     z_source, r_source, \
+#                     z_aperture, r_aperture, \
+#                     z_detector, length_detector, glbl):
+#  
+#==============================================================================
+def generate_angles(averaging_type, glbl):
+    grid_type       = glbl.grid_type
+    points_source   = glbl.points_source
+    points_detector = glbl.points_detector
+    z_source        = glbl.z_source
+    r_source        = glbl.r_source
+    z_aperture      = glbl.z_aperture
+    r_aperture      = glbl.r_aperture
+    length_detector = glbl.length_laser
+    z_detector      = glbl.z_laser
+    
     if averaging_type == 'point_detector':
         angles = np.arange(0., glbl.ang_res + glbl.theta_step, glbl.theta_step)
     elif averaging_type == 'none':
@@ -80,9 +92,9 @@ def generate_angles(averaging_type, grid_type, \
 # -------------------------------------------------------------------------------------------------
 #   Angular Averaging
 # -------------------------------------------------------------------------------------------------
-def angular_averaging(time, n_dataset, parms, data,
-                      averaging_type, angles, prob_curve_type, glbl):
-
+def angular_averaging(time, n_dataset, angles, parms, glbl, data):
+    averaging_type = glbl.averaging_types[n_dataset-1]
+    prob_curve_type = glbl.functions[n_dataset-1]
     ffr_dist  = parms['ffr_%i' % n_dataset].value * 1E-3
     Temperature = parms['temp_%i' % n_dataset].value
 
@@ -117,7 +129,7 @@ def angular_averaging(time, n_dataset, parms, data,
         Signal = (velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) *
                   Prob(Enorm, n_dataset, parms, prob_curve_type))
 
-    elif averaging_type == "line_dDetector":
+    elif averaging_type == "line_detector":
         # Averaging along line, accounting for different flight time for different angles
         for theta in angles :
             # v = x / t = ( L / cos(theta) ) / t                        

@@ -21,6 +21,7 @@ class Data(object):
         self.background_names           = []; self.background_name          = None
         self.baselines                  = []; self.baseline                 = None
         self.datasets                   = []; self.dataset                  = None
+        self.dates                      = []; self.date                     = None
         self.fit_index_ranges           = []; self.fit_index_range          = None
         self.mass_molecules             = []; self.mass_molecule            = None
         self.molecules                  = []; self.molecule                 = None
@@ -77,7 +78,7 @@ class Data(object):
         self.signal_names.append(signal_filename)
         self.background_names.append(background_filename)        
         
-        key_info = ['data_format', 'molecule', 'temperature', 'v', 'J', 'data_col', 'data_row']
+        key_info = ['data_format', 'molecule', 'temperature', 'v', 'J', 'data_col', 'data_row', 'date']
         
         # scan through the lines and look for lines with key_info
         # use exec() to assign values to these variable
@@ -94,6 +95,7 @@ class Data(object):
             if tok1 == 'Begin':
                 break
             
+
             # check if line contains a key_info item
             for item in key_info:
                 if item == tok1 :
@@ -120,6 +122,7 @@ class Data(object):
         self.temperatures.append(self.temperature)
         self.state = (int(self.v), int(self.J))
         self.states.append(self.state)
+        self.dates.append(self.date)
         
         # if self.data_format == 2.1:
         #     self.original_signal_names.append(sig_lines[self.glbl.original_file_line - 1].split()[3])

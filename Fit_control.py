@@ -45,6 +45,7 @@ class Fit_control(object):
                           ]
 
         self.lists_list = ['averaging_type',
+                           'comment',
                            'cutoff_type',
                            'function',
                            'n_delt',
@@ -91,48 +92,15 @@ class Fit_control(object):
             raise SystemExit
 
 
-    #==============================================================================
-    # break input line into tokens
+    #==========================================================================
+    # break string on seperator and remove imbedded comments
     #=========================================================================
-#==============================================================================
-#     def getTokens(self, line):
-# 
-#         # split the line on '=,'
-#         cmd = line.split('=')[0].strip()
-#         
-#         try:
-#             arg = line.split('=')[1].strip()
-#             tokens = arg.split(',')
-#         except:
-#             arg = None
-#             tokens = None
-#         
-#         if tokens:
-#             for j in range(len(tokens)):
-#                 tokens[j] = tokens[j].strip()
-#                 # replace nule tokens (i.e. '') with None
-#                 if tokens[j] == '': tokens[j] = None
-#                 # remove imbedded comments
-#                 try:
-#                     ii = tokens[j].index('#')
-#                     # if so, remove rest of token and strip white space
-#                     tokens[j] = tokens[j][0:ii].strip()
-#                     # ignore rest of tokens
-#                     for k in range(j + 1, len(tokens)):
-#                         tokens.pop(-1)
-#                     break
-#                 except:
-#                     pass
-# 
-#         return cmd, arg, tokens
-#==============================================================================
-    
     def tokenize(self, line, sep, count):
         toks = line.split(sep, count)
         for j in range(len(toks)):
             toks[j] = toks[j].strip()
             
-            # replace nule tokens (i.e. '') with None
+            # replace null tokens (i.e. '') with None
             if toks[j] == '': 
                 toks[j] = None
             
@@ -148,18 +116,22 @@ class Fit_control(object):
                 break
             except:
                 pass
+        
         return toks
 
         
-        
+    #==========================================================================
+    # use tokenize to get tokens from input line
+    #
+    # first split line on '='; then split remainder on ','
+    #=========================================================================    
     def getTokens(self, line):
-
-        # split the line on '=,'
+        # first split the line on '=,'
         toks = self.tokenize(line, '=', 1)
         cmd = toks[0].lower()
         
         # if there is more than 1 token break apart further
-        # sometimes there will only be one as in 'End Section'
+        # (sometimes there will only be one as in 'End Section')
         if len(toks)>1:
             arg = toks[1].lower()
             # split the args on ',' to get tokens
@@ -172,7 +144,7 @@ class Fit_control(object):
 
 
     #==============================================================================
-    # check if cmd is a Parameter item
+    # check if tokens specify a Parameter item
     #==============================================================================
     # def isParameter(self, tokens):
     #     return any(tokens[0] in s for s in self.parms_list)
@@ -181,21 +153,21 @@ class Fit_control(object):
 
 
     #==============================================================================
-    # check if cmd is an Global Variable item
+    # check if tokens specify a Global Variable item
     #==============================================================================
     def isVar(self, cmd):
         return any([cmd == s for s in self.vars_list])
 
 
     #==============================================================================
-    # check if cmd is a List item
+    # check if tokens specify a List item
     #==============================================================================
     def isListItem(self, cmd):
         matching = [cmd == s for s in self.lists_list]
         return any(matching)
 
     #==============================================================================
-    # check if cmd is a Tuple item
+    # check tokens specify a Tuple item
     #==============================================================================
     def isTupleItem(self, cmd):
         matching = [cmd == s for s in self.tuples_list]
@@ -217,21 +189,9 @@ class Fit_control(object):
     # add Parameter
     #==============================================================================
     def addParameter(self, runNumber, cmd, arg, tokens, line, lineNumber):
-
-        # global errors,  global_parms, parms
-
-        # check if number of tokesn is correct
+        # check for correct number of parameters
+        #   cmd is the parameter name; tokens are the parameters
         #   there should be name, and 2, 3 or 4 parameters
-        #   i.e. 3 to 5 tokens on the line
-        # if len(tokens) < 3 or len(tokens) > 5:
-        #     print('\n *** wrong number of items on line ', lineNumber)
-        #     print(' *** items found =', len(tokens),
-        #           '. Should be 3, 4, or 5')
-        #     print(' *** line =', line)
-        #     print(' *** items =', tokens)
-        #     self.errors.append(('wrong number of items', 'line ' + str(lineNumber)))
-        #     return
-
         if len(tokens) < 2 or len(tokens) > 4:
             print('\n *** wrong number of values for Parameter Item on line ', lineNumber)
             print(' *** number found =', len(tokens),
@@ -241,36 +201,26 @@ class Fit_control(object):
             self.errors.append(('wrong number of items', 'line ' + str(lineNumber)))
             return
 
-
-        # set defaults
+        # set defaults whether parameter varies or is fixed; is global or not;
+        #   and whether there is a min and max constraint
         vary1 = False
         glbl1 = False
         min1 = None
         max1 = None
 
-        # # set vary and global
-        # if tokens[2] != '0':
-        #         vary1 = True
-        # if tokens[2] == '2':
-        #     glbl1 = True
-        #     self.global_parms.append(tokens[0])
-
-        # set vary and global
+        # token 2 to set vary and global;
+        #   0 -> fixed; 1 -> vary; 2-> vary and global
         if tokens[1] != '0':
                 vary1 = True
         if tokens[1] == '2':
             glbl1 = True
+            # store the name of global parameters in a list.  This could,
+            #   and probably should be replaced by using the glbl property 
+            #   of parameters to process global parameters
+            #   keep for now because it is simple and works
             self.global_parms.append(cmd)
 
-        # set bounds
-        # try:
-        #     min1=float(tokens[3])
-        # except:
-        #     pass
-        # try:
-        #     max1 = float(tokens[4])
-        # except:
-        #     pass
+        # set bounds if min or max is given
         try:
             min1=float(tokens[2])
         except:
@@ -280,6 +230,7 @@ class Fit_control(object):
         except:
             pass
 
+        # add the parameter to the parameter dictionary        
         self.parms.add(cmd + '_' + str(runNumber),
                   value = float(tokens[0]),
                   vary = vary1,
@@ -287,13 +238,13 @@ class Fit_control(object):
                   min = min1,
                   max = max1
                   )
-        # print('addParameter runNumber, tokens =', runNumber, tokens)
 
 
     #==============================================================================
     # add variable
     #==============================================================================
     def addVar(self, cmd, arg, tokens, line, lineNumber, glbl):
+        # check there is one value to use to set the variable
         if len(tokens) != 1:
             error = 'wrong number of args for item on line ' + str(lineNumber)
             print('\n ***' + error, lineNumber)
@@ -303,16 +254,19 @@ class Fit_control(object):
             print(' *** items =', tokens)
             self.errors.append(error)
             return
-
-        exec('glbl.' + cmd + '=' + tokens[0])
+            
+        # use python exec command to execute line var = value
+        # exec('glbl.' + cmd + '=' + tokens[0])
+        if self.isNumber(tokens[0]):
+            exec('glbl.' + cmd + '=' + tokens[0])
+        else:
+            exec('glbl.' + cmd + '=' + "tokens[0]")
 
 
     #==============================================================================
     # add list item
     #==============================================================================
     def addListItem(self, cmd, arg, tokens, line, lineNumber, glbl):
-
-        # global errors,  global_parms, parms
 
         if len(tokens) != 1:
             error = 'wrong number of arguments items on line ' + str(lineNumber)
@@ -354,7 +308,7 @@ class Fit_control(object):
             exec('glbl.' + cmd + ' = ' + str(arg.split(',')))
 
     #==============================================================================
-    # add Parameter to the Parameters class instance
+    # duplicate global parameters for run >
     #==============================================================================
     def addGlobalParameters(self, runNumber):
 
@@ -375,7 +329,8 @@ class Fit_control(object):
     #==============================================================================
     def processEndSection(self, runNumber, lineNumber, glbl):
 
-        optionalList = ['n_delt']
+        optionalList = ['n_delt', 'comment']
+        no_dup_list  = ['comment']
         
         # check if a signal file was specified
         if not glbl.signal_filename:
@@ -392,6 +347,8 @@ class Fit_control(object):
 
             # if var or tuple item was not supplied, use value from previous run if available
             for item in self.lists_list:
+                if item in no_dup_list:
+                    continue
                 if not eval('glbl.' + item):
                     try:
                         exec('glbl.' + item + ' = glbl.' + item + 's[' + str(runNumber -2) + ']')
@@ -417,7 +374,7 @@ class Fit_control(object):
             exec('glbl.' + item + 's.append(glbl.' + item + ')')
 
         # make a list of required parameters and then check if they have been supplied
-        required_parms = ['y_scale', 'baseline', 'ion_tof', 'ffr', 'temp']
+        required_parms = ['y_scale', 'baseline', 'ion_tof', 'ffr']
 
         if glbl.cutoff_type:        
             if glbl.cutoff_type == 'exp':
@@ -432,7 +389,6 @@ class Fit_control(object):
             if glbl.function == 'erf':
                 required_parms.append('e0')
                 required_parms.append('w')
-
 
         # test if required parameters have been supplied
         # if parameter is missing, use parameter from previous run number
@@ -465,6 +421,7 @@ class Fit_control(object):
         glbl.cutoff_type = None
         glbl.Tmin = None
         glbl.Tmax = None
+        glbl.comment = None
 
 
 
@@ -521,7 +478,7 @@ class Fit_control(object):
                 if len(filelist) == 0:
                     print('***** error no file found \n')
                     print('*****', tokens[0])
-                    self.errors.append(' no match for file patern' + tokens[0] +
+                    self.errors.append(' no match for file patern ' + tokens[0] +
                                     ' on line ' + str(lineNumber))
                     filename = 'no match for pattern'
 
@@ -574,9 +531,9 @@ if __name__ == '__main__':
 #     parms, functions, signal_filename, backgrounds, errors = parseCmdFile(const_filename)
 #==============================================================================
 
-    filename = 'Fits\\fit0031.fit_in'
+    cmd_fn = 'C:\\Users\dja\\Desktop\\All DJA local\\Permeation Experiment\\Example Fits\\fit0001.fit_in'
 
-    errors = fit_control.parse_cmd_file(filename, glbl, parms)
+    errors = fit_control.parse_cmd_file(cmd_fn, glbl, parms)
     
     print()
     print('=========================')    
@@ -594,6 +551,7 @@ if __name__ == '__main__':
     print()
     print('fit_ranges:      ', glbl.fit_ranges)
     print('comment_xlsx     ', glbl.comment_xlsx)
+    print('comments         ', glbl.comments)
     print()
     
     fit_control.print_list_items()

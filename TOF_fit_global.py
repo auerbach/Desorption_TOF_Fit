@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 Created on Wed Mar  9 13:42:22 2016
@@ -81,37 +80,23 @@ class TOF_fit_global(object):
                                                 #   values of 'Cartesian' or'Radial'
 
         #------------------------------------------------------------------------------------------
-        # Fit Control Variables and Tuples
+        # Fit Control Variables and Lists
         #------------------------------------------------------------------------------------------
-        self.averaging_type         = None; self.averaging_types      = []
-        self.background_filename    = None; self.background_filenames = []
-        self.baseline_range         = None; self.baseline_ranges      = []
-        self.cutoff_type            = None; self.cutoff_types         = []
-        self.fit_range              = None; self.fit_ranges           = []
-        self.function               = None; self.functions            = []
-        self.n_delt                 = 30  ; self.n_delts              = []
-        self.signal_filename        = None; self.signal_filenames     = []
-        self.threshold              = 0.05; self.thresholds           = []
-                                                                    
-
-
-        #------------------------------------------------------------------------------------------
-        # Data Header Format
-        #------------------------------------------------------------------------------------------
-        # self.DataFormatLine   =  2; self.DataFormatLines   = []
-        # self.OriginalFileLine =  3; self.OriginalFileLines = []
-        # self.FileDateLine     =  4; self.FileDataLines     = []
-        # self.MoleculeLine     =  5; self.MoleculeLines     = []
-        # self.TemperatureLine  =  6; self.TemperatureLines  = []
-        # self.VibStateLine     =  7; self.VibStateLines     = []
-        # self.RotStateLine     =  8; self.RotStateLines     = []
-        # self.DataColLine      =  9; self.DataColLines      = []
-        # self.DataRowLine      = 10; self.DataRowLines      = []
+        self.averaging_type         = None; self.averaging_types      = []  # string
+        self.background_filename    = None; self.background_filenames = []  # string
+        self.baseline_range         = None; self.baseline_ranges      = []  # tuple of integers (4)
+        self.comment                = None; self.comments             = []  # string
+        self.cutoff_type            = None; self.cutoff_types         = []  # string
+        self.fit_range              = None; self.fit_ranges           = []  # tuple of integers (2)
+        self.function               = None; self.functions            = []  # string
+        self.n_delt                 = 30  ; self.n_delts              = []  # int
+        self.signal_filename        = None; self.signal_filenames     = []  # string
+        self.threshold              = 0.05; self.thresholds           = []  # float
 
         #------------------------------------------------------------------------------------------
         #   Miscellaneous Variables
         #------------------------------------------------------------------------------------------
-        self.comment_xlsx = None
-        self.file_label   = None
-        self.angles_list  = []
+        self.comment_xlsx          = None; 
+        self.file_label            = None
+        self.angles_list           = [];   self.angles_lists          = []
         

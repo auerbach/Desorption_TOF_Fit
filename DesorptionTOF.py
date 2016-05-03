@@ -5,86 +5,33 @@ Fit data from post permeation desorption TOF
 """
 #==============================================================================
 # 
-# Based on time of Flight fitting program
+# This program is dervied from time of Flight fitting program
 #   Alessandro Genova, Leiden University, July 2012 
 #   Francesco Nattino, Leiden University, June 2015  (vs 7)
 #
 #==============================================================================
-
-from lmfit import minimize, fit_report
-# Parameters2 is a class derived from Parameters with support for a parm.glbl attribute
-#   used to handle global parameters
-from Parameters2 import Parameters2
 import numpy as np
-from scipy import special
-import shutil
+import lmfit
 import subprocess
-import unicodedata
-from glob import glob
-
+import shutil
+# Parameters2 is a class derived from Parameters 
+# adds support for a parm.glbl attribute for global fits
+from Parameters2 import Parameters2
 from Fit_control import Fit_control
+# from compute_tof import TOF, generate_angles
 from plot_fit import plot_fit
 from cutoff import cutoff_function
-from compute_tof import TOF, generate_angles
 import TOF_fit_global
-from Parameters2 import Parameters2
+from do_fit import do_fit
+# from Parameters2 import Parameters2
 
 import Data
 import write_output
 
+
 # -------------------------------------------------------------------------------------------------
-#   do_fit -- function to perform the fit
-# -------------------------------------------------------------------------------------------------
-def do_fit(datasets, parms, averaging_type, prob_curve_type, mass_molecules, glbl):
-    
-    # Generate Theta angles employed for angular averaging
-    glbl.angles_list = generate_angles(averaging_type, glbl.grid_type, glbl.points_source,
-                                       glbl.points_detector, glbl.z_source, glbl.r_source, glbl.z_aperture,
-                                       glbl.r_aperture, glbl.z_laser, glbl.length_laser, glbl)
-
-    #-------------------------------------------------------------------------------------------------------------------
-    # Fit the data
-    #-------------------------------------------------------------------------------------------------------------------
-    # Put data in the form needed by minimize
-    X = []
-    Y = []
-    for DataSet in datasets:
-        X = X + list( DataSet[0] )
-        Y = Y + list( DataSet[1] )
-        
-    # Perform the fit
-    result = minimize(residual, parms,
-                      args=(X, Y, datasets, averaging_type, glbl.angles_list,
-                            prob_curve_type, mass_molecules))
-
-    #-------------------------------------------------------------------------------------------------------------------
-    # The minimizer result object has a Parameters object.  We want to have a Parameters2 object so that information
-    #   about whether a parameter is global or not is retained.  The proper way to do this would be to create
-    #   a new class that inherits from minimize but uses Parameters2 objects.  For now, we will simply make a new
-    #   copy the value of global from the initial Parameters to the results.params object.  Even though this is a
-    #   Parameters object and has no glbl attribute, it seems to be allowed to add an attribute this way
-    #-------------------------------------------------------------------------------------------------------------------
-    for p in result.params:
-        result.params[p].glbl = parms[p].glbl
-
-    return result
-
-    
-# -------------------------------------------------------------------------------------------------
-#   residual function used by minimize in performing the fit
-# -------------------------------------------------------------------------------------------------
-def residual(parms, x, y, datasets, averaging_type, angles, prob_curve_type, mass_molecules):
-    resid = []
-
-    for i in range(len(datasets)):
-        NDataSet = i + 1
-        resid = resid + list(datasets[i][1] \
-                             - TOF(datasets[i][0], NDataSet, parms, data, glbl, averaging_type, angles,
-                                   prob_curve_type, cutoff_type, mass_molecules))
-
-    return np.array(resid)
-    
-
+#   sticking probability from direct TOF inversion
+#--------------------------------------------------------------------------------------------------
 def ProbFromTOFInversion(time, signal, n_dataset, parms, averaging_type, theta_angles,
                          prob_curve_type, cutoff_type, mass_molecules):
     # time of flight signal model. The function takes an uncorrected time in seconds and returns a signal
@@ -192,63 +139,60 @@ with open("path_to_fits_and_editor.txt") as file:
     lines = file.readlines()
     path_to_fits = lines[0].split(':',1)[1].strip()
     editor_cmd   = lines[1].split(':',1)[1].strip()
-    pass
-
-# pathToFits = 'd:\\users\\dja\\desktop\\permeation\\All-DJA\\Fits'
 
 #------------------------------------------------------------------------------
-# uncomment for testing:
+# for testing:
 #------------------------------------------------------------------------------
-# new_fit_number = '0034'
-# new_fit_number = '0017'
-
+new_fit_number = '0035'
+debug1 = False  # suppress dialog for opening control file
+debug2 = False  # suppress writing excel file
 #------------------------------------------------------------------------------
 # begin1 comment out for testing
 #------------------------------------------------------------------------------
-# Get Last fit number from FitNumber.dat
-fn = path_to_fits + 'FitNumber.dat'
-print('fn =', fn)
-fit_number_file = open(fn)
-fit_number = '{:04d}'.format(int(fit_number_file.readline()))
-old_fit_number = fit_number
-new_fit_number = fit_number
 
-while True:
-    print('please enter old fit number: ', '[', old_fit_number, ']')
-    ans = input('?')
+if not debug1:
+    # Get Last fit number from FitNumber.dat
+    fn = path_to_fits + 'FitNumber.dat'
+    print('fn =', fn)
+    fit_number_file = open(fn, 'r+')
+    fit_number = '{:04d}'.format(int(fit_number_file.readline()))
+    old_fit_number = fit_number
+    new_fit_number = fit_number
+    
+    while True:
+        print('please enter old fit number: ', '[', old_fit_number, ']')
+        ans = input('?')
+        if ans:
+            old_n = '{:04d}'.format(int(ans))
+        else:
+            old_n = old_fit_number
+    
+        if int(old_n) > int(old_fit_number):
+            print('maximum allowed for old fit number is ', old_fit_number)
+        else:
+            break
+    
+    old_fit_number = old_n
+    
+    ans = input ('make new command file? [no]')
     if ans:
-        old_n = '{:04d}'.format(int(ans))
+        if ans.upper()[0] == 'Y':
+            new_fit_number = '{:04d}'.format(int(fit_number) + 1)
+        fit_number_file.seek(0)
+        fit_number_file.write(new_fit_number)
     else:
-        old_n = old_fit_number
-
-    if int(old_n) > int(old_fit_number):
-        print('maximum allowed for old fit number is ', old_fit_number)
-    else:
-        break
-
-old_fit_number = old_n
-
-ans = input ('make new command file? [no]')
-if ans:
-    if ans.upper()[0] == 'Y':
-        new_fit_number = '{:04d}'.format(int(fit_number) + 1)
-    fit_number_file.seek(0)
-    fit_number_file.write(new_fit_number)
-else:
-    new_fit_number = old_fit_number
-
-fit_number_file.close()
-
-old_file = path_to_fits + 'Fit' + old_fit_number + '.fit_in'
-new_file = old_file
-
-if old_fit_number != new_fit_number:
-    new_file = path_to_fits + 'Fit' + new_fit_number + '.fit_in'
-    shutil.copy2(old_file, new_file)
-
-eee = editor_cmd + ' ' + new_file
-subprocess.call([editor_cmd, new_file])
-
+        new_fit_number = old_fit_number
+    
+    fit_number_file.close()
+    
+    old_file = path_to_fits + 'Fit' + old_fit_number + '.fit_in'
+    new_file = old_file
+    
+    if old_fit_number != new_fit_number:
+        new_file = path_to_fits + 'Fit' + new_fit_number + '.fit_in'
+        shutil.copy2(old_file, new_file)
+    
+    subprocess.run(editor_cmd + ' "' + new_file + '"')
 #------------------------------------------------------------------------------
 # end of comment out for testing
 #------------------------------------------------------------------------------
@@ -299,6 +243,15 @@ for i in range(len(signal_filenames)):
     if data.baselines[i]:
         parms['baseline_' + str(i+1)].value = data.baselines[i]
         parms['baseline_' + str(i+1)].vary  = False
+        
+    # check if temperature parameter was set.  If not use temperature from header
+    try:
+        parms['temp_' + str(i+1)].value
+        pass
+    except:
+        parms.add('temp_' + str(i+1),
+                  value = data.temperatures[i],
+                  vary = False)
     
     time   = data.datasets[i][0]
     signal = data.datasets[i][1]
@@ -308,17 +261,20 @@ for i in range(len(signal_filenames)):
 #--------------------------------------------------------------------------------------------------
 # Fit the data to model 
 #--------------------------------------------------------------------------------------------------
-fit_result = do_fit(fit_datasets, parms, averaging_type, fit_function, data.mass_molecules, glbl)
-print(fit_report(fit_result))
+fit_result = do_fit(fit_datasets, parms, averaging_type, fit_function, data.mass_molecules, glbl, data)
+print(lmfit.fit_report(fit_result))
 
 result_filename = \
     write_output.write_fit_out(glbl, data, path_to_fits, cmd_file, 
                                new_fit_number, fit_result, plot_datasets)
-# write_output.write_results_excel_file()
+
+#==============================================================================
+# uncomment when done with testing
+#==============================================================================
+if not debug2:
+    write_output.write_results_excel_file(glbl, data, path_to_fits, new_fit_number, fit_result)
+
 plot_fit(path_to_fits + result_filename)
-
-
-
 
 
     # if not calibration run
