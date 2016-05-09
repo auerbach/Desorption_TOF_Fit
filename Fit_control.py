@@ -27,8 +27,9 @@ class Fit_control(object):
                            'baseline']
 
         self.vars_list = ['comment_xlsx',
+                          'energy_angle_scaling',
                           'grid_type',
-                          'l_laser',
+                          'length_laser',
                           'points_detector',
                           'points_source',
                           'r_aperture',
@@ -40,7 +41,7 @@ class Fit_control(object):
                           'z_diff_wall',
                           'z_final',
                           'z_laser',
-                          'z_refef',
+                          'z_ref',
                           'z_source'
                           ]
 
@@ -59,13 +60,18 @@ class Fit_control(object):
         self.global_parms=[]
         self.parms = None
 
-
+    #==========================================================================
+    # print variable items
+    #==========================================================================
+    def print_var_items(self):
+        for item in self.vars_list:
+            print('{:16s} = {}'.format(item + 's', eval('glbl.' + item)))
+    
     #==========================================================================
     # print list items
     #==========================================================================
     def print_list_items(self):
         for item in self.lists_list:
-            # print('{:16s} = {}'.format(item + 's', eval('glbl_old.' + item + 's')))
             print('{:16s} = {}'.format(item + 's', eval('glbl.' + item + 's')))
 
 
@@ -509,9 +515,11 @@ class Fit_control(object):
 #==============================================================================
 if __name__ == '__main__':         
     
+    import subprocess
     
-    # global errors,  global_parms, parms
-
+    # -------------------------------------------------------------------------
+    # create instances of TOF-fit_global, Parameters2 and Fit_control classes
+    # -------------------------------------------------------------------------
     glbl = TOF_fit_global.TOF_fit_global()
     parms = Parameters2()
     fit_control = Fit_control()
@@ -522,16 +530,50 @@ if __name__ == '__main__':
     print('=====================')
     print('    Initial State    ')
     print('=====================')
+    fit_control.print_var_items()
     fit_control.print_list_items()
     fit_control.print_tuple_items()
 
-#==============================================================================
-#     # parse the constants file    
-#     const_filename = 'testSetVariables.dat'   
-#     parms, functions, signal_filename, backgrounds, errors = parseCmdFile(const_filename)
-#==============================================================================
-
-    cmd_fn = 'C:\\Users\dja\\Desktop\\All DJA local\\Permeation Experiment\\Example Fits\\fit0001.fit_in'
+    #==============================================================================
+    #   get path to the command file
+    #==============================================================================
+    with open("path_to_fits_and_editor.txt") as file: 
+        lines = file.readlines()
+        path_to_fits = lines[0].split(':',1)[1].strip()
+        editor_cmd   = lines[1].split(':',1)[1].strip()
+        
+    fit_number = '0036'
+    prompt = True  
+    #------------------------------------------------------------------------------
+    # begin1 comment out for testing
+    #------------------------------------------------------------------------------
+    
+    if prompt:
+        # Get Last fit number from FitNumber.dat
+        fn = path_to_fits + 'FitNumber.dat'
+        print('fn =', fn)
+        with open(fn, 'r+') as fit_number_file:
+            fit_number = '{:04d}'.format(int(fit_number_file.readline()))
+            prompt = 'please enter fit number to test parsing: [' + fit_number + ']'
+            
+            while True:
+                ans = input(prompt)
+                if ans:
+                    n = '{:04d}'.format(int(ans))
+                else:
+                    n = fit_number
+            
+                if int(n) > int(fit_number):
+                    print('maximum available fit number is ', fit_number)
+                else:
+                    break
+            
+        fit_number = n
+        cmd_fn = path_to_fits + 'Fit' + fit_number + '.fit_in'
+        
+        ans = input('edit file? [no]')
+        if ans.lower().startswith('y'):   
+            subprocess.run(editor_cmd + ' "' + cmd_fn + '"')
 
     errors = fit_control.parse_cmd_file(cmd_fn, glbl, parms)
     
@@ -539,6 +581,11 @@ if __name__ == '__main__':
     print('=========================')    
     print('       Final State       ')
     print('=========================')
+    fit_control.print_var_items()
+    fit_control.print_list_items()
+    fit_control.print_tuple_items()
+    print()
+
     print('signal_filenames:')
     for file in glbl.signal_filenames:
         print('  ', file)
@@ -553,11 +600,7 @@ if __name__ == '__main__':
     print('comment_xlsx     ', glbl.comment_xlsx)
     print('comments         ', glbl.comments)
     print()
-    
-    fit_control.print_list_items()
-    fit_control.print_tuple_items()
-    print()
-    
+        
     is_global_fit = any([parms[p].glbl for p in parms])
     print('{:16s} = {}'.format('Global Fit', is_global_fit))
     print()

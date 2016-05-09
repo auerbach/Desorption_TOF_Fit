@@ -32,14 +32,16 @@ def plot_fit(filename):
     plot_filename = path_to_file + '\\' + fn_no_ext
 
     # create an object for multipage PDF
-    pdf_multi = PdfPages(plot_filename + '.pdf')
+    multi_page_pdf = PdfPages(plot_filename + '.pdf')
     
     # read the fit_out file    
     with open(filename,'r') as fit_out:
         lines = fit_out.readlines()
      
     #--------------------------------------------------------------------------
-    # get the number of plots to make 
+    # get the number of plots to make
+    # note: n_line will be at the Number of plots line which is the first line
+    #       of the 'data for plots' section of the fit_out file
     #--------------------------------------------------------------------------    
     for n_line, line in enumerate(lines):
         if line.startswith('# Number of plots'):
@@ -63,36 +65,16 @@ def plot_fit(filename):
                      'n_points',
                      'signal_file',
                      'states', 
-                     'tcutc', 'tcutw',
+                     'tcutc_label', 'tcutw_label',
                      'temp_label', 
                      'Title',
                      'w_label',                                                              
                      'y_scale_label']
-    
-    #--------------------------------------------------------------------------
-    # set all variables to None to suppress complaints about undefined variables
-    #--------------------------------------------------------------------------
-#==============================================================================
-#     avg_type_label = None
-#     date = None
-#     e0_label = None
-#     ecutm_label = ecuts = None
-#     ion_tof_label = None
-#     molecule = None
-#     n_points = None
-#     states = None
-#     tcutc = tcutw = None
-#     temp_label = None
-#     Title = None
-#     w_label = None
-#     y_scale_label = None
-#==============================================================================
-    
+        
     #--------------------------------------------------------------------------
     # make a plot for each data section
     #--------------------------------------------------------------------------
     for n_plot in range(n_plots):
-        
         #----------------------------------------------------------------------
         # parse the fit_out file 
         # use exec to set values of variable
@@ -105,31 +87,19 @@ def plot_fit(filename):
             try:
                 tok0 = line.split(' ',1)[1].split(':',1)[0].strip()
                 tok1 = line.split(' ',1)[1].split(':',1)[1].strip()
-                for var in variable_list: 
-                    if tok0 == var:
-                        if isNumber(tok1):
-                            exec('global '+ tok0 + '; ' + tok0 + ' = ' + tok1)
-                        else:
-                            exec('global '+ tok0 + '; ' + tok0 + ' = ' + "tok1")
-                            
+                if tok0 in variable_list: 
+                    if isNumber(tok1):
+                        exec('global '+ tok0 + '; ' + tok0 + ' = ' + tok1)
+                    else:
+                        exec('global '+ tok0 + '; ' + tok0 + ' = ' + "tok1")
             except:
                 pass
-                           
-#==============================================================================
-#             if line.startswith('# Title'):
-#                 title = line.split(':', 1)[1]
-#                 Title = title
-#             
-#             if line.startswith('# function'):
-#                 function = line.split(':', 1)[1]
-#                 
-#             if line.startswith('# Npoints'):
-#                 n_points = int(line.split(':')[1])
-#            
-#             if line.startswith('# Baseline'):
-#                 baseline = float(line.split(':')[1])
-#                 
-#==============================================================================
+            
+
+            #----------------------------------------------------------------------
+            #  process # t_min, t_max : (4.98, 25.00)           
+            #  
+            #----------------------------------------------------------------------                           
             if line.startswith('# t_min'):
             # line will look like # t_min, t_max = :  (12, 50)\n
             # split on :, take second element, strip space, ( ) and \n) gives 12, 50
@@ -154,42 +124,25 @@ def plot_fit(filename):
         time   = []
         sig    = []
         fit    = []
+        cutoff = []
         
         n_start = n_line + 1
         for n_line in range(n_start, n_start + n_points ):
             line = lines[n_line]
             if float(line.split()[0]) < ion_tof:
                 continue
-            time.append  (float(line.split()[0]))
-            sig.append   (float(line.split()[1]))
-            fit.append   (float(line.split()[2]))
+            time.append   (float(line.split()[0]))
+            sig.append    (float(line.split()[1]))
+            fit.append    (float(line.split()[2]))
+            cutoff.append (float(line.split()[3]))
         
-        time = np.array(time)
-        sig  = np.array(sig)            
-        fit  = np.array(fit)
-
-        #------------------------------------------------------------------------------------------
-        # get the cutoff array over the range wher fit > fit.max()
-        # use the same range of lines used for the time, signal, and fit arrays
-        #     i.e. do not reset n_start
-        # note: didn't use n_line as index variable so that n_line remains 
-        #       the last data line
-        #------------------------------------------------------------------------------------------
-        cutoff = []
-        time_cutoff = []
-        trigger = False
-        for nn in range(n_start, n_start + n_points ):
-            line = lines[nn]
-            if not trigger and fit[nn - n_start] > 0.5 * fit.max():
-                trigger = True
-            if trigger and fit[nn - n_start] - baseline < 0.02 * (fit.max() - baseline):
-                break
-            time_cutoff.append(float(line.split()[0]))
-            cutoff.append(float(line.split()[3]))
+        time   = np.array(time)
+        sig    = np.array(sig)            
+        fit    = np.array(fit)
+        cutoff = np.array(cutoff)
         
         cutoff_max = 0.8 * sig.max() + 0.2 * fit.max()
         cutoff = np.array(cutoff) * cutoff_max
-        time_cutoff = np.array(time_cutoff)
         
         #------------------------------------------------------------------------------------------
         #  create the plot label based on plot type
@@ -208,8 +161,18 @@ def plot_fit(filename):
             label += 'ion_tof ' + ion_tof_label         + '\n'
                        
         if function == 'erf':
-            label = 'erf, ' 
-            label += avg_type_label + '\n'
+#==============================================================================
+#             # -------------------------------------------------------------------------------------
+#             # remove the , from E0 and W label and adjust alignment
+#             # -------------------------------------------------------------------------------------
+#             e0, e0_pm = e0_label.split(',')
+#             w,  w_pm  = w_label.split(',')
+#             new_e0_label = e0 + '  ' + e0_pm.strip()            
+#             new_w_label  = w  + ' '  + w_pm.strip()
+#==============================================================================
+
+            label = 'Erf fit, ' 
+            label += avg_type_label + '\n\n'
             label += molecule + str(states) + ' ' + temp+ '\n'
             label += date                               + '\n'
             label += '\n'
@@ -226,67 +189,95 @@ def plot_fit(filename):
                 label += 'ecuts   ' + ecuts_label       + '\n'
             except:
                 pass
-                
-
         
         sig_max = sig.max()
         sig_min = sig.min()
-    
-        fig = plt.figure(figsize = (6,6), dpi = 200)
-        fig = plt.figure()
+
+        # ---------------------------------------------------------------------
+        # Set the size of the figure
+        # ---------------------------------------------------------------------    
+        fig = plt.figure(figsize = (8,6), dpi = 200)
+        #fig = plt.figure()
         
-        fig.suptitle(Title, fontsize=14, y=1.01)
-        plt.title(sig_file, fontsize = 10 )
+        # ---------------------------------------------------------------------         
+        # make extra room on top for title and suptitle
+        # top sets the location of the top axis and suptitle
+        # y = 1.01 in the axis title moves it up a little so _ looks OK
+        # ---------------------------------------------------------------------
+        fig.subplots_adjust(top=0.9)
         
+        fig.suptitle(Title, fontsize=14)
+        plt.title(sig_file, fontsize = 10, y=1.01 )
+        
+        # ---------------------------------------------------------------------
+        # set up the axis labels
+        # ---------------------------------------------------------------------
         ax = plt.subplot(111)
         ax.set_xlabel('TOF [' + unicodedata.lookup('micro sign') + 's]', fontsize=16)
         ax.set_ylabel('Signal', fontsize=16)
-    
-        ax.annotate(label, xy = [0.55, 0.95, ], xycoords = 'axes fraction', 
-                    va = 'top', family='monospace', )
-        ax.annotate('Cutoff', xy = (4., cutoff_max * 1.03), 
+
+        # ---------------------------------------------------------------------
+        # add the label to the plot
+        # annotate the Cutoff line
+        # add bars at t_min and t_max use for the fit
+        # ---------------------------------------------------------------------    
+        #ax.annotate(label, xy = [0.65, 0.95, ], xycoords = 'axes fraction', 
+        #            va = 'top', family='monospace' )
+        
+        # these are matplotlib.patch.Patch properties
+        props = dict(facecolor='lightyellow', alpha=.8)
+        
+        ax.text(0.6, 0.95, label,  family = 'monospace', fontsize=11, bbox = props,
+                transform=ax.transAxes, va='top')
+        
+        ax.annotate('Cutoff', xy = (time[0], cutoff_max * 1.01), 
                     xycoords ='data', va='bottom')
-#==============================================================================
-#         ax.annotate('$t_{min}$', xycoords = 'data', xy = (t_min-.1, sig_max * .4), 
-#                     ha = 'right', va='center', fontsize=14)        
-#         ax.annotate('$t_{max}$', xycoords = 'data', xy = (t_max+.1, sig_max * .4), 
-#                     ha = 'left',  va='center', fontsize=14)                
-#==============================================================================
         ax.annotate('', xycoords = 'data', xy = (t_min , sig_min), xytext =(t_min, sig_max*.3), 
                     arrowprops=dict(linewidth = 2.5, linestyle = '-', arrowstyle = '-')) 
         ax.annotate('', xycoords = 'data', xy = (t_max , sig_min), xytext =(t_max, sig_max*.3), 
                     arrowprops=dict(linewidth = 2.5, linestyle = '-', arrowstyle = '-'))   
 
+        # ---------------------------------------------------------------------
+        # set the min and max times for the plot
+        # the criteria used here are possiblyt to simple but they seem to work
+        # calibration plots will have max time of 60 microseconds
+        # fit plots will have a max time of 30 microseconds
+        # ---------------------------------------------------------------------        
+        t_min_plot = 2        
         if t_max <= 20:
             t_max_plot = 30
         else: 
             t_max_plot = 60
             
-        plt.xlim((2, t_max_plot))
+        # ---------------------------------------------------------------------        
+        # plot the signal and fit
+        # ---------------------------------------------------------------------        
+        plt.xlim((t_min_plot, t_max_plot))
         plt.ylim((sig_min, sig_max * 1.05))
         plt.plot(time, sig, 'b.')
         plt.plot(time, fit, 'r', linewidth = 2)
-        plt.plot(time_cutoff, cutoff, 'g', linestyle = '--', linewidth = 2)
         
-#figtext(.5,.85,'Lorem ipsum dolor sit amet, consectetur adipiscing elit',fontsize=10,ha='center')
-        
-#==============================================================================
-#         path_to_file = os.path.dirname(filename)
-#         base_name    = os.path.basename(filename)
-#         plot_filename = path_to_file + '\\' + base_name + '.pdf'
-#         plt.savefig(plot_filename)
-#==============================================================================
-        pdf_multi.savefig()
-        
+        # ---------------------------------------------------------------------        
+        # plot the cutoff up to 0.6  of plot range to avoid obscuring the plot label
+        # ---------------------------------------------------------------------        
+        index = np.where(time > (t_max_plot - t_min_plot) * 0.6)[0][0]
+        index = len(time)
+        plt.plot(time[0:index], cutoff[0:index], 'g', linestyle = '--', linewidth = 2)
+                
+        # ---------------------------------------------------------------------        
+        # save the plot as a multipage .pdf file and display the plot in console
+        # ---------------------------------------------------------------------        
+        multi_page_pdf.savefig()
         plt.show()
     
-    pdf_multi.close()    
+    multi_page_pdf.close()    
     
     
     
 if __name__ == '__main__':
         
-    plot_file_path = 'G:\\Spyder\\Au111-Fitting\\'
-    plot_file_name = plot_file_path + 'Fit0005_H2_v0j1_erf.fit_out'
+    plot_file_path = 'C:\\Users\\dja\\Desktop\\All DJA local\\Permeation Experiment\\Example Fits\\'
+    plot_file_name = plot_file_path + 'Fit0036_D2_v1j2_erf.fit_out'
+    plot_file_name = plot_file_path + 'Fit0001_D2_v0j2_ERF.fit_out'
     
     plot_fit(plot_file_name)

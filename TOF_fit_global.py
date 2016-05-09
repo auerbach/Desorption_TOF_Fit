@@ -36,6 +36,17 @@ class TOF_fit_global(object):
         #------------------------------------------------------------------------------------------
         # Angular averaging parameters
         #------------------------------------------------------------------------------------------
+
+        # NOTE: there is a problem here. Some varibales are defined by computation
+        # e.g. self.z_source   = self.z_aperture - 4.
+        # If the value of z.aperture is changed, z.source won't be updated.
+        # could solve this by using functions like get_z.aperature() rather than direct
+        # access to variables
+        #
+        # another solution would be to use implement an update function
+        # since changes are only made in Fit_control.py, the update function could be 
+        # called on exit
+
         # Parameters for point detector
         self.ang_res    = 20                        # Angular resolusion (degrees)
         self.theta_step = 1                         # Theta step in averaging
@@ -48,7 +59,7 @@ class TOF_fit_global(object):
                                                     #   Source and differential wall positions
                                                     #   might be changed
         self.aperture_to_shield = 3.5               # Distance of the aperature to Ta shield
-        self.z_aperture = self.z_ref - 3.5          # Position of Aperture in Ta shield
+        self.z_aperture = self.z_ref - self.aperture_to_shield # Position of Aperture in Ta shield
         self.r_aperture = 1.5                       # Radius of aperture in Ta shield
         self.z_source   = self.z_aperture - 4.      # Position of Source
         self.r_source   = 0.1                       # Radius of the source (Source or knudsen)
@@ -95,8 +106,10 @@ class TOF_fit_global(object):
 
         #------------------------------------------------------------------------------------------
         #   Miscellaneous Variables
-        #------------------------------------------------------------------------------------------
-        self.comment_xlsx          = None; 
-        self.file_label            = None
-        self.angles_list           = [];   self.angles_lists          = []
+        #------------------------------------------------------------------------------------------        
+        self.angles_list           = [];   self.angles_lists          = []  # float
+        self.energy_angle_scaling  = 2                                      # float
+        self.comment_xlsx          = None; self.comment_xlsxs         = []  # string
+        self.file_label            = None                                   # string
+        
         

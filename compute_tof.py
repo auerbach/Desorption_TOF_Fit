@@ -114,7 +114,7 @@ def angular_averaging(time, n_dataset, angles, parms, glbl, data):
             # ASSUMING the reaction probability depends on normal energy
             Ekin = (0.5 * mass * velocity**2.) * glbl.eVConst
             
-            Enorm = Ekin * np.cos( np.radians(theta) )**2. 
+            Enorm = Ekin * np.cos( np.radians(theta) )**glbl.energy_angle_scaling 
             Signal = Signal + (velocity ** 4. * np.exp(-Ekin / (glbl.kb * Temperature)) * \
                                np.cos( np.radians(theta) ) ** 2. * \
                                Prob(Enorm, n_dataset, parms, prob_curve_type)) * \
